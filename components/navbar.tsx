@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -14,10 +15,15 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary font-heading text-sm font-bold text-primary-foreground">
-            10
-          </span>
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image
+            src="/alianze-logo.png"
+            alt="ALIANZE E-Sports"
+            width={36}
+            height={36}
+            priority
+            className="h-9 w-9 rounded-sm object-contain"
+          />
           <span className="font-heading text-lg font-bold uppercase tracking-widest text-foreground">
             10v10 <span className="text-primary">STATS</span>
           </span>
