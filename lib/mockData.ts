@@ -1,3 +1,5 @@
+import { getSupabaseClient } from '@/lib/supabase'
+
 export type Player = {
   id: string
   name: string
@@ -244,7 +246,7 @@ export type PlayerStats = {
   kda: number
 }
 
-export function getPlayerStats(playerId: string): PlayerStats | null {
+export function getPlayerStatsSync(playerId: string): PlayerStats | null {
   const player = players.find((p) => p.id === playerId)
   if (!player) return null
   const entries = matches.flatMap((m) =>
@@ -270,11 +272,72 @@ export function getPlayerStats(playerId: string): PlayerStats | null {
   }
 }
 
-export function getAllPlayerStats(): PlayerStats[] {
+export async function getPlayerStats(playerId: string): Promise<PlayerStats | null> {
+  const supabase = getSupabaseClient()
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('players')
+      .select('id, name, badge, avatar_color')
+      .eq('id', playerId)
+      .maybeSingle()
+
+    if (!error && data) {
+      return {
+        player: {
+          id: data.id,
+          name: data.name,
+          badge: data.badge,
+          avatarColor: data.avatar_color,
+        },
+        matches: 0,
+        wins: 0,
+        losses: 0,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+        damage: 0,
+        kda: 0,
+      }
+    }
+  }
+
+  return getPlayerStatsSync(playerId)
+}
+
+export function getAllPlayerStatsSync(): PlayerStats[] {
   return players
-    .map((p) => getPlayerStats(p.id))
+    .map((p) => getPlayerStatsSync(p.id))
     .filter((s): s is PlayerStats => s !== null)
     .sort((a, b) => b.kda - a.kda)
+}
+
+export async function getAllPlayerStats(): Promise<PlayerStats[]> {
+  const supabase = getSupabaseClient()
+  if (supabase) {
+    const { data, error } = await supabase.from('players').select('id, name, badge, avatar_color')
+    if (!error && data) {
+      return data
+        .map((p) => ({
+          player: {
+            id: p.id,
+            name: p.name,
+            badge: p.badge,
+            avatarColor: p.avatar_color,
+          },
+          matches: 0,
+          wins: 0,
+          losses: 0,
+          kills: 0,
+          deaths: 0,
+          assists: 0,
+          damage: 0,
+          kda: 0,
+        }))
+        .sort((a, b) => b.kda - a.kda)
+    }
+  }
+
+  return getAllPlayerStatsSync()
 }
 
 export function getPlayerMatches(playerId: string) {
@@ -304,13 +367,13 @@ export function getPlayer(playerId: string) {
 }
 
 export const leaderHighlights = {
-  mostKills: topBy('kills'),
-  bestKda: topBy('kda'),
-  mostDamage: topBy('damage'),
+  mostKills: topBySync('kills'),
+  bestKda: topBySync('kda'),
+  mostDamage: topBySync('damage'),
 }
 
-function topBy(key: 'kills' | 'kda' | 'damage') {
-  const stats = getAllPlayerStats()
+function topBySync(key: 'kills' | 'kda' | 'damage') {
+  const stats = getAllPlayerStatsSync()
   return [...stats].sort((a, b) => (b[key] as number) - (a[key] as number))[0]
 }
 

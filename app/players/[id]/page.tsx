@@ -15,7 +15,7 @@ export default async function PlayerProfile({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const stats = getPlayerStats(id)
+  const stats = await getPlayerStats(id)
   if (!stats) notFound()
 
   const playerMatches = getPlayerMatches(id)

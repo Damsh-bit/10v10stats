@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   description:
     '10v10 STATS — track your CS2 10v10 match stats, leaderboards, the Nelson League and player highlights.',
   generator: 'v0.app',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/apple-icon.png',
+  },
 }
 
 export const viewport: Viewport = {

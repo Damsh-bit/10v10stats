@@ -10,8 +10,8 @@ import { NelsonLeague } from '@/components/nelson-league'
 import { RecentMatches } from '@/components/recent-matches'
 import { DashboardStats, dashboardIcons } from '@/components/dashboard-stats'
 
-export default function Page() {
-  const stats = getAllPlayerStats()
+export default async function Page() {
+  const stats = await getAllPlayerStats()
 
   const totalKills = matches.reduce(
     (acc, m) => acc + m.players.reduce((s, p) => s + p.kills, 0),
