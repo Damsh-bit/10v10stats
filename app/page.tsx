@@ -3,6 +3,7 @@ import { MiniLeaderboard } from '@/components/mini-leaderboard'
 import { NelsonLeague } from '@/components/nelson-league'
 import { RecentMatches } from '@/components/recent-matches'
 import { DashboardStats, dashboardIcons } from '@/components/dashboard-stats'
+import { NewMatchModal } from '@/components/new-match-modal'
 
 export default async function Page() {
   const data = await getLiveData()
@@ -67,17 +68,20 @@ export default async function Page() {
   return (
     <main className="cs-grid min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6">
-          <span className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
-            10v10 Stats
-          </span>
-          <h1 className="font-heading text-3xl font-bold uppercase tracking-wide text-foreground">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Resumen general de tu lobby de CS2 — leaderboard, Nelson League y
-            últimas partidas.
-          </p>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
+              10v10 Stats
+            </span>
+            <h1 className="font-heading text-3xl font-bold uppercase tracking-wide text-foreground">
+              Dashboard
+            </h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Resumen general de tu lobby de CS2 — leaderboard, Nelson League y
+              últimas partidas.
+            </p>
+          </div>
+          <NewMatchModal />
         </div>
 
         <div className="mb-6">

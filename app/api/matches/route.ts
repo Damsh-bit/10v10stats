@@ -1,0 +1,87 @@
+import { NextResponse } from 'next/server'
+import { getSupabaseAdminClient } from '@/lib/supabase'
+
+type MatchPlayerPayload = {
+  player_id: string
+  team: 'CT' | 'T'
+  won: boolean
+  kills: number
+  deaths: number
+  assists: number
+  damage: number
+}
+
+type MatchPayload = {
+  map: string
+  score_ct: number
+  score_t: number
+  winner_team: 'CT' | 'T'
+  played_at: string
+  players: MatchPlayerPayload[]
+}
+
+export async function POST(request: Request) {
+  try {
+    const payload = (await request.json()) as MatchPayload
+
+    if (!payload?.map?.trim()) {
+      return NextResponse.json({ error: 'El mapa es obligatorio' }, { status: 400 })
+    }
+    if (payload.score_ct === undefined || payload.score_t === undefined) {
+      return NextResponse.json({ error: 'Los scores son obligatorios' }, { status: 400 })
+    }
+    if (!payload.players || payload.players.length !== 10) {
+      return NextResponse.json({ error: 'Debes asignar 10 jugadores' }, { status: 400 })
+    }
+
+    const playerIds = payload.players.map((player) => player.player_id)
+    const hasMissingPlayer = playerIds.some((playerId) => !playerId)
+    const hasDuplicates = new Set(playerIds).size !== playerIds.length
+
+    if (hasMissingPlayer || hasDuplicates) {
+      return NextResponse.json({ error: 'Todos los jugadores deben estar asignados y ser únicos' }, { status: 400 })
+    }
+
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'No se pudo inicializar el cliente de Supabase' }, { status: 500 })
+    }
+
+    const { data: matchData, error: matchError } = await supabase
+      .from('matches')
+      .insert({
+        map: payload.map.trim(),
+        score_ct: payload.score_ct,
+        score_t: payload.score_t,
+        winner_team: payload.winner_team,
+        played_at: payload.played_at,
+      })
+      .select('id')
+      .single()
+
+    if (matchError || !matchData?.id) {
+      return NextResponse.json({ error: matchError?.message || 'No se pudo crear la partida' }, { status: 500 })
+    }
+
+    const rows = payload.players.map((player) => ({
+      match_id: matchData.id,
+      player_id: player.player_id,
+      team: player.team,
+      won: player.won,
+      kills: player.kills,
+      deaths: player.deaths,
+      assists: player.assists,
+      damage: player.damage,
+    }))
+
+    const { error: playersError } = await supabase.from('match_players').insert(rows)
+
+    if (playersError) {
+      return NextResponse.json({ error: playersError.message || 'No se pudieron guardar los jugadores' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, matchId: matchData.id })
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'No se pudo guardar la partida' }, { status: 500 })
+  }
+}
