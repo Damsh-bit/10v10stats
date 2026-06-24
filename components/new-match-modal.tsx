@@ -16,28 +16,10 @@ type PlayerRow = {
   id: number
   team: Team
   player_id: string
-  raw_name: string
   kills: string
   deaths: string
   assists: string
   damage: string
-}
-
-type OcrPlayer = {
-  raw_name: string
-  team: Team
-  kills: number
-  deaths: number
-  assists: number
-  damage: number
-}
-
-type OcrPayload = {
-  map: string
-  score_ct: number
-  score_t: number
-  winner_team: Team
-  players: OcrPlayer[]
 }
 
 type FormState = {
@@ -64,7 +46,6 @@ function createInitialFormState(): FormState {
       id: index,
       team,
       player_id: '',
-      raw_name: '',
       kills: '',
       deaths: '',
       assists: '',
@@ -82,30 +63,14 @@ function createInitialFormState(): FormState {
   }
 }
 
-function fileToBase64(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result
-      if (typeof result === 'string') {
-        const base64 = result.split(',')[1] ?? ''
-        resolve(base64)
-        return
-      }
-      reject(new Error('No se pudo leer la imagen'))
-    }
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
-    reader.readAsDataURL(file)
-  })
-}
-
 export function NewMatchModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState(1)
   const [players, setPlayers] = useState<PlayerOption[]>([])
   const [form, setForm] = useState<FormState>(createInitialFormState)
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
-  const [isOcrLoading, setIsOcrLoading] = useState(false)
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -154,89 +119,43 @@ export function NewMatchModal() {
     setError(null)
     setSuccessMessage(null)
     setForm(createInitialFormState())
+    setScreenshotFile(null)
+    setScreenshotUrl(null)
   }
 
   const handleClose = () => {
+    if (screenshotUrl) {
+      URL.revokeObjectURL(screenshotUrl)
+    }
     setIsOpen(false)
     setStep(1)
     setError(null)
     setSuccessMessage(null)
     setForm(createInitialFormState())
+    setScreenshotFile(null)
+    setScreenshotUrl(null)
   }
 
-  const applyOcrResult = (ocr: OcrPayload) => {
-    const ctPlayers = ocr.players.filter((player) => player.team === 'CT').slice(0, 5)
-    const tPlayers = ocr.players.filter((player) => player.team === 'T').slice(0, 5)
-
-    const nextPlayers: PlayerRow[] = []
-
-    for (let index = 0; index < 5; index += 1) {
-      const source = ctPlayers[index]
-      nextPlayers.push({
-        id: index,
-        team: 'CT',
-        player_id: '',
-        raw_name: source?.raw_name ?? '',
-        kills: source ? String(source.kills) : '',
-        deaths: source ? String(source.deaths) : '',
-        assists: source ? String(source.assists) : '',
-        damage: source ? String(source.damage) : '',
-      })
-    }
-
-    for (let index = 0; index < 5; index += 1) {
-      const source = tPlayers[index]
-      nextPlayers.push({
-        id: index + 5,
-        team: 'T',
-        player_id: '',
-        raw_name: source?.raw_name ?? '',
-        kills: source ? String(source.kills) : '',
-        deaths: source ? String(source.deaths) : '',
-        assists: source ? String(source.assists) : '',
-        damage: source ? String(source.damage) : '',
-      })
-    }
-
-    setForm({
-      map: ocr.map || '',
-      score_ct: String(ocr.score_ct ?? ''),
-      score_t: String(ocr.score_t ?? ''),
-      winner_team: ocr.winner_team || 'CT',
-      played_at: getTodayString(),
-      players: nextPlayers,
-    })
-  }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    setIsOcrLoading(true)
+    if (screenshotUrl) {
+      URL.revokeObjectURL(screenshotUrl)
+    }
+
+    setScreenshotFile(file)
+    setScreenshotUrl(URL.createObjectURL(file))
     setError(null)
     setSuccessMessage(null)
+  }
 
-    try {
-      const base64 = await fileToBase64(file)
-      const response = await fetch('/api/ocr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mimeType: file.type || 'image/png' }),
-      })
-
-      const payload = await response.json()
-      if (!response.ok) {
-        throw new Error(payload.error || 'No se pudo procesar la imagen')
-      }
-
-      applyOcrResult(payload as OcrPayload)
-      setStep(2)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo procesar la imagen')
-    } finally {
-      setIsOcrLoading(false)
-      event.target.value = ''
+  const handleRemoveScreenshot = () => {
+    if (screenshotUrl) {
+      URL.revokeObjectURL(screenshotUrl)
     }
+    setScreenshotFile(null)
+    setScreenshotUrl(null)
   }
 
   const updatePlayerRow = (rowId: number, field: keyof PlayerRow, value: string) => {
@@ -307,7 +226,7 @@ export function NewMatchModal() {
               <div>
                 <h3 className="font-semibold text-foreground">Subí una captura de la partida</h3>
                 <p className="text-sm text-muted-foreground">
-                  El OCR extraerá el mapa, score, ganador y los jugadores para precargar el formulario.
+                  La captura es solo de referencia visual. Completarás los datos manualmente en el siguiente paso.
                 </p>
               </div>
             </div>
@@ -319,13 +238,22 @@ export function NewMatchModal() {
             <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               PNG, JPG o WEBP
             </span>
-            <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={handleFileUpload} />
+            <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={handleScreenshotUpload} />
           </label>
 
-          {isOcrLoading ? (
-            <div className="flex items-center justify-center rounded-lg border border-border bg-card/60 px-4 py-3 text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analizando la imagen con OCR…
+          {screenshotUrl ? (
+            <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">Vista previa</p>
+                <button
+                  type="button"
+                  onClick={handleRemoveScreenshot}
+                  className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <img src={screenshotUrl} alt="Captura de referencia" className="w-full rounded-lg object-contain" />
             </div>
           ) : null}
 
@@ -337,6 +265,13 @@ export function NewMatchModal() {
     if (step === 2) {
       return (
         <div className="space-y-6">
+          {screenshotUrl ? (
+            <div className="space-y-2 rounded-xl border border-border bg-card/70 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Captura de referencia</p>
+              <img src={screenshotUrl} alt="Captura de referencia" className="max-h-[280px] w-full rounded-xl border border-border object-contain" />
+            </div>
+          ) : null}
+
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm">
               <span className="text-muted-foreground">Mapa</span>
@@ -411,7 +346,6 @@ export function NewMatchModal() {
                         </option>
                       ))}
                     </select>
-                    {row.raw_name ? <p className="text-[11px] text-muted-foreground">OCR: {row.raw_name}</p> : null}
                   </div>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Kills</span>
@@ -479,7 +413,6 @@ export function NewMatchModal() {
                         </option>
                       ))}
                     </select>
-                    {row.raw_name ? <p className="text-[11px] text-muted-foreground">OCR: {row.raw_name}</p> : null}
                   </div>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Kills</span>
@@ -559,7 +492,7 @@ export function NewMatchModal() {
         ) : null}
       </div>
     )
-  }, [error, form, isOcrLoading, players, step, successMessage])
+  }, [error, form, players, step, successMessage])
 
   return (
     <>
@@ -607,7 +540,7 @@ export function NewMatchModal() {
                     </Button>
                   ) : null}
                   {step < 3 ? (
-                    <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && (isOcrLoading || !form.map && !form.score_ct && !form.score_t)}>
+                    <Button onClick={() => setStep((prev) => prev + 1)}>
                       Siguiente
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
