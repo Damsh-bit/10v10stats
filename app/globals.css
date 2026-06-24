@@ -39,27 +39,27 @@
 
 :root {
   color-scheme: dark;
-  --background: #0b0d0e;
-  --foreground: #e8eaec;
-  --card: #14171a;
-  --card-foreground: #e8eaec;
-  --popover: #14171a;
-  --popover-foreground: #e8eaec;
-  --primary: #f0a818;
-  --primary-foreground: #0b0d0e;
-  --secondary: #1a1e22;
-  --secondary-foreground: #e8eaec;
-  --muted: #15181b;
-  --muted-foreground: #7c858c;
-  --accent: #1f2429;
-  --accent-foreground: #e8eaec;
-  --destructive: #e8503a;
-  --destructive-foreground: #fafafa;
-  --success: #43d17a;
-  --success-foreground: #0b0d0e;
-  --border: #23282d;
-  --input: #23282d;
-  --ring: #f0a818;
+  --background: #011b2c;
+  --foreground: #f7fafc;
+  --card: #022942;
+  --card-foreground: #f7fafc;
+  --popover: #022942;
+  --popover-foreground: #f7fafc;
+  --primary: #950c42;
+  --primary-foreground: #fff7fa;
+  --secondary: #01385f;
+  --secondary-foreground: #f7fafc;
+  --muted: #0b3e64;
+  --muted-foreground: #93b3c9;
+  --accent: #0f4d75;
+  --accent-foreground: #f7fafc;
+  --destructive: #d95a7a;
+  --destructive-foreground: #faf7f9;
+  --success: #24b47b;
+  --success-foreground: #07151d;
+  --border: #124b70;
+  --input: #124b70;
+  --ring: #950c42;
   --radius: 0.25rem;
 }
 
@@ -80,10 +80,9 @@
   }
 }
 
-/* CS-style faint grid texture for the dashboard backdrop */
 .cs-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 32px 32px;
 }

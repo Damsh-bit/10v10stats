@@ -16,12 +16,12 @@ export function Navbar() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <img
-            src="/icon.svg"
+            src="/logo.png"
             alt="10v10 Stats"
             className="h-8 w-8 rounded-sm object-cover"
           />
-          <span className="font-heading text-lg font-bold uppercase tracking-widest text-foreground">
-            10v10 <span className="text-primary">STATS</span>
+          <span className="font-heading text-[15px] font-bold uppercase tracking-[0.25em] text-foreground">
+            10v10 <span className="text-[#950c42]">STATS</span>
           </span>
         </Link>
         <nav className="flex items-center gap-1">
@@ -37,7 +37,7 @@ export function Navbar() {
                 className={cn(
                   'rounded-sm px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider transition-colors',
                   active
-                    ? 'bg-accent text-primary'
+                    ? 'bg-[#950c42]/15 text-[#950c42]'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
