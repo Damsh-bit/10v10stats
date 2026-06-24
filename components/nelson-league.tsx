@@ -1,5 +1,5 @@
 import { ChevronUp, ChevronDown, Minus, Skull } from 'lucide-react'
-import { nelsonLeague, type NelsonEntry } from '@/lib/mockData'
+import { type NelsonEntry } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
 
 function TrendIcon({ trend }: { trend: NelsonEntry['trend'] }) {
@@ -12,7 +12,7 @@ function TrendIcon({ trend }: { trend: NelsonEntry['trend'] }) {
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" aria-label="igual" />
 }
 
-export function NelsonLeague() {
+export function NelsonLeague({ entries }: { entries: NelsonEntry[] }) {
   return (
     <section className="rounded-lg border border-border bg-card">
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -28,8 +28,8 @@ export function NelsonLeague() {
       </header>
 
       <ol className="flex flex-col">
-        {nelsonLeague.map((entry, i) => {
-          const isSuperNelson = i === nelsonLeague.length - 1
+        {entries.map((entry, i) => {
+          const isSuperNelson = i === entries.length - 1
           return (
             <li
               key={entry.rank}

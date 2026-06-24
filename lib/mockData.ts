@@ -246,10 +246,186 @@ export type PlayerStats = {
   kda: number
 }
 
-export function getPlayerStatsSync(playerId: string): PlayerStats | null {
-  const player = players.find((p) => p.id === playerId)
+type SupabasePlayerRecord = {
+  id: string
+  name: string
+  badge: string
+  avatar_color: string
+}
+
+type SupabaseMatchRecord = {
+  id: string
+  map: string
+  date: string
+  ct_score: number
+  t_score: number
+  duration_min: number
+}
+
+type SupabaseMatchPlayerRecord = {
+  match_id: string
+  player_id: string
+  team: 'CT' | 'T'
+  kills: number
+  deaths: number
+  assists: number
+  damage: number
+  adr: number
+  hs_pct: number
+  mvps: number
+  won: boolean
+}
+
+type SupabaseHighlightRecord = {
+  id: string
+  player_id: string
+  match_id: string
+  type: HighlightType
+  description: string
+  round: number
+  clip_url?: string | null
+}
+
+type SupabaseNelsonEntry = {
+  rank: number
+  name: string
+  points: number
+  trend: NelsonTrend
+}
+
+export type LiveData = {
+  players: Player[]
+  matches: Match[]
+  highlights: Highlight[]
+  nelsonLeague: NelsonEntry[]
+}
+
+async function getSupabaseLiveData(): Promise<LiveData | null> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return null
+
+  try {
+    const { data: playerRows, error: playersError } = await supabase
+      .from('players')
+      .select('id, name, badge, avatar_color')
+      .order('name')
+
+    if (playersError || !playerRows) return null
+
+    const players = playerRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      badge: row.badge,
+      avatarColor: row.avatar_color,
+    }))
+
+    const { data: matchRows, error: matchesError } = await supabase
+      .from('matches')
+      .select('id, map, date, ct_score, t_score, duration_min')
+      .order('date', { ascending: false })
+
+    if (matchesError || !matchRows) return null
+
+    const matchIds = matchRows.map((row) => row.id)
+    let matchPlayers: SupabaseMatchPlayerRecord[] = []
+
+    if (matchIds.length > 0) {
+      const { data: matchPlayerRows, error: matchPlayersError } = await supabase
+        .from('match_players')
+        .select('match_id, player_id, team, kills, deaths, assists, damage, adr, hs_pct, mvps, won')
+        .in('match_id', matchIds)
+
+      if (!matchPlayersError && matchPlayerRows) {
+        matchPlayers = matchPlayerRows as SupabaseMatchPlayerRecord[]
+      }
+    }
+
+    const matches = matchRows.map((row) => ({
+      id: row.id,
+      map: row.map as CSMap,
+      date: row.date,
+      ctScore: row.ct_score,
+      tScore: row.t_score,
+      durationMin: row.duration_min,
+      players: matchPlayers
+        .filter((entry) => entry.match_id === row.id)
+        .map((entry) => ({
+          playerId: entry.player_id,
+          team: entry.team,
+          kills: entry.kills,
+          deaths: entry.deaths,
+          assists: entry.assists,
+          damage: entry.damage,
+          adr: entry.adr,
+          hsPct: entry.hs_pct,
+          mvps: entry.mvps,
+          won: entry.won,
+        })),
+    }))
+
+    let highlights: Highlight[] = []
+    const { data: highlightRows, error: highlightsError } = await supabase
+      .from('highlights')
+      .select('id, player_id, match_id, type, description, round, clip_url')
+      .order('round')
+
+    if (!highlightsError && highlightRows) {
+      highlights = (highlightRows as SupabaseHighlightRecord[]).map((row) => ({
+        id: row.id,
+        playerId: row.player_id,
+        matchId: row.match_id,
+        type: row.type,
+        description: row.description,
+        round: row.round,
+        clipUrl: row.clip_url ?? undefined,
+      }))
+    }
+
+    let nelsonLeague: NelsonEntry[] = []
+    const { data: nelsonRows, error: nelsonError } = await supabase
+      .from('nelson_league')
+      .select('rank, name, points, trend')
+      .order('rank')
+
+    if (!nelsonError && nelsonRows) {
+      nelsonLeague = (nelsonRows as SupabaseNelsonEntry[]).map((row) => ({
+        rank: row.rank,
+        name: row.name,
+        points: row.points,
+        trend: row.trend,
+      }))
+    }
+
+    return {
+      players,
+      matches,
+      highlights,
+      nelsonLeague,
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function getLiveData(): Promise<LiveData> {
+  const liveData = await getSupabaseLiveData()
+  if (liveData) {
+    return liveData
+  }
+
+  return {
+    players,
+    matches,
+    highlights,
+    nelsonLeague,
+  }
+}
+
+function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats | null {
+  const player = data.players.find((p) => p.id === playerId)
   if (!player) return null
-  const entries = matches.flatMap((m) =>
+
+  const entries = data.matches.flatMap((m) =>
     m.players.filter((mp) => mp.playerId === playerId),
   )
   const kills = sum(entries.map((e) => e.kills))
@@ -259,6 +435,7 @@ export function getPlayerStatsSync(playerId: string): PlayerStats | null {
   const wins = entries.filter((e) => e.won).length
   const losses = entries.length - wins
   const kda = deaths === 0 ? kills + assists : (kills + assists) / deaths
+
   return {
     player,
     matches: entries.length,
@@ -272,72 +449,32 @@ export function getPlayerStatsSync(playerId: string): PlayerStats | null {
   }
 }
 
-export async function getPlayerStats(playerId: string): Promise<PlayerStats | null> {
-  const supabase = getSupabaseClient()
-  if (supabase) {
-    const { data, error } = await supabase
-      .from('players')
-      .select('id, name, badge, avatar_color')
-      .eq('id', playerId)
-      .maybeSingle()
-
-    if (!error && data) {
-      return {
-        player: {
-          id: data.id,
-          name: data.name,
-          badge: data.badge,
-          avatarColor: data.avatar_color,
-        },
-        matches: 0,
-        wins: 0,
-        losses: 0,
-        kills: 0,
-        deaths: 0,
-        assists: 0,
-        damage: 0,
-        kda: 0,
-      }
-    }
-  }
-
-  return getPlayerStatsSync(playerId)
-}
-
-export function getAllPlayerStatsSync(): PlayerStats[] {
-  return players
-    .map((p) => getPlayerStatsSync(p.id))
+function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
+  return data.players
+    .map((p) => buildPlayerStatsForData(data, p.id))
     .filter((s): s is PlayerStats => s !== null)
     .sort((a, b) => b.kda - a.kda)
 }
 
-export async function getAllPlayerStats(): Promise<PlayerStats[]> {
-  const supabase = getSupabaseClient()
-  if (supabase) {
-    const { data, error } = await supabase.from('players').select('id, name, badge, avatar_color')
-    if (!error && data) {
-      return data
-        .map((p) => ({
-          player: {
-            id: p.id,
-            name: p.name,
-            badge: p.badge,
-            avatarColor: p.avatar_color,
-          },
-          matches: 0,
-          wins: 0,
-          losses: 0,
-          kills: 0,
-          deaths: 0,
-          assists: 0,
-          damage: 0,
-          kda: 0,
-        }))
-        .sort((a, b) => b.kda - a.kda)
-    }
-  }
+export function getPlayerStatsSync(playerId: string): PlayerStats | null {
+  return buildPlayerStatsForData(
+    { players, matches, highlights, nelsonLeague },
+    playerId,
+  )
+}
 
-  return getAllPlayerStatsSync()
+export async function getPlayerStats(playerId: string): Promise<PlayerStats | null> {
+  const data = await getLiveData()
+  return buildPlayerStatsForData(data, playerId)
+}
+
+export function getAllPlayerStatsSync(): PlayerStats[] {
+  return buildAllPlayerStatsForData({ players, matches, highlights, nelsonLeague })
+}
+
+export async function getAllPlayerStats(): Promise<PlayerStats[]> {
+  const data = await getLiveData()
+  return buildAllPlayerStatsForData(data)
 }
 
 export function getPlayerMatches(playerId: string) {

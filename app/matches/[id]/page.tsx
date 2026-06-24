@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getMatch, getMatchHighlights, formatDate } from '@/lib/mockData'
+import { formatDate, getLiveData } from '@/lib/mockData'
 import { Scoreboard } from '@/components/scoreboard'
 import { HighlightCard } from '@/components/highlight-card'
 
@@ -10,13 +10,14 @@ export default async function MatchDetail({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const match = getMatch(id)
+  const data = await getLiveData()
+  const match = data.matches.find((m) => m.id === id)
   if (!match) notFound()
 
   const ctPlayers = match.players.filter((p) => p.team === 'CT')
   const tPlayers = match.players.filter((p) => p.team === 'T')
   const ctWins = match.ctScore > match.tScore
-  const matchHighlights = getMatchHighlights(id)
+  const matchHighlights = data.highlights.filter((h) => h.matchId === id)
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -59,12 +60,14 @@ export default async function MatchDetail({
           score={match.ctScore}
           entries={ctPlayers}
           isWinner={ctWins}
+          players={data.players}
         />
         <Scoreboard
           team="T"
           score={match.tScore}
           entries={tPlayers}
           isWinner={!ctWins}
+          players={data.players}
         />
       </div>
 
@@ -80,6 +83,7 @@ export default async function MatchDetail({
                 key={h.id}
                 highlight={h}
                 className="w-72 shrink-0"
+                matchLabel={match.map}
               />
             ))}
           </div>

@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import type { MatchPlayer } from '@/lib/mockData'
-import { getPlayer } from '@/lib/mockData'
+import type { MatchPlayer, Player } from '@/lib/mockData'
 import { PlayerAvatar } from '@/components/strike-ui'
 import { cn } from '@/lib/utils'
 
@@ -9,11 +8,13 @@ export function Scoreboard({
   score,
   entries,
   isWinner,
+  players,
 }: {
   team: 'CT' | 'T'
   score: number
   entries: MatchPlayer[]
   isWinner: boolean
+  players: Player[]
 }) {
   const sorted = [...entries].sort((a, b) => b.kills - a.kills)
   return (
@@ -53,7 +54,7 @@ export function Scoreboard({
         </thead>
         <tbody>
           {sorted.map((e) => {
-            const player = getPlayer(e.playerId)!
+            const player = players.find((p) => p.id === e.playerId)!
             return (
               <tr key={e.playerId} className="border-t border-border">
                 <td className="px-3 py-2.5">

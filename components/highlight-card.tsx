@@ -1,14 +1,15 @@
 import type { Highlight } from '@/lib/mockData'
-import { getMatch, highlightTypeColors } from '@/lib/mockData'
+import { highlightTypeColors } from '@/lib/mockData'
 
 export function HighlightCard({
   highlight,
   className,
+  matchLabel,
 }: {
   highlight: Highlight
   className?: string
+  matchLabel?: string
 }) {
-  const match = getMatch(highlight.matchId)
   const color = highlightTypeColors[highlight.type]
   return (
     <div
@@ -22,7 +23,7 @@ export function HighlightCard({
           {highlight.type}
         </span>
         <span className="font-mono text-[11px] text-muted-foreground">
-          {match?.map} · R{highlight.round}
+          {matchLabel ?? '—'} · R{highlight.round}
         </span>
       </div>
       <p className="text-[13px] leading-relaxed text-foreground">

@@ -1,11 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import {
-  getPlayerStats,
-  getPlayerMatches,
-  getPlayerHighlights,
-  formatDate,
-} from '@/lib/mockData'
+import { formatDate, getLiveData } from '@/lib/mockData'
 import { PlayerAvatar, BadgePill, ResultChip } from '@/components/strike-ui'
 import { HighlightCard } from '@/components/highlight-card'
 
@@ -15,19 +10,52 @@ export default async function PlayerProfile({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const stats = await getPlayerStats(id)
+  const data = await getLiveData()
+  const stats = data.players.find((p) => p.id === id)
   if (!stats) notFound()
 
-  const playerMatches = getPlayerMatches(id)
-  const playerHighlights = getPlayerHighlights(id)
+  const playerMatches = data.matches
+    .filter((m) => m.players.some((mp) => mp.playerId === id))
+    .map((m) => ({
+      match: m,
+      entry: m.players.find((mp) => mp.playerId === id)!,
+    }))
+    .sort((a, b) => b.match.date.localeCompare(a.match.date))
 
+  const playerHighlights = data.highlights.filter((h) => h.playerId === id)
+
+  const playerStats = data.matches
+    .flatMap((m) => m.players.filter((entry) => entry.playerId === id))
+    .reduce(
+      (acc, entry) => {
+        acc.matches += 1
+        acc.kills += entry.kills
+        acc.deaths += entry.deaths
+        acc.assists += entry.assists
+        acc.damage += entry.damage
+        acc.wins += entry.won ? 1 : 0
+        acc.losses += entry.won ? 0 : 1
+        return acc
+      },
+      {
+        matches: 0,
+        wins: 0,
+        losses: 0,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+        damage: 0,
+      },
+    )
+
+  const kda = playerStats.deaths === 0 ? playerStats.kills + playerStats.assists : (playerStats.kills + playerStats.assists) / playerStats.deaths
   const statCards = [
-    { label: 'Matches', value: `${stats.matches}` },
-    { label: 'W / L', value: `${stats.wins} / ${stats.losses}` },
-    { label: 'KDA', value: stats.kda.toFixed(2), accent: true },
-    { label: 'Kills', value: `${stats.kills}` },
-    { label: 'Deaths', value: `${stats.deaths}` },
-    { label: 'Damage', value: stats.damage.toLocaleString() },
+    { label: 'Matches', value: `${playerStats.matches}` },
+    { label: 'W / L', value: `${playerStats.wins} / ${playerStats.losses}` },
+    { label: 'KDA', value: kda.toFixed(2), accent: true },
+    { label: 'Kills', value: `${playerStats.kills}` },
+    { label: 'Deaths', value: `${playerStats.deaths}` },
+    { label: 'Damage', value: playerStats.damage.toLocaleString() },
   ]
 
   return (
@@ -42,12 +70,12 @@ export default async function PlayerProfile({
       {/* Header */}
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <PlayerAvatar player={stats.player} size={80} />
+          <PlayerAvatar player={stats} size={80} />
           <div className="flex flex-col gap-2">
             <h1 className="text-xl font-bold leading-none text-foreground">
-              {stats.player.name}
+              {stats.name}
             </h1>
-            <BadgePill>{stats.player.badge}</BadgePill>
+            <BadgePill>{stats.badge}</BadgePill>
           </div>
         </div>
 
@@ -110,7 +138,11 @@ export default async function PlayerProfile({
           {playerHighlights.length > 0 ? (
             <div className="flex flex-col gap-3">
               {playerHighlights.map((h) => (
-                <HighlightCard key={h.id} highlight={h} />
+                <HighlightCard
+                  key={h.id}
+                  highlight={h}
+                  matchLabel={data.matches.find((m) => m.id === h.matchId)?.map}
+                />
               ))}
             </div>
           ) : (

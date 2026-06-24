@@ -1,34 +1,29 @@
-import {
-  getAllPlayerStats,
-  leaderHighlights,
-  matches,
-  players,
-  highlights,
-} from '@/lib/mockData'
+import { getAllPlayerStats, getLiveData } from '@/lib/mockData'
 import { MiniLeaderboard } from '@/components/mini-leaderboard'
 import { NelsonLeague } from '@/components/nelson-league'
 import { RecentMatches } from '@/components/recent-matches'
 import { DashboardStats, dashboardIcons } from '@/components/dashboard-stats'
 
 export default async function Page() {
+  const data = await getLiveData()
   const stats = await getAllPlayerStats()
 
-  const totalKills = matches.reduce(
+  const totalKills = data.matches.reduce(
     (acc, m) => acc + m.players.reduce((s, p) => s + p.kills, 0),
     0,
   )
-  const aces = highlights.filter((h) => h.type === 'ACE').length
+  const aces = data.highlights.filter((h) => h.type === 'ACE').length
 
   const overview = [
     {
       label: 'Partidas',
-      value: String(matches.length),
+      value: String(data.matches.length),
       sub: 'jugadas en total',
       icon: dashboardIcons.Swords,
     },
     {
       label: 'Jugadores',
-      value: String(players.length),
+      value: String(data.players.length),
       sub: 'en el roster',
       icon: dashboardIcons.Users,
     },
@@ -40,27 +35,31 @@ export default async function Page() {
     },
     {
       label: 'Highlights',
-      value: String(highlights.length),
+      value: String(data.highlights.length),
       sub: `${aces} aces registrados`,
       icon: dashboardIcons.Flame,
     },
   ]
 
+  const mostKills = [...stats].sort((a, b) => b.kills - a.kills)[0]
+  const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0]
+  const mostDamage = [...stats].sort((a, b) => b.damage - a.damage)[0]
+
   const chips = [
     {
       label: 'Más kills',
-      stat: leaderHighlights.mostKills,
-      value: `${leaderHighlights.mostKills.kills}`,
+      stat: mostKills,
+      value: `${mostKills.kills}`,
     },
     {
       label: 'Mejor KDA',
-      stat: leaderHighlights.bestKda,
-      value: leaderHighlights.bestKda.kda.toFixed(2),
+      stat: bestKda,
+      value: bestKda.kda.toFixed(2),
     },
     {
       label: 'Más daño',
-      stat: leaderHighlights.mostDamage,
-      value: leaderHighlights.mostDamage.damage.toLocaleString(),
+      stat: mostDamage,
+      value: mostDamage.damage.toLocaleString(),
     },
   ]
 
@@ -108,8 +107,8 @@ export default async function Page() {
             <MiniLeaderboard stats={stats} />
           </div>
           <div className="flex flex-col gap-6">
-            <NelsonLeague />
-            <RecentMatches matches={matches.slice(0, 4)} />
+            <NelsonLeague entries={data.nelsonLeague} />
+            <RecentMatches matches={data.matches.slice(0, 4)} />
           </div>
         </div>
       </div>
