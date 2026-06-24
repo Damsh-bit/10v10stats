@@ -8,19 +8,27 @@ export function PlayerAvatar({
   player: Player
   size?: number
 }) {
-  const initials = player.name.slice(0, 2).toUpperCase()
+  const initials = (player.name || '??').slice(0, 2).toUpperCase()
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full font-mono font-bold text-background"
+      className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-mono font-bold text-background"
       style={{
         width: size,
         height: size,
-        backgroundColor: player.avatarColor,
+        backgroundColor: player.avatarColor || '#64748b',
         fontSize: size * 0.4,
       }}
       aria-hidden="true"
     >
-      {initials}
+      {player.photoUrl ? (
+        <img
+          src={player.photoUrl}
+          alt={player.name}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        initials
+      )}
     </span>
   )
 }

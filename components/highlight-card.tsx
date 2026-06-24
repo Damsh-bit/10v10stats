@@ -23,11 +23,11 @@ export function HighlightCard({
           {highlight.type}
         </span>
         <span className="font-mono text-[11px] text-muted-foreground">
-          {matchLabel ?? '—'} · R{highlight.round}
+          {matchLabel || 'Sin info'} · R{highlight.round || 0}
         </span>
       </div>
       <p className="text-[13px] leading-relaxed text-foreground">
-        {highlight.description}
+        {highlight.description || 'Sin descripción'}
       </p>
       {highlight.clipUrl ? (
         <a

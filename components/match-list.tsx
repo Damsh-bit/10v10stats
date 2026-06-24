@@ -58,7 +58,7 @@ export function MatchList({ matches }: { matches: Match[] }) {
                     {match.ctScore}-{match.tScore}
                   </span>
                   <span className="text-[12px] text-muted-foreground">
-                    {formatDate(match.date)} · {match.durationMin} min
+                    {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
                   </span>
                 </div>
               </div>

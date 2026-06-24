@@ -41,25 +41,26 @@ export default async function Page() {
     },
   ]
 
-  const mostKills = [...stats].sort((a, b) => b.kills - a.kills)[0]
-  const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0]
-  const mostDamage = [...stats].sort((a, b) => b.damage - a.damage)[0]
+  const rankedStats = [...stats].sort((a, b) => b.kills - a.kills)
+  const mostKills = rankedStats[0] ?? null
+  const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
+  const mostDamage = [...stats].sort((a, b) => b.damage - a.damage)[0] ?? null
 
   const chips = [
     {
       label: 'Más kills',
       stat: mostKills,
-      value: `${mostKills.kills}`,
+      value: mostKills ? `${mostKills.kills}` : 'Sin info',
     },
     {
       label: 'Mejor KDA',
       stat: bestKda,
-      value: bestKda.kda.toFixed(2),
+      value: bestKda ? bestKda.kda.toFixed(2) : 'Sin info',
     },
     {
       label: 'Más daño',
       stat: mostDamage,
-      value: mostDamage.damage.toLocaleString(),
+      value: mostDamage ? mostDamage.damage.toLocaleString() : 'Sin info',
     },
   ]
 
@@ -93,7 +94,7 @@ export default async function Page() {
                 {c.label}
               </span>
               <span className="text-[13px] font-semibold text-foreground">
-                {c.stat.player.name}
+                {c.stat?.player?.name ?? 'Sin info'}
               </span>
               <span className="font-mono text-[13px] font-bold text-primary">
                 {c.value}

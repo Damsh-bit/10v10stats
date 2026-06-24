@@ -54,7 +54,12 @@ export function Scoreboard({
         </thead>
         <tbody>
           {sorted.map((e) => {
-            const player = players.find((p) => p.id === e.playerId)!
+            const player = players.find((p) => p.id === e.playerId) ?? {
+              id: e.playerId,
+              name: 'Sin info',
+              badge: 'Sin info',
+              avatarColor: '#64748b',
+            }
             return (
               <tr key={e.playerId} className="border-t border-border">
                 <td className="px-3 py-2.5">
@@ -68,14 +73,14 @@ export function Scoreboard({
                     </span>
                   </Link>
                 </td>
-                <Cell>{e.kills}</Cell>
-                <Cell>{e.deaths}</Cell>
-                <Cell>{e.assists}</Cell>
-                <Cell>{e.adr}</Cell>
-                <Cell className="hidden sm:table-cell">{e.damage}</Cell>
-                <Cell>{e.hsPct}</Cell>
+                <Cell>{e.kills ?? 0}</Cell>
+                <Cell>{e.deaths ?? 0}</Cell>
+                <Cell>{e.assists ?? 0}</Cell>
+                <Cell>{e.adr ?? 0}</Cell>
+                <Cell className="hidden sm:table-cell">{e.damage ?? 0}</Cell>
+                <Cell>{e.hsPct ?? 0}</Cell>
                 <td className="px-2 py-2.5 text-center">
-                  {e.mvps > 0 ? (
+                  {typeof e.mvps === 'number' && e.mvps > 0 ? (
                     <span className="font-mono text-[12px] font-bold text-primary">
                       ★{e.mvps}
                     </span>

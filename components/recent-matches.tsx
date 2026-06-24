@@ -45,7 +45,7 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
                     {match.ctScore}-{match.tScore}
                   </span>
                   <span className="text-[11px] text-muted-foreground">
-                    {formatDate(match.date)}
+                    {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
                   </span>
                 </div>
                 <span className="rounded-sm bg-primary/15 px-2 py-1 font-mono text-[11px] font-bold text-primary">

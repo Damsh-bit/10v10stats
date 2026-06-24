@@ -35,7 +35,7 @@ export default async function MatchDetail({
             {match.map}
           </h1>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            {formatDate(match.date)} · {match.durationMin} min
+            {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
           </p>
         </div>
         <div className="flex items-center gap-3 font-mono">
