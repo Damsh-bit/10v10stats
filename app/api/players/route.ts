@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase'
+import { getPlayersFromSupabase } from '@/lib/supabase'
 
 export async function GET() {
-  const supabase = getSupabaseClient()
+  const players = await getPlayersFromSupabase()
 
-  if (!supabase) {
-    return NextResponse.json([], { status: 200 })
-  }
+  const mappedPlayers = players.map((player) => ({
+    id: player.id,
+    name: player.name ?? 'Sin info',
+    badge: player.badge ?? null,
+  }))
 
-  const { data, error } = await supabase.from('players').select('id, name').order('name')
-
-  if (error) {
-    return NextResponse.json({ error: 'No se pudieron cargar los jugadores' }, { status: 500 })
-  }
-
-  return NextResponse.json((data ?? []).map((player) => ({ id: player.id, name: player.name ?? 'Sin info' })))
+  return NextResponse.json(mappedPlayers)
 }

@@ -1,5 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
+export type SupabasePlayerRecord = {
+  id: string
+  name: string | null
+  badge?: string | null
+  photo_url?: string | null
+}
+
 function isValidHttpUrl(value: string | undefined): value is string {
   if (!value) return false
 
@@ -60,4 +67,24 @@ export function getSupabaseAdminClient() {
   return createClient(config.url, serviceRoleKey.trim(), {
     auth: { persistSession: false },
   })
+}
+
+export async function getPlayersFromSupabase(): Promise<SupabasePlayerRecord[]> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return []
+
+  try {
+    const { data, error } = await supabase.from('players').select('id, name, badge, photo_url').order('name')
+
+    if (error || !data) return []
+
+    return (data ?? []).map((player) => ({
+      id: player.id,
+      name: player.name ?? 'Sin info',
+      badge: player.badge ?? null,
+      photo_url: player.photo_url ?? null,
+    }))
+  } catch {
+    return []
+  }
 }

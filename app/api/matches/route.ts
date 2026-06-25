@@ -15,8 +15,13 @@ type MatchPayload = {
   map: string
   score_ct: number
   score_t: number
-  winner_team: 'CT' | 'T'
-  played_at: string
+  winner_team?: 'CT' | 'T'
+  played_at?: string
+  date?: string
+  playedAt?: string
+  total_rounds?: number | null
+  video_url?: string | null
+  notes?: string | null
   players: MatchPlayerPayload[]
 }
 
@@ -47,14 +52,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No se pudo inicializar el cliente de Supabase' }, { status: 500 })
     }
 
+    const playedAt = (payload.played_at ?? payload.date ?? payload.playedAt ?? '').trim() || new Date().toISOString()
+    const winnerTeam = payload.winner_team ?? (payload.score_ct > payload.score_t ? 'CT' : 'T')
+    const totalRounds = typeof payload.total_rounds === 'number' && Number.isFinite(payload.total_rounds) ? payload.total_rounds : null
+    const videoUrl = typeof payload.video_url === 'string' ? payload.video_url.trim() || null : null
+    const notes = typeof payload.notes === 'string' ? payload.notes.trim() || null : null
+
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
       .insert({
         map: payload.map.trim(),
         score_ct: payload.score_ct,
         score_t: payload.score_t,
-        winner_team: payload.winner_team,
-        played_at: payload.played_at,
+        winner_team: winnerTeam,
+        played_at: playedAt,
+        total_rounds: totalRounds,
+        video_url: videoUrl,
+        notes,
       })
       .select('id')
       .single()

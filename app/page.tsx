@@ -4,10 +4,13 @@ import { NelsonLeague } from '@/components/nelson-league'
 import { RecentMatches } from '@/components/recent-matches'
 import { DashboardStats, dashboardIcons } from '@/components/dashboard-stats'
 import { NewMatchModal } from '@/components/new-match-modal'
+import { NelsonVotePanel } from '@/components/nelson-vote-panel'
+import { getNelsonData } from '@/lib/nelson'
 
 export default async function Page() {
   const data = await getLiveData()
   const stats = await getAllPlayerStats()
+  const nelsonData = await getNelsonData()
 
   const totalKills = data.matches.reduce(
     (acc, m) => acc + m.players.reduce((s, p) => s + p.kills, 0),
@@ -112,7 +115,16 @@ export default async function Page() {
             <MiniLeaderboard stats={stats} />
           </div>
           <div className="flex flex-col gap-6">
-            <NelsonLeague entries={data.nelsonLeague} />
+            <NelsonLeague entries={nelsonData.league} />
+            <NelsonVotePanel
+              initialPlayers={nelsonData.players.map((player) => ({
+                id: player.id,
+                name: player.name,
+                nelsonPoints: player.nelsonPoints,
+              }))}
+              initialVoteState={nelsonData.voteState}
+              initialAdminPasswordConfigured={nelsonData.adminPasswordConfigured}
+            />
             <RecentMatches matches={data.matches.slice(0, 4)} />
           </div>
         </div>

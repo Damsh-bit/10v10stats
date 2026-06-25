@@ -1,0 +1,66 @@
+{
+  "players": {
+    "fallback-ct-1": {
+      "id": "fallback-ct-1",
+      "name": "Jugador CT 1",
+      "nelsonPoints": 0
+    },
+    "fallback-ct-2": {
+      "id": "fallback-ct-2",
+      "name": "Jugador CT 2",
+      "nelsonPoints": 0
+    },
+    "fallback-ct-3": {
+      "id": "fallback-ct-3",
+      "name": "Jugador CT 3",
+      "nelsonPoints": 0
+    },
+    "fallback-ct-4": {
+      "id": "fallback-ct-4",
+      "name": "Jugador CT 4",
+      "nelsonPoints": 0
+    },
+    "fallback-ct-5": {
+      "id": "fallback-ct-5",
+      "name": "Jugador CT 5",
+      "nelsonPoints": 0
+    },
+    "fallback-t-1": {
+      "id": "fallback-t-1",
+      "name": "Jugador T 1",
+      "nelsonPoints": 0
+    },
+    "fallback-t-2": {
+      "id": "fallback-t-2",
+      "name": "Jugador T 2",
+      "nelsonPoints": 0
+    },
+    "fallback-t-3": {
+      "id": "fallback-t-3",
+      "name": "Jugador T 3",
+      "nelsonPoints": 0
+    },
+    "fallback-t-4": {
+      "id": "fallback-t-4",
+      "name": "Jugador T 4",
+      "nelsonPoints": 0
+    },
+    "fallback-t-5": {
+      "id": "fallback-t-5",
+      "name": "Jugador T 5",
+      "nelsonPoints": 0
+    }
+  },
+  "state": {
+    "active": false,
+    "startedAt": null,
+    "startedBy": null,
+    "voteId": null,
+    "voters": {},
+    "voteCounts": {},
+    "winnerPlayerId": null,
+    "winnerName": null,
+    "closedAt": null
+  },
+  "lastUpdatedAt": null
+}

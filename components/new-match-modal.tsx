@@ -28,6 +28,9 @@ type FormState = {
   score_t: string
   winner_team: Team
   played_at: string
+  total_rounds: string
+  video_url: string
+  notes: string
   players: PlayerRow[]
 }
 
@@ -59,6 +62,9 @@ function createInitialFormState(): FormState {
     score_t: '',
     winner_team: 'CT',
     played_at: getTodayString(),
+    total_rounds: '',
+    video_url: '',
+    notes: '',
     players: rows,
   }
 }
@@ -182,6 +188,9 @@ export function NewMatchModal() {
         score_t: Number(form.score_t),
         winner_team: form.winner_team,
         played_at: form.played_at,
+        total_rounds: form.total_rounds === '' ? null : Number(form.total_rounds),
+        video_url: form.video_url.trim() || null,
+        notes: form.notes.trim() || null,
         players: form.players.map((row) => ({
           player_id: row.player_id,
           team: row.team,
@@ -323,6 +332,39 @@ export function NewMatchModal() {
               <option value="CT">CT</option>
               <option value="T">T</option>
             </select>
+          </label>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm">
+              <span className="text-muted-foreground">Total de rondas</span>
+              <input
+                type="number"
+                min="0"
+                value={form.total_rounds}
+                onChange={(event) => setForm((prev) => ({ ...prev, total_rounds: event.target.value }))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                placeholder="16"
+              />
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="text-muted-foreground">Video URL</span>
+              <input
+                value={form.video_url}
+                onChange={(event) => setForm((prev) => ({ ...prev, video_url: event.target.value }))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                placeholder="https://..."
+              />
+            </label>
+          </div>
+
+          <label className="space-y-2 text-sm">
+            <span className="text-muted-foreground">Notas</span>
+            <textarea
+              value={form.notes}
+              onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+              className="min-h-[90px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+              placeholder="Detalles de la partida"
+            />
           </label>
 
           <div className="space-y-4">
@@ -477,6 +519,9 @@ export function NewMatchModal() {
             </p>
             <p>
               <span className="font-semibold text-foreground">Ganador:</span> {form.winner_team}
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">Rondas:</span> {form.total_rounds || 'Sin info'}
             </p>
             <p>
               <span className="font-semibold text-foreground">Jugadores:</span> {form.players.length} asignados
