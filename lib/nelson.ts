@@ -31,6 +31,9 @@ type NelsonStoreData = {
 const DATA_DIR = path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'nelson.json')
 const ADMIN_PASSWORD = 'admin'
+const globalForNelsonStore = globalThis as typeof globalThis & {
+  __nelsonStore?: NelsonStoreData
+}
 
 function createInitialState(): NelsonVoteState {
   return {
@@ -54,6 +57,25 @@ function createEmptyStore(players: NelsonPlayer[]): NelsonStoreData {
     state: createInitialState(),
     lastUpdatedAt: null,
   }
+}
+
+function getMemoryStore(players: NelsonPlayer[]): NelsonStoreData {
+  if (globalForNelsonStore.__nelsonStore) {
+    return globalForNelsonStore.__nelsonStore
+  }
+
+  const freshStore = createEmptyStore(players)
+  globalForNelsonStore.__nelsonStore = freshStore
+  return freshStore
+}
+
+function isReadOnlyFilesystemError(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+
+  const code = 'code' in error ? String((error as { code?: string }).code).toLowerCase() : ''
+  const message = 'message' in error ? String((error as { message?: string }).message).toLowerCase() : ''
+
+  return code.includes('eros') || code.includes('eacces') || code.includes('eperm') || message.includes('read-only') || message.includes('readonly')
 }
 
 function normalizeName(value: unknown, fallback = 'Sin info') {
@@ -94,19 +116,31 @@ function buildBadgeValue(points: number) {
 }
 
 async function ensureStoreFile() {
-  await fs.mkdir(DATA_DIR, { recursive: true })
   try {
-    await fs.access(DATA_FILE)
-  } catch {
-    await fs.writeFile(DATA_FILE, JSON.stringify(createEmptyStore([]), null, 2), 'utf8')
+    await fs.mkdir(DATA_DIR, { recursive: true })
+    try {
+      await fs.access(DATA_FILE)
+    } catch {
+      await fs.writeFile(DATA_FILE, JSON.stringify(createEmptyStore([]), null, 2), 'utf8')
+    }
+    return true
+  } catch (error) {
+    if (isReadOnlyFilesystemError(error)) {
+      return false
+    }
+    throw error
   }
 }
 
 async function readStore(players: NelsonPlayer[]): Promise<NelsonStoreData> {
-  await ensureStoreFile()
+  const persisted = await ensureStoreFile()
+  if (!persisted) {
+    return getMemoryStore(players)
+  }
 
-  const content = await fs.readFile(DATA_FILE, 'utf8')
-  const parsed = JSON.parse(content) as Partial<NelsonStoreData>
+  try {
+    const content = await fs.readFile(DATA_FILE, 'utf8')
+    const parsed = JSON.parse(content) as Partial<NelsonStoreData>
 
   const normalizedPlayers = players.reduce<Record<string, NelsonPlayer>>((acc, player) => {
     acc[player.id] = {
@@ -119,21 +153,44 @@ async function readStore(players: NelsonPlayer[]): Promise<NelsonStoreData> {
   const existingState = parsed.state ?? createInitialState()
   const voteCounts = Object.fromEntries(players.map((player) => [player.id, existingState.voteCounts?.[player.id] ?? 0]))
 
-  return {
-    players: normalizedPlayers,
-    state: {
-      ...createInitialState(),
-      ...existingState,
-      voters: existingState.voters ?? {},
-      voteCounts,
-    },
-    lastUpdatedAt: parsed.lastUpdatedAt ?? null,
+    const store = {
+      players: normalizedPlayers,
+      state: {
+        ...createInitialState(),
+        ...existingState,
+        voters: existingState.voters ?? {},
+        voteCounts,
+      },
+      lastUpdatedAt: parsed.lastUpdatedAt ?? null,
+    }
+
+    globalForNelsonStore.__nelsonStore = store
+    return store
+  } catch (error) {
+    if (isReadOnlyFilesystemError(error)) {
+      return getMemoryStore(players)
+    }
+    throw error
   }
 }
 
 async function writeStore(store: NelsonStoreData) {
-  await ensureStoreFile()
-  await fs.writeFile(DATA_FILE, JSON.stringify({ ...store, lastUpdatedAt: new Date().toISOString() }, null, 2), 'utf8')
+  const persisted = await ensureStoreFile()
+  if (!persisted) {
+    globalForNelsonStore.__nelsonStore = store
+    return
+  }
+
+  try {
+    await fs.writeFile(DATA_FILE, JSON.stringify({ ...store, lastUpdatedAt: new Date().toISOString() }, null, 2), 'utf8')
+    globalForNelsonStore.__nelsonStore = store
+  } catch (error) {
+    if (isReadOnlyFilesystemError(error)) {
+      globalForNelsonStore.__nelsonStore = store
+      return
+    }
+    throw error
+  }
 }
 
 async function syncPlayerPoints(playerId: string, points: number) {
