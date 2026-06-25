@@ -30,6 +30,7 @@ type NelsonStoreData = {
 
 const DATA_DIR = path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'nelson.json')
+const ADMIN_PASSWORD = 'admin'
 
 function createInitialState(): NelsonVoteState {
   return {
@@ -183,12 +184,12 @@ export async function getNelsonData() {
     players: orderedPlayers,
     league,
     voteState: store.state,
-    adminPasswordConfigured: Boolean(process.env.NELSON_ADMIN_PASSWORD),
+    adminPasswordConfigured: true,
   }
 }
 
 export async function startNelsonVote(password: string) {
-  const expectedPassword = 'admin'
+  const expectedPassword = ADMIN_PASSWORD
   if (password !== expectedPassword) {
     throw new Error('Contraseña incorrecta')
   }
@@ -251,7 +252,7 @@ export async function voteForNelson(options: { voterKey: string; voteForPlayerId
 }
 
 export async function finishNelsonVote(password: string) {
-  const expectedPassword = 'admin'
+  const expectedPassword = ADMIN_PASSWORD
   if (password !== expectedPassword) {
     throw new Error('Contraseña incorrecta')
   }

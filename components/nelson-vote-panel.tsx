@@ -181,7 +181,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
           </div>
         ) : (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
-            La contraseña admin no está configurada. Define NELSON_ADMIN_PASSWORD en el entorno para habilitar el inicio/cierre.
+            La contraseña admin ya está habilitada. Usa la clave "admin" para iniciar o cerrar la votación.
           </div>
         )}
 
