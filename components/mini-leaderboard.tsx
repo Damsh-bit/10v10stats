@@ -66,7 +66,7 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
                   )}
                 </div>
                 <span className="font-mono text-[11px] text-muted-foreground">
-                  {s.kills}/{s.deaths}/{s.assists} · <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span> · {s.wins}W-{s.losses}L
+                  {s.kills}/{s.deaths}/{s.assists} · <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span> · <span title="Average Damage per Match">{s.adm.toLocaleString()} ADM</span> · {s.wins}W-{s.losses}L
                 </span>
               </div>
               <span

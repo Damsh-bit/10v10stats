@@ -21,6 +21,7 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
             <Th className="text-right">Deaths</Th>
             <Th className="text-right">Assists</Th>
             <Th className="text-right">Damage</Th>
+            <Th className="text-right">ADM</Th>
             <Th className="text-right">KDA</Th>
           </tr>
         </thead>
@@ -67,6 +68,7 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
               <Td className="text-right">{s.deaths}</Td>
               <Td className="text-right">{s.assists}</Td>
               <Td className="text-right">{s.damage.toLocaleString()}</Td>
+              <Td className="text-right">{s.adm.toLocaleString()}</Td>
               <td className="px-3 py-3 text-right">
                 <span
                   className={cn(

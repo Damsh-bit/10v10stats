@@ -72,6 +72,7 @@ export type PlayerStats = {
   deaths: number
   assists: number
   damage: number
+  adm: number
   kda: number
   mvps: number
   hsPct: number
@@ -299,6 +300,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   const damage = sum(entries.map((e) => e.damage))
   const wins = entries.filter((e) => e.won).length
   const losses = entries.length - wins
+  const adm = entries.length > 0 ? Math.round(damage / entries.length) : 0
   const kda = deaths === 0 ? kills + assists : (kills + assists) / deaths
   const mvps = sum(entries.map((e) => e.mvps))
   
@@ -316,6 +318,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     deaths,
     assists,
     damage,
+    adm,
     kda: Math.round(kda * 100) / 100,
     mvps,
     hsPct: Math.round(hsPct),

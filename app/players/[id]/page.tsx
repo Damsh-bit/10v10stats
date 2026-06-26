@@ -56,6 +56,7 @@ export default async function PlayerProfile({
     )
 
   const kda = playerStats.deaths === 0 ? playerStats.kills + playerStats.assists : (playerStats.kills + playerStats.assists) / playerStats.deaths
+  const adm = playerStats.matches > 0 ? Math.round(playerStats.damage / playerStats.matches) : 0
   const statCards = [
     { label: 'Matches', value: `${playerStats.matches}` },
     { label: 'W / L', value: `${playerStats.wins} / ${playerStats.losses}` },
@@ -63,6 +64,7 @@ export default async function PlayerProfile({
     { label: 'Kills', value: `${playerStats.kills}` },
     { label: 'Deaths', value: `${playerStats.deaths}` },
     { label: 'Damage', value: playerStats.damage.toLocaleString() },
+    { label: 'ADM', value: adm.toLocaleString(), title: 'Average Damage per Match' },
   ]
 
   return (
@@ -107,11 +109,12 @@ export default async function PlayerProfile({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {statCards.map((c) => (
             <div
               key={c.label}
               className="flex flex-col gap-1 rounded-lg border border-border bg-card px-3 py-2.5"
+              title={'title' in c ? c.title : undefined}
             >
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 {c.label}
