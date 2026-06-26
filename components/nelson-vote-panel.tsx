@@ -65,6 +65,48 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
     }
   }, [voteState.voteId])
 
+  const triggerWinnerAnimation = (name: string) => {
+    setWinnerPopup({ show: true, name })
+    const duration = 3000
+    const end = Date.now() + duration
+    const frame = () => {
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#8B4513', '#A0522D', '#D2691E'] })
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#8B4513', '#A0522D', '#D2691E'] })
+      if (Date.now() < end) requestAnimationFrame(frame)
+    }
+    frame()
+    setTimeout(() => {
+      setWinnerPopup(null)
+      router.refresh()
+    }, 5000)
+  }
+
+  // Polling para detectar cuando se finaliza la votación o hay cambios
+  useEffect(() => {
+    if (!voteState.active) return
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch('/api/nelson', { cache: 'no-store' })
+        if (!response.ok) return
+        const data = await response.json()
+        
+        // Si nosotros teníamos la votación activa y ahora ya no lo está, y hay ganador
+        if (!data.voteState.active && data.voteState.winnerName) {
+           triggerWinnerAnimation(data.voteState.winnerName)
+        }
+        
+        setPlayers(data.players ?? [])
+        setVoteState(data.voteState)
+      } catch (e) {
+        console.error(e)
+      }
+    }, 3000)
+
+    return () => clearInterval(intervalId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voteState.active])
+
   const voteResults = useMemo(() => {
     if (!voteState.voteCounts) return []
 
@@ -166,38 +208,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
       setFinishPassword('')
 
       if (result.winner) {
-        setWinnerPopup({ show: true, name: result.winner.name })
-
-        // Trigger confetti
-        const duration = 3000
-        const end = Date.now() + duration
-
-        const frame = () => {
-          confetti({
-            particleCount: 5,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: ['#8B4513', '#A0522D', '#D2691E']
-          })
-          confetti({
-            particleCount: 5,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: ['#8B4513', '#A0522D', '#D2691E']
-          })
-
-          if (Date.now() < end) {
-            requestAnimationFrame(frame)
-          }
-        }
-        frame()
-
-        setTimeout(() => {
-          setWinnerPopup(null)
-          router.refresh()
-        }, 5000)
+        triggerWinnerAnimation(result.winner.name)
       } else {
         router.refresh()
       }
