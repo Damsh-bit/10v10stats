@@ -18,6 +18,8 @@ export default async function MatchDetail({
   const tPlayers = match.players.filter((p) => p.team === 'T')
   const ctWins = match.ctScore > match.tScore
   const matchHighlights = data.highlights.filter((h) => h.matchId === id)
+  const teamALabel = match.teamAName || 'CT'
+  const teamBLabel = match.teamBName || 'T'
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -42,13 +44,13 @@ export default async function MatchDetail({
           <span
             className={`text-3xl font-bold ${ctWins ? 'text-primary' : 'text-muted-foreground'}`}
           >
-            CT {match.ctScore}
+            {teamALabel} {match.ctScore}
           </span>
           <span className="text-xl text-muted-foreground">—</span>
           <span
             className={`text-3xl font-bold ${!ctWins ? 'text-primary' : 'text-muted-foreground'}`}
           >
-            {match.tScore} T
+            {match.tScore} {teamBLabel}
           </span>
         </div>
       </div>
@@ -57,6 +59,7 @@ export default async function MatchDetail({
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Scoreboard
           team="CT"
+          teamLabel={teamALabel}
           score={match.ctScore}
           entries={ctPlayers}
           isWinner={ctWins}
@@ -64,6 +67,7 @@ export default async function MatchDetail({
         />
         <Scoreboard
           team="T"
+          teamLabel={teamBLabel}
           score={match.tScore}
           entries={tPlayers}
           isWinner={!ctWins}

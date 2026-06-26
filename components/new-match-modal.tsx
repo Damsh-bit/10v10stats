@@ -24,6 +24,8 @@ type PlayerRow = {
 
 type FormState = {
   map: string
+  team_a_name: string
+  team_b_name: string
   score_ct: string
   score_t: string
   winner_team: Team
@@ -58,6 +60,8 @@ function createInitialFormState(): FormState {
 
   return {
     map: '',
+    team_a_name: 'Equipo A',
+    team_b_name: 'Equipo B',
     score_ct: '',
     score_t: '',
     winner_team: 'CT',
@@ -112,6 +116,8 @@ export function NewMatchModal() {
     }
   }, [form.score_ct, form.score_t])
 
+  const teamAName = form.team_a_name.trim() || 'Equipo A'
+  const teamBName = form.team_b_name.trim() || 'Equipo B'
   const selectedPlayerIds = form.players.map((row) => row.player_id).filter(Boolean)
   const hasDuplicateSelection = new Set(selectedPlayerIds).size !== selectedPlayerIds.length
   const allPlayersAssigned = form.players.every((row) => row.player_id)
@@ -154,6 +160,9 @@ export function NewMatchModal() {
     setScreenshotUrl(URL.createObjectURL(file))
     setError(null)
     setSuccessMessage(null)
+
+    // Auto-advance to the data form after a brief preview
+    setTimeout(() => setStep(2), 600)
   }
 
   const handleRemoveScreenshot = () => {
@@ -184,6 +193,8 @@ export function NewMatchModal() {
     try {
       const payload = {
         map: form.map.trim(),
+        team_a_name: teamAName,
+        team_b_name: teamBName,
         score_ct: Number(form.score_ct),
         score_t: Number(form.score_t),
         winner_team: form.winner_team,
@@ -301,7 +312,25 @@ export function NewMatchModal() {
               />
             </label>
             <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground">Score CT</span>
+              <span className="text-muted-foreground">Nombre Equipo 1</span>
+              <input
+                value={form.team_a_name}
+                onChange={(event) => setForm((prev) => ({ ...prev, team_a_name: event.target.value }))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                placeholder="Equipo Tomi"
+              />
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="text-muted-foreground">Nombre Equipo 2</span>
+              <input
+                value={form.team_b_name}
+                onChange={(event) => setForm((prev) => ({ ...prev, team_b_name: event.target.value }))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                placeholder="Equipo Dami"
+              />
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="text-muted-foreground">Score {teamAName}</span>
               <input
                 type="number"
                 min="0"
@@ -311,7 +340,7 @@ export function NewMatchModal() {
               />
             </label>
             <label className="space-y-2 text-sm">
-              <span className="text-muted-foreground">Score T</span>
+              <span className="text-muted-foreground">Score {teamBName}</span>
               <input
                 type="number"
                 min="0"
@@ -329,8 +358,8 @@ export function NewMatchModal() {
               onChange={(event) => setForm((prev) => ({ ...prev, winner_team: event.target.value as Team }))}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
             >
-              <option value="CT">CT</option>
-              <option value="T">T</option>
+              <option value="CT">{teamAName}</option>
+              <option value="T">{teamBName}</option>
             </select>
           </label>
 
@@ -369,7 +398,7 @@ export function NewMatchModal() {
 
           <div className="space-y-4">
             <div className="rounded-xl border border-border bg-card/60 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Equipo CT</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">{teamAName}</h3>
             </div>
             <div className="space-y-3">
               {form.players.filter((row) => row.team === 'CT').map((row) => (
@@ -436,7 +465,7 @@ export function NewMatchModal() {
 
           <div className="space-y-4">
             <div className="rounded-xl border border-border bg-card/60 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Equipo T</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">{teamBName}</h3>
             </div>
             <div className="space-y-3">
               {form.players.filter((row) => row.team === 'T').map((row) => (
@@ -515,10 +544,10 @@ export function NewMatchModal() {
               <span className="font-semibold text-foreground">Mapa:</span> {form.map || 'Sin info'}
             </p>
             <p>
-              <span className="font-semibold text-foreground">Score:</span> {form.score_ct} - {form.score_t}
+              <span className="font-semibold text-foreground">Score:</span> {teamAName} {form.score_ct} - {form.score_t} {teamBName}
             </p>
             <p>
-              <span className="font-semibold text-foreground">Ganador:</span> {form.winner_team}
+              <span className="font-semibold text-foreground">Ganador:</span> {form.winner_team === 'CT' ? teamAName : teamBName}
             </p>
             <p>
               <span className="font-semibold text-foreground">Rondas:</span> {form.total_rounds || 'Sin info'}
@@ -537,7 +566,7 @@ export function NewMatchModal() {
         ) : null}
       </div>
     )
-  }, [error, form, players, step, successMessage])
+  }, [error, form, players, step, successMessage, teamAName, teamBName])
 
   return (
     <>

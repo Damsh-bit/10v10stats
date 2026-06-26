@@ -28,6 +28,9 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
       <ul className="flex flex-col">
         {matches.map((match) => {
           const winner = match.ctScore > match.tScore ? 'CT' : 'T'
+          const winnerLabel = winner === 'CT'
+            ? (match.teamAName || 'CT')
+            : (match.teamBName || 'T')
           return (
             <li key={match.id} className="border-b border-border last:border-b-0">
               <Link
@@ -49,7 +52,7 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
                   </span>
                 </div>
                 <span className="rounded-sm bg-primary/15 px-2 py-1 font-mono text-[11px] font-bold text-primary">
-                  {winner} WINS
+                  {winnerLabel} WINS
                 </span>
               </Link>
             </li>

@@ -5,12 +5,14 @@ import { cn } from '@/lib/utils'
 
 export function Scoreboard({
   team,
+  teamLabel,
   score,
   entries,
   isWinner,
   players,
 }: {
   team: 'CT' | 'T'
+  teamLabel?: string
   score: number
   entries: MatchPlayer[]
   isWinner: boolean
@@ -26,7 +28,7 @@ export function Scoreboard({
     >
       <div className="flex items-center justify-between border-b border-border bg-muted px-3 py-2.5">
         <span className="text-[14px] font-bold text-foreground">
-          {team === 'CT' ? 'Counter-Terrorists' : 'Terrorists'}
+          {teamLabel || (team === 'CT' ? 'Counter-Terrorists' : 'Terrorists')}
         </span>
         <span
           className={cn(

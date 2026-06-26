@@ -13,6 +13,8 @@ type MatchPlayerPayload = {
 
 type MatchPayload = {
   map: string
+  team_a_name?: string
+  team_b_name?: string
   score_ct: number
   score_t: number
   winner_team?: 'CT' | 'T'
@@ -57,11 +59,15 @@ export async function POST(request: Request) {
     const totalRounds = typeof payload.total_rounds === 'number' && Number.isFinite(payload.total_rounds) ? payload.total_rounds : null
     const videoUrl = typeof payload.video_url === 'string' ? payload.video_url.trim() || null : null
     const notes = typeof payload.notes === 'string' ? payload.notes.trim() || null : null
+    const teamAName = typeof payload.team_a_name === 'string' && payload.team_a_name.trim() ? payload.team_a_name.trim() : 'Equipo A'
+    const teamBName = typeof payload.team_b_name === 'string' && payload.team_b_name.trim() ? payload.team_b_name.trim() : 'Equipo B'
 
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
       .insert({
         map: payload.map.trim(),
+        team_a_name: teamAName,
+        team_b_name: teamBName,
         score_ct: payload.score_ct,
         score_t: payload.score_t,
         winner_team: winnerTeam,

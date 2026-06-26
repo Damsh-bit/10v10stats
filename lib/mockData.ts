@@ -47,6 +47,8 @@ export type Match = {
   totalRounds?: number
   videoUrl?: string
   notes?: string
+  teamAName?: string
+  teamBName?: string
 }
 
 export type NelsonTrend = 'up' | 'down' | 'same'
@@ -88,6 +90,8 @@ type SupabaseMatchRecord = {
   total_rounds: number | null
   video_url?: string | null
   notes?: string | null
+  team_a_name?: string | null
+  team_b_name?: string | null
 }
 
 type SupabaseMatchPlayerRecord = {
@@ -172,7 +176,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     let matches: Match[] = []
     const { data: matchRows, error: matchesError } = await supabase
       .from('matches')
-      .select('id, played_at, map, winner_team, score_ct, score_t, total_rounds, video_url, notes')
+      .select('id, played_at, map, winner_team, score_ct, score_t, total_rounds, video_url, notes, team_a_name, team_b_name')
       .order('played_at', { ascending: false })
 
     if (!matchesError && matchRows) {
@@ -201,6 +205,8 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
         totalRounds: normalizeNumber(row.total_rounds),
         videoUrl: row.video_url ?? undefined,
         notes: row.notes ?? undefined,
+        teamAName: row.team_a_name ?? undefined,
+        teamBName: row.team_b_name ?? undefined,
         players: matchPlayers
           .filter((entry) => entry.match_id === row.id)
           .map((entry) => ({
