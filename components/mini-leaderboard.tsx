@@ -44,9 +44,19 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
               </div>
               <PlayerAvatar player={s.player} size={32} />
               <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[14px] font-semibold leading-tight text-foreground">
-                  {s.player.name}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-[14px] font-semibold leading-tight text-foreground">
+                    {s.player.name}
+                  </span>
+                  {s.mvps > 0 && (
+                    <span 
+                      title="Total de MVPs"
+                      className="flex shrink-0 items-center gap-1 rounded border border-[#d4af37]/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-[#d4af37] shadow-sm cursor-help"
+                    >
+                      👑 {s.mvps}
+                    </span>
+                  )}
+                </div>
                 <span className="font-mono text-[11px] text-muted-foreground">
                   {s.kills}/{s.deaths}/{s.assists} · {s.wins}W-{s.losses}L
                 </span>

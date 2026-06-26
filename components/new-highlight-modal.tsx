@@ -45,6 +45,9 @@ export function NewHighlightModal() {
   const [error, setError] = useState<string | null>(null)
   const [videoError, setVideoError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -96,6 +99,7 @@ export function NewHighlightModal() {
     setVideoError(null)
     setSuccessMessage(null)
     setForm(createInitialFormState())
+    setAdminPassword('')
     clearVideoPreview()
   }
 
@@ -105,6 +109,7 @@ export function NewHighlightModal() {
     setVideoError(null)
     setSuccessMessage(null)
     setForm(createInitialFormState())
+    setAdminPassword('')
     clearVideoPreview()
   }
 
@@ -219,136 +224,173 @@ export function NewHighlightModal() {
                 </button>
               </div>
 
-              <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-                <label className="space-y-2 text-sm">
-                  <span className="text-muted-foreground">Jugador</span>
-                  <select
-                    value={form.player_id}
-                    onChange={(event) => setForm((prev) => ({ ...prev, player_id: event.target.value }))}
-                    className={INPUT_CLASS}
-                    disabled={isLoadingPlayers || isSubmitting}
-                    required
-                  >
-                    <option value="">— seleccionar —</option>
-                    {players.map((player) => (
-                      <option key={player.id} value={player.id}>
-                        {player.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              {!isAuthenticated ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-full max-w-sm space-y-4">
+                    <div className="space-y-2 text-center">
+                      <h3 className="text-lg font-medium text-foreground">Acceso restringido</h3>
+                      <p className="text-sm text-muted-foreground">Ingresa la clave de administrador para continuar.</p>
+                    </div>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        if (adminPassword === 'alzhannah2026') {
+                          setIsAuthenticated(true)
+                          setAuthError(null)
+                        } else {
+                          setAuthError('Clave de administrador incorrecta.')
+                        }
+                      }}
+                      className="space-y-4"
+                    >
+                      <input
+                        type="password"
+                        autoFocus
+                        value={adminPassword}
+                        onChange={(e) => {
+                          setAdminPassword(e.target.value)
+                          setAuthError(null)
+                        }}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-widest text-foreground outline-none ring-0 focus:border-primary"
+                        placeholder="••••••••"
+                      />
+                      {authError && <p className="text-center text-sm text-destructive">{authError}</p>}
+                      <Button type="submit" className="w-full">Desbloquear</Button>
+                    </form>
+                  </div>
+                </div>
+              ) : (
+                <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+                  <label className="space-y-2 text-sm">
+                    <span className="text-muted-foreground">Jugador</span>
+                    <select
+                      value={form.player_id}
+                      onChange={(event) => setForm((prev) => ({ ...prev, player_id: event.target.value }))}
+                      className={INPUT_CLASS}
+                      disabled={isLoadingPlayers || isSubmitting}
+                      required
+                    >
+                      <option value="">— seleccionar —</option>
+                      {players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-                <div className="space-y-2 text-sm">
-                  <span className="text-muted-foreground">Video del highlight</span>
-                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background/70 px-6 py-8 text-center transition hover:border-primary hover:bg-primary/5">
-                    <Upload className="mb-3 h-8 w-8 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">
-                      Haz click o arrastra un video
-                    </span>
-                    <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      MP4, WEBM o MOV · máx. 10 GB
-                    </span>
-                    <input
-                      type="file"
-                      accept={ACCEPTED_VIDEO_TYPES}
-                      className="sr-only"
-                      onChange={handleVideoUpload}
+                  <div className="space-y-2 text-sm">
+                    <span className="text-muted-foreground">Video del highlight</span>
+                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background/70 px-6 py-8 text-center transition hover:border-primary hover:bg-primary/5">
+                      <Upload className="mb-3 h-8 w-8 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">
+                        Haz click o arrastra un video
+                      </span>
+                      <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                        MP4, WEBM o MOV · máx. 10 GB
+                      </span>
+                      <input
+                        type="file"
+                        accept={ACCEPTED_VIDEO_TYPES}
+                        className="sr-only"
+                        onChange={handleVideoUpload}
+                        disabled={isSubmitting}
+                      />
+                    </label>
+
+                    {videoError ? <p className="text-sm text-destructive">{videoError}</p> : null}
+
+                    {videoFile ? (
+                      <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="truncate text-sm font-semibold text-foreground">{videoFile.name}</p>
+                          <button
+                            type="button"
+                            onClick={clearVideoPreview}
+                            className="shrink-0 rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                            aria-label="Quitar video"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        {videoPreviewUrl ? (
+                          <video
+                            key={videoPreviewUrl}
+                            src={videoPreviewUrl}
+                            controls
+                            playsInline
+                            preload="metadata"
+                            className="aspect-video w-full rounded-lg bg-black object-contain"
+                          />
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2 text-sm">
+                      <span className="text-muted-foreground">Tipo</span>
+                      <input
+                        type="text"
+                        value={form.type}
+                        onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
+                        className={INPUT_CLASS}
+                        placeholder="Ej. ACE, CLUTCH, ENTRY_FRAG"
+                        disabled={isSubmitting}
+                      />
+                    </label>
+
+                    <label className="space-y-2 text-sm">
+                      <span className="text-muted-foreground">Ronda</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.round_number}
+                        onChange={(event) => setForm((prev) => ({ ...prev, round_number: event.target.value }))}
+                        className={INPUT_CLASS}
+                        placeholder="Opcional"
+                        disabled={isSubmitting}
+                      />
+                    </label>
+                  </div>
+
+                  <label className="space-y-2 text-sm">
+                    <span className="text-muted-foreground">Descripción</span>
+                    <textarea
+                      value={form.description}
+                      onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                      className="min-h-[80px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                      placeholder="Detalle opcional del clip"
                       disabled={isSubmitting}
                     />
                   </label>
 
-                  {videoError ? <p className="text-sm text-destructive">{videoError}</p> : null}
-
-                  {videoFile ? (
-                    <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="truncate text-sm font-semibold text-foreground">{videoFile.name}</p>
-                        <button
-                          type="button"
-                          onClick={clearVideoPreview}
-                          className="shrink-0 rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                          aria-label="Quitar video"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      {videoPreviewUrl ? (
-                        <video
-                          key={videoPreviewUrl}
-                          src={videoPreviewUrl}
-                          controls
-                          playsInline
-                          preload="metadata"
-                          className="aspect-video w-full rounded-lg bg-black object-contain"
-                        />
-                      ) : null}
+                  {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                  {successMessage ? (
+                    <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {successMessage}
                     </div>
                   ) : null}
-                </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Tipo</span>
-                    <input
-                      type="text"
-                      value={form.type}
-                      onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
-                      className={INPUT_CLASS}
-                      placeholder="Ej. ACE, CLUTCH, ENTRY_FRAG"
-                      disabled={isSubmitting}
-                    />
-                  </label>
-
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Ronda</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.round_number}
-                      onChange={(event) => setForm((prev) => ({ ...prev, round_number: event.target.value }))}
-                      className={INPUT_CLASS}
-                      placeholder="Opcional"
-                      disabled={isSubmitting}
-                    />
-                  </label>
-                </div>
-
-                <label className="space-y-2 text-sm">
-                  <span className="text-muted-foreground">Descripción</span>
-                  <textarea
-                    value={form.description}
-                    onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-                    className="min-h-[80px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    placeholder="Detalle opcional del clip"
-                    disabled={isSubmitting}
-                  />
-                </label>
-
-                {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                {successMessage ? (
-                  <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {successMessage}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      {isLoadingPlayers
+                        ? 'Cargando jugadores…'
+                        : `${players.length} jugador${players.length === 1 ? '' : 'es'} disponibles`}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={!canSubmit || isSubmitting || isLoadingPlayers}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Guardar highlight
+                      </Button>
+                    </div>
                   </div>
-                ) : null}
-
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {isLoadingPlayers
-                      ? 'Cargando jugadores…'
-                      : `${players.length} jugador${players.length === 1 ? '' : 'es'} disponibles`}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit" disabled={!canSubmit || isSubmitting || isLoadingPlayers}>
-                      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Guardar highlight
-                    </Button>
-                  </div>
-                </div>
-              </form>
+                </form>
+              )}
             </div>
           </div>
         </div>

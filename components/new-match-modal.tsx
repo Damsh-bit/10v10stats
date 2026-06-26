@@ -84,6 +84,9 @@ export function NewMatchModal() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -137,6 +140,7 @@ export function NewMatchModal() {
     setForm(createInitialFormState())
     setScreenshotFile(null)
     setScreenshotUrl(null)
+    setAdminPassword('')
   }
 
   const handleClose = () => {
@@ -150,6 +154,7 @@ export function NewMatchModal() {
     setForm(createInitialFormState())
     setScreenshotFile(null)
     setScreenshotUrl(null)
+    setAdminPassword('')
   }
 
   const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -600,44 +605,83 @@ export function NewMatchModal() {
                 </button>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {STEP_LABELS.map((label, index) => {
-                  const active = index + 1 === step
-                  const complete = index + 1 < step
-                  return (
-                    <div key={label} className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${active ? 'bg-primary text-primary-foreground' : complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
-                      {label}
+              {!isAuthenticated ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-full max-w-sm space-y-4">
+                    <div className="space-y-2 text-center">
+                      <h3 className="text-lg font-medium text-foreground">Acceso restringido</h3>
+                      <p className="text-sm text-muted-foreground">Ingresa la clave de administrador para continuar.</p>
                     </div>
-                  )
-                })}
-              </div>
-
-              <div className="mt-6 flex-1">{stepContent}</div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <div className="text-sm text-muted-foreground">
-                  {isLoadingPlayers ? 'Cargando jugadores…' : 'Los jugadores se traen desde la base de datos.'}
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        if (adminPassword === 'alzhannah2026') {
+                          setIsAuthenticated(true)
+                          setAuthError(null)
+                        } else {
+                          setAuthError('Clave de administrador incorrecta.')
+                        }
+                      }}
+                      className="space-y-4"
+                    >
+                      <input
+                        type="password"
+                        autoFocus
+                        value={adminPassword}
+                        onChange={(e) => {
+                          setAdminPassword(e.target.value)
+                          setAuthError(null)
+                        }}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-widest text-foreground outline-none ring-0 focus:border-primary"
+                        placeholder="••••••••"
+                      />
+                      {authError && <p className="text-center text-sm text-destructive">{authError}</p>}
+                      <Button type="submit" className="w-full">Desbloquear</Button>
+                    </form>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  {step > 1 ? (
-                    <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Volver
-                    </Button>
-                  ) : null}
-                  {step < 3 ? (
-                    <Button onClick={() => setStep((prev) => prev + 1)}>
-                      Siguiente
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button onClick={handleSubmit} disabled={!canSave || isSubmitting}>
-                      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Guardar partida
-                    </Button>
-                  )}
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {STEP_LABELS.map((label, index) => {
+                      const active = index + 1 === step
+                      const complete = index + 1 < step
+                      return (
+                        <div key={label} className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${active ? 'bg-primary text-primary-foreground' : complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                          {label}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className="mt-6 flex-1">{stepContent}</div>
+
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                    <div className="text-sm text-muted-foreground">
+                      {isLoadingPlayers ? 'Cargando jugadores…' : 'Los jugadores se traen desde la base de datos.'}
+                    </div>
+                    <div className="flex gap-2">
+                      {step > 1 ? (
+                        <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Volver
+                        </Button>
+                      ) : null}
+                      {step < 3 ? (
+                        <Button onClick={() => setStep((prev) => prev + 1)}>
+                          Siguiente
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button onClick={handleSubmit} disabled={!canSave || isSubmitting}>
+                          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          Guardar partida
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
