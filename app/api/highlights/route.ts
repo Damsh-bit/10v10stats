@@ -1,20 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
-const HIGHLIGHT_TYPES = [
-  'ACE',
-  'QUAD_KILL',
-  'TRIPLE_KILL',
-  'CLUTCH',
-  'ENTRY_FRAG',
-  'KNIFE_KILL',
-  'OTHER',
-] as const
-
-type HighlightType = (typeof HIGHLIGHT_TYPES)[number]
-
 const HIGHLIGHTS_BUCKET = process.env.SUPABASE_HIGHLIGHTS_BUCKET ?? 'highlights'
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024
+const MAX_VIDEO_BYTES = 10 * 1024 * 1024 * 1024
 const ALLOWED_VIDEO_TYPES = new Set([
   'video/mp4',
   'video/webm',
@@ -50,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     if (videoFile.size > MAX_VIDEO_BYTES) {
-      return NextResponse.json({ error: 'El video no puede superar los 100 MB' }, { status: 400 })
+      return NextResponse.json({ error: 'El video no puede superar los 10 GB' }, { status: 400 })
     }
 
     if (!ALLOWED_VIDEO_TYPES.has(videoFile.type)) {
@@ -60,9 +48,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const type: HighlightType = HIGHLIGHT_TYPES.includes(typeRaw as HighlightType)
-      ? (typeRaw as HighlightType)
-      : 'OTHER'
+    const type = typeRaw.trim() !== '' ? typeRaw.trim() : 'OTHER'
     const description =
       typeof descriptionRaw === 'string' ? descriptionRaw.trim() || null : null
     const roundNumber =

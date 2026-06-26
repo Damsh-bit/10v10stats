@@ -20,16 +20,8 @@ type FormState = {
 const INPUT_CLASS =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary'
 
-const HIGHLIGHT_TYPES = [
-  'ACE',
-  'QUAD_KILL',
-  'TRIPLE_KILL',
-  'CLUTCH',
-  'ENTRY_FRAG',
-  'KNIFE_KILL',
-  'OTHER',
-] as const
-
+const MAX_VIDEO_BYTES = 10 * 1024 * 1024 * 1024
+const MAX_VIDEO_LABEL = '10 GB'
 const ACCEPTED_VIDEO_TYPES = 'video/mp4,video/webm,video/quicktime,video/x-msvideo,.mp4,.webm,.mov'
 
 function createInitialFormState(): FormState {
@@ -51,6 +43,7 @@ export function NewHighlightModal() {
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [videoError, setVideoError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -78,6 +71,14 @@ export function NewHighlightModal() {
     loadPlayers()
   }, [isOpen])
 
+  useEffect(() => {
+    return () => {
+      if (videoPreviewUrl) {
+        URL.revokeObjectURL(videoPreviewUrl)
+      }
+    }
+  }, [videoPreviewUrl])
+
   const canSubmit = form.player_id.trim().length > 0 && videoFile !== null
 
   const clearVideoPreview = () => {
@@ -86,11 +87,13 @@ export function NewHighlightModal() {
     }
     setVideoFile(null)
     setVideoPreviewUrl(null)
+    setVideoError(null)
   }
 
   const handleOpen = () => {
     setIsOpen(true)
     setError(null)
+    setVideoError(null)
     setSuccessMessage(null)
     setForm(createInitialFormState())
     clearVideoPreview()
@@ -99,6 +102,7 @@ export function NewHighlightModal() {
   const handleClose = () => {
     setIsOpen(false)
     setError(null)
+    setVideoError(null)
     setSuccessMessage(null)
     setForm(createInitialFormState())
     clearVideoPreview()
@@ -108,12 +112,22 @@ export function NewHighlightModal() {
     const file = event.target.files?.[0]
     if (!file) return
 
+    if (file.size > MAX_VIDEO_BYTES) {
+      setVideoFile(null)
+      setVideoPreviewUrl(null)
+      setVideoError(`El video no puede superar los ${MAX_VIDEO_LABEL}.`)
+      setError(null)
+      event.target.value = ''
+      return
+    }
+
     if (videoPreviewUrl) {
       URL.revokeObjectURL(videoPreviewUrl)
     }
 
     setVideoFile(file)
     setVideoPreviewUrl(URL.createObjectURL(file))
+    setVideoError(null)
     setError(null)
     event.target.value = ''
   }
@@ -232,7 +246,7 @@ export function NewHighlightModal() {
                       Haz click o arrastra un video
                     </span>
                     <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      MP4, WEBM o MOV · máx. 100 MB
+                      MP4, WEBM o MOV · máx. 10 GB
                     </span>
                     <input
                       type="file"
@@ -242,6 +256,8 @@ export function NewHighlightModal() {
                       disabled={isSubmitting}
                     />
                   </label>
+
+                  {videoError ? <p className="text-sm text-destructive">{videoError}</p> : null}
 
                   {videoFile ? (
                     <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3">
@@ -258,6 +274,7 @@ export function NewHighlightModal() {
                       </div>
                       {videoPreviewUrl ? (
                         <video
+                          key={videoPreviewUrl}
                           src={videoPreviewUrl}
                           controls
                           playsInline
@@ -272,18 +289,14 @@ export function NewHighlightModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm">
                     <span className="text-muted-foreground">Tipo</span>
-                    <select
+                    <input
+                      type="text"
                       value={form.type}
                       onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
                       className={INPUT_CLASS}
+                      placeholder="Ej. ACE, CLUTCH, ENTRY_FRAG"
                       disabled={isSubmitting}
-                    >
-                      {HIGHLIGHT_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </label>
 
                   <label className="space-y-2 text-sm">
