@@ -299,12 +299,16 @@ export function NewMatchModal() {
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm">
               <span className="text-muted-foreground">Mapa</span>
-              <input
+              <select
                 value={form.map}
                 onChange={(event) => setForm((prev) => ({ ...prev, map: event.target.value }))}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                placeholder="Inferno"
-              />
+              >
+                <option value="">— Seleccionar mapa —</option>
+                {['Mirage', 'Inferno', 'Overpass', 'Nuke', 'Vertigo', 'Ancient', 'Anubis', 'Dust 2', 'Train', 'Cache'].map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
             </label>
             <label className="space-y-2 text-sm">
               <span className="text-muted-foreground">Fecha</span>

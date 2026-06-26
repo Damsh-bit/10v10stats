@@ -46,12 +46,7 @@ export function Scoreboard({
             <th className="px-2 py-2 text-right font-medium">K</th>
             <th className="px-2 py-2 text-right font-medium">D</th>
             <th className="px-2 py-2 text-right font-medium">A</th>
-            <th className="px-2 py-2 text-right font-medium">ADR</th>
-            <th className="hidden px-2 py-2 text-right font-medium sm:table-cell">
-              Dmg
-            </th>
-            <th className="px-2 py-2 text-right font-medium">HS%</th>
-            <th className="px-2 py-2 text-center font-medium">MVP</th>
+            <th className="px-2 py-2 text-right font-medium">Dmg</th>
           </tr>
         </thead>
         <tbody>
@@ -62,6 +57,11 @@ export function Scoreboard({
               badge: 'Sin info',
               avatarColor: '#64748b',
             }
+            const kills = e.kills ?? 0
+            const deaths = e.deaths ?? 0
+            const assists = e.assists ?? 0
+            const damage = e.damage ?? 0
+            
             return (
               <tr key={e.playerId} className="border-t border-border">
                 <td className="px-3 py-2.5">
@@ -75,21 +75,10 @@ export function Scoreboard({
                     </span>
                   </Link>
                 </td>
-                <Cell>{e.kills ?? 0}</Cell>
-                <Cell>{e.deaths ?? 0}</Cell>
-                <Cell>{e.assists ?? 0}</Cell>
-                <Cell>{e.adr ?? 0}</Cell>
-                <Cell className="hidden sm:table-cell">{e.damage ?? 0}</Cell>
-                <Cell>{e.hsPct ?? 0}</Cell>
-                <td className="px-2 py-2.5 text-center">
-                  {typeof e.mvps === 'number' && e.mvps > 0 ? (
-                    <span className="font-mono text-[12px] font-bold text-primary">
-                      ★{e.mvps}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
+                <Cell>{kills}</Cell>
+                <Cell>{deaths}</Cell>
+                <Cell>{assists}</Cell>
+                <Cell>{damage}</Cell>
               </tr>
             )
           })}

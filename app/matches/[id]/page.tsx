@@ -14,12 +14,13 @@ export default async function MatchDetail({
   const match = data.matches.find((m) => m.id === id)
   if (!match) notFound()
 
-  const ctPlayers = match.players.filter((p) => p.team === 'CT')
-  const tPlayers = match.players.filter((p) => p.team === 'T')
-  const ctWins = match.ctScore > match.tScore
-  const matchHighlights = data.highlights.filter((h) => h.matchId === id)
   const teamALabel = match.teamAName || 'CT'
   const teamBLabel = match.teamBName || 'T'
+
+  const ctPlayers = match.players.filter((p) => p.team === teamALabel || p.team === 'CT')
+  const tPlayers = match.players.filter((p) => p.team === teamBLabel || p.team === 'T')
+  const ctWins = match.ctScore > match.tScore
+  const matchHighlights = data.highlights.filter((h) => h.matchId === id)
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -31,16 +32,25 @@ export default async function MatchDetail({
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <div className="relative overflow-hidden flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-60 transition-all duration-700"
+          style={{ backgroundImage: `url('/maps/${match.map.toLowerCase().replace(/\s+/g, '')}.webp')` }}
+        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-r from-card/90 via-card/30 to-card/90" />
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-card/80 via-transparent to-transparent sm:hidden" />
+
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground drop-shadow-md">
             {match.map}
           </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[13px] text-muted-foreground drop-shadow-sm">
             {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
           </p>
         </div>
-        <div className="flex items-center gap-3 font-mono">
+        <div className="relative z-10 flex items-center gap-3 font-mono drop-shadow-md">
           <span
             className={`text-3xl font-bold ${ctWins ? 'text-primary' : 'text-muted-foreground'}`}
           >

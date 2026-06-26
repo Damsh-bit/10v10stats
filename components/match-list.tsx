@@ -47,35 +47,37 @@ export function MatchList({ matches }: { matches: Match[] }) {
           return (
             <div
               key={match.id}
-              className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"
+              className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/50 sm:flex-row"
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-14 w-20 shrink-0 items-center justify-center rounded font-mono text-[12px] font-bold text-background"
-                  style={{ backgroundColor: mapColors[match.map] }}
-                >
-                  {match.map}
-                </div>
+              <div
+                className="h-24 w-full shrink-0 bg-cover bg-center sm:h-auto sm:w-40"
+                style={{ 
+                  backgroundImage: `url('/maps/${match.map.toLowerCase().replace(/\s+/g, '')}.webp')`,
+                  backgroundColor: mapColors[match.map] ?? '#1e293b' 
+                }}
+              />
+              
+              <div className="flex flex-1 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-1">
-                  <span className="font-mono text-lg font-bold text-foreground">
+                  <span className="font-mono text-xl font-bold text-foreground">
                     {match.ctScore}-{match.tScore}
                   </span>
-                  <span className="text-[12px] text-muted-foreground">
+                  <span className="text-[13px] text-muted-foreground">
                     {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
                   </span>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center rounded bg-primary/15 px-2 py-1 font-mono text-[11px] font-bold text-primary">
-                  {winnerLabel} WINS
-                </span>
-                <Link
-                  href={`/matches/${match.id}`}
-                  className="rounded border border-border px-3 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
-                >
-                  Ver detalle
-                </Link>
+                <div className="flex items-center gap-3 mt-1 sm:mt-0">
+                  <span className="inline-flex items-center rounded bg-primary/15 px-2 py-1 font-mono text-[11px] font-bold text-primary">
+                    {winnerLabel} WINS
+                  </span>
+                  <Link
+                    href={`/matches/${match.id}`}
+                    className="rounded border border-border px-3 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:bg-accent group-hover:border-primary/50"
+                  >
+                    Ver detalle
+                  </Link>
+                </div>
               </div>
             </div>
           )
