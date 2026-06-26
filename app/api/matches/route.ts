@@ -1,6 +1,73 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
+const TABULADOR_BUCKET = process.env.SUPABASE_TABULADOR_BUCKET ?? 'tabulador'
+const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[^\w.-]+/g, '_').slice(0, 120)
+}
+
+function buildTabuladorPath(matchId: string, fileName: string) {
+  const safeName = sanitizeFileName(fileName)
+  return `${matchId}/${Date.now()}-${safeName}`
+}
+
+async function parseMatchRequest(request: Request): Promise<{ payload: MatchPayload; screenshot: File | null }> {
+  const contentType = request.headers.get('content-type') ?? ''
+
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await request.formData()
+    const payloadRaw = formData.get('payload')
+    const screenshot = formData.get('screenshot')
+
+    if (typeof payloadRaw !== 'string') {
+      throw new Error('Payload inválido')
+    }
+
+    return {
+      payload: JSON.parse(payloadRaw) as MatchPayload,
+      screenshot: screenshot instanceof File && screenshot.size > 0 ? screenshot : null,
+    }
+  }
+
+  return {
+    payload: (await request.json()) as MatchPayload,
+    screenshot: null,
+  }
+}
+
+async function uploadScreenshot(matchId: string, screenshot: File) {
+  if (screenshot.size > MAX_SCREENSHOT_BYTES) {
+    return { error: 'La captura no puede superar los 10 MB' }
+  }
+
+  if (!ALLOWED_IMAGE_TYPES.has(screenshot.type)) {
+    return { error: 'Formato no soportado. Usa PNG, JPG o WEBP.' }
+  }
+
+  const supabase = getSupabaseAdminClient()
+  if (!supabase) {
+    return { error: 'No se pudo inicializar el cliente de Supabase con permisos de servidor' }
+  }
+
+  const storagePath = buildTabuladorPath(matchId, screenshot.name || 'captura.png')
+  const fileBuffer = Buffer.from(await screenshot.arrayBuffer())
+
+  const { error: uploadError } = await supabase.storage.from(TABULADOR_BUCKET).upload(storagePath, fileBuffer, {
+    contentType: screenshot.type,
+    upsert: false,
+  })
+
+  if (uploadError) {
+    return { error: uploadError.message || 'No se pudo subir la captura' }
+  }
+
+  const { data: publicUrlData } = supabase.storage.from(TABULADOR_BUCKET).getPublicUrl(storagePath)
+  return { screenshotUrl: publicUrlData.publicUrl }
+}
+
 export async function GET() {
   try {
     const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
@@ -65,7 +132,7 @@ type MatchPayload = {
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as MatchPayload
+    const { payload, screenshot } = await parseMatchRequest(request)
 
     if (!payload?.map?.trim()) {
       return NextResponse.json({ error: 'El mapa es obligatorio' }, { status: 400 })
@@ -151,7 +218,22 @@ export async function POST(request: Request) {
     const { error: playersError } = await supabase.from('match_players').insert(rows)
 
     if (playersError) {
+      await supabase.from('matches').delete().eq('id', matchData.id)
       return NextResponse.json({ error: playersError.message || 'No se pudieron guardar los jugadores' }, { status: 500 })
+    }
+
+    let screenshotUrl: string | undefined
+
+    if (screenshot) {
+      const uploadResult = await uploadScreenshot(matchData.id, screenshot)
+
+      if ('error' in uploadResult) {
+        await supabase.from('match_players').delete().eq('match_id', matchData.id)
+        await supabase.from('matches').delete().eq('id', matchData.id)
+        return NextResponse.json({ error: uploadResult.error }, { status: 500 })
+      }
+
+      screenshotUrl = uploadResult.screenshotUrl
     }
 
     // 4. Intentar actualizar el total de MVPs en la tabla players
@@ -183,7 +265,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, matchId: matchData.id })
+    return NextResponse.json({ success: true, matchId: matchData.id, screenshotUrl })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'No se pudo guardar la partida' }, { status: 500 })
   }

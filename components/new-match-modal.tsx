@@ -225,10 +225,15 @@ export function NewMatchModal() {
         })),
       }
 
+      const formData = new FormData()
+      formData.append('payload', JSON.stringify(payload))
+      if (screenshotFile) {
+        formData.append('screenshot', screenshotFile)
+      }
+
       const response = await fetch('/api/matches', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: formData,
       })
 
       const result = await response.json()
@@ -239,6 +244,11 @@ export function NewMatchModal() {
       setSuccessMessage(`Partida guardada correctamente${result.matchId ? ` (${result.matchId})` : ''}.`)
       setStep(3)
       setForm(createInitialFormState())
+      if (screenshotUrl) {
+        URL.revokeObjectURL(screenshotUrl)
+      }
+      setScreenshotFile(null)
+      setScreenshotUrl(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar la partida')
     } finally {
