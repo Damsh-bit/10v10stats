@@ -62,6 +62,7 @@ export default async function EstadisticasPage() {
   const hasMinDeaths = Number.isFinite(recordMinDeaths.value)
 
   const statCards = [
+    // Generales
     {
       title: 'Total Partidas',
       value: data.matches.length.toString(),
@@ -75,6 +76,20 @@ export default async function EstadisticasPage() {
       color: 'text-white',
       bgImage: `/maps/${mostPlayedMap.toLowerCase().replace(/\s+/g, '')}.webp`
     },
+    // Historial
+    {
+      title: 'Más Victorias (Histórico)',
+      value: String(topWins.value),
+      subtitle: topWins.value > 0 ? topWins.playerName : 'Sin datos',
+      color: 'text-emerald-400'
+    },
+    {
+      title: 'Más Derrotas (Histórico)',
+      value: String(topLosses.value),
+      subtitle: topLosses.value > 0 ? topLosses.playerName : 'Sin datos',
+      color: 'text-rose-500'
+    },
+    // Récords Kills
     {
       title: 'Más Kills (Partida)',
       value: String(recordKills.value),
@@ -83,12 +98,28 @@ export default async function EstadisticasPage() {
       matchId: recordKills.matchId
     },
     {
+      title: 'Menos Kills (Partida)',
+      value: hasMinKills ? String(recordMinKills.value) : '0',
+      subtitle: hasMinKills ? recordMinKills.playerName : 'Sin datos',
+      color: 'text-red-300',
+      matchId: hasMinKills ? recordMinKills.matchId : undefined
+    },
+    // Récords Muertes
+    {
       title: 'Más Muertes (Partida)',
       value: String(recordDeaths.value),
       subtitle: recordDeaths.value > 0 ? recordDeaths.playerName : 'Sin datos',
       color: 'text-red-400',
       matchId: recordDeaths.matchId
     },
+    {
+      title: 'Menos Muertes (Partida)',
+      value: hasMinDeaths ? String(recordMinDeaths.value) : '0',
+      subtitle: hasMinDeaths ? recordMinDeaths.playerName : 'Sin datos',
+      color: 'text-green-300',
+      matchId: hasMinDeaths ? recordMinDeaths.matchId : undefined
+    },
+    // Récords Asistencias y Daño
     {
       title: 'Más Asistencias (Partida)',
       value: String(recordAssists.value),
@@ -109,32 +140,6 @@ export default async function EstadisticasPage() {
       subtitle: hasMinDamage ? recordMinDamage.playerName : 'Sin datos',
       color: 'text-slate-400',
       matchId: hasMinDamage ? recordMinDamage.matchId : undefined
-    },
-    {
-      title: 'Menos Kills (Partida)',
-      value: hasMinKills ? String(recordMinKills.value) : '0',
-      subtitle: hasMinKills ? recordMinKills.playerName : 'Sin datos',
-      color: 'text-red-300',
-      matchId: hasMinKills ? recordMinKills.matchId : undefined
-    },
-    {
-      title: 'Menos Muertes (Partida)',
-      value: hasMinDeaths ? String(recordMinDeaths.value) : '0',
-      subtitle: hasMinDeaths ? recordMinDeaths.playerName : 'Sin datos',
-      color: 'text-green-300',
-      matchId: hasMinDeaths ? recordMinDeaths.matchId : undefined
-    },
-    {
-      title: 'Más Victorias (Histórico)',
-      value: String(topWins.value),
-      subtitle: topWins.value > 0 ? topWins.playerName : 'Sin datos',
-      color: 'text-emerald-400'
-    },
-    {
-      title: 'Más Derrotas (Histórico)',
-      value: String(topLosses.value),
-      subtitle: topLosses.value > 0 ? topLosses.playerName : 'Sin datos',
-      color: 'text-rose-500'
     }
   ]
 
