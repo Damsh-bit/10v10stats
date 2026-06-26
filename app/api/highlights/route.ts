@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from '@/lib/supabase'
 
 const HIGHLIGHTS_BUCKET = process.env.SUPABASE_HIGHLIGHTS_BUCKET ?? 'highlights'
 const MAX_VIDEO_BYTES = 10 * 1024 * 1024 * 1024
+const ALLOWED_TYPES = new Set(['ACE', 'QUAD_KILL', 'TRIPLE_KILL', 'CLUTCH', 'ENTRY_FRAG', 'KNIFE_KILL', 'OTHER'])
 const ALLOWED_VIDEO_TYPES = new Set([
   'video/mp4',
   'video/webm',
@@ -48,7 +49,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const type = typeRaw.trim() !== '' ? typeRaw.trim() : 'OTHER'
+    const normalizedType = typeRaw.trim().toUpperCase()
+    const type = ALLOWED_TYPES.has(normalizedType) ? normalizedType : 'OTHER'
     const description =
       typeof descriptionRaw === 'string' ? descriptionRaw.trim() || null : null
     const roundNumber =
