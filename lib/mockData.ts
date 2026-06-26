@@ -6,6 +6,7 @@ export type Player = {
   badge: string
   avatarColor: string
   photoUrl?: string
+  nelsons: number
 }
 
 export type MatchPlayer = {
@@ -79,6 +80,7 @@ type SupabasePlayerRecord = {
   name: string | null
   photo_url?: string | null
   badge: string | null
+  contador_nelson?: number | null
 }
 
 type SupabaseMatchRecord = {
@@ -161,7 +163,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     let players: Player[] = []
     const { data: playerRows, error: playersError } = await supabase
       .from('players')
-      .select('id, name, photo_url, badge')
+      .select('id, name, photo_url, badge, contador_nelson')
       .order('name')
 
     if (!playersError && playerRows) {
@@ -171,6 +173,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
         badge: normalizeString(row.badge),
         avatarColor: createAvatarColor(normalizeString(row.name)),
         photoUrl: row.photo_url ?? undefined,
+        nelsons: row.contador_nelson ?? 0,
       }))
     }
 

@@ -56,6 +56,14 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
                       👑 {s.mvps}
                     </span>
                   )}
+                  {s.player.nelsons > 0 && (
+                    <span 
+                      title="Total de Nelsons"
+                      className="flex shrink-0 items-center gap-1 rounded border border-primary/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-primary shadow-sm cursor-help"
+                    >
+                      💀 {s.player.nelsons}
+                    </span>
+                  )}
                 </div>
                 <span className="font-mono text-[11px] text-muted-foreground">
                   {s.kills}/{s.deaths}/{s.assists} · {s.wins}W-{s.losses}L

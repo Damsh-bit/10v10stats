@@ -91,6 +91,14 @@ export default async function PlayerProfile({
                   </span>
                 </div>
               )}
+              {stats.nelsons > 0 && (
+                <div className="flex items-center gap-1.5 rounded border border-primary/30 bg-[#101010] px-2.5 py-0.5 shadow-sm">
+                  <span className="text-[11px] text-primary opacity-90">💀</span>
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-primary">
+                    {stats.nelsons} NELSON{stats.nelsons !== 1 ? 'S' : ''}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
