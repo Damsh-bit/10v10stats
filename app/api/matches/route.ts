@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseAdminClient } from '@/lib/supabase'
+import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 type MatchPlayerPayload = {
   player_id: string
@@ -49,18 +49,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Todos los jugadores deben estar asignados y ser únicos' }, { status: 400 })
     }
 
-    const supabase = getSupabaseAdminClient()
+    // Prefer admin client (service role key), fall back to regular client (anon key)
+    const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
     if (!supabase) {
       return NextResponse.json({ error: 'No se pudo inicializar el cliente de Supabase' }, { status: 500 })
     }
 
     const playedAt = (payload.played_at ?? payload.date ?? payload.playedAt ?? '').trim() || new Date().toISOString()
-    const winnerTeam = payload.winner_team ?? (payload.score_ct > payload.score_t ? 'CT' : 'T')
+    const winnerTeamRaw = payload.winner_team ?? (payload.score_ct > payload.score_t ? 'CT' : 'T')
     const totalRounds = typeof payload.total_rounds === 'number' && Number.isFinite(payload.total_rounds) ? payload.total_rounds : null
     const videoUrl = typeof payload.video_url === 'string' ? payload.video_url.trim() || null : null
     const notes = typeof payload.notes === 'string' ? payload.notes.trim() || null : null
     const teamAName = typeof payload.team_a_name === 'string' && payload.team_a_name.trim() ? payload.team_a_name.trim() : 'Equipo A'
     const teamBName = typeof payload.team_b_name === 'string' && payload.team_b_name.trim() ? payload.team_b_name.trim() : 'Equipo B'
+    const winnerTeam = winnerTeamRaw === 'CT' ? teamAName : teamBName
 
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
@@ -72,7 +74,6 @@ export async function POST(request: Request) {
         score_t: payload.score_t,
         winner_team: winnerTeam,
         played_at: playedAt,
-        total_rounds: totalRounds,
         video_url: videoUrl,
         notes,
       })
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
     const rows = payload.players.map((player) => ({
       match_id: matchData.id,
       player_id: player.player_id,
-      team: player.team,
+      team: player.team === 'CT' ? teamAName : teamBName,
       won: player.won,
       kills: player.kills,
       deaths: player.deaths,

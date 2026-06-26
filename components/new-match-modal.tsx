@@ -111,8 +111,12 @@ export function NewMatchModal() {
   useEffect(() => {
     const scoreCt = Number(form.score_ct)
     const scoreT = Number(form.score_t)
-    if (Number.isFinite(scoreCt) && Number.isFinite(scoreT) && scoreCt !== scoreT) {
-      setForm((prev) => ({ ...prev, winner_team: scoreCt > scoreT ? 'CT' : 'T' }))
+    if (Number.isFinite(scoreCt) && Number.isFinite(scoreT)) {
+      setForm((prev) => ({
+        ...prev,
+        winner_team: scoreCt !== scoreT ? (scoreCt > scoreT ? 'CT' : 'T') : prev.winner_team,
+        total_rounds: form.score_ct !== '' && form.score_t !== '' ? String(scoreCt + scoreT) : '',
+      }))
     }
   }, [form.score_ct, form.score_t])
 
@@ -411,11 +415,13 @@ export function NewMatchModal() {
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     >
                       <option value="">— seleccionar —</option>
-                      {players.map((player) => (
-                        <option key={player.id} value={player.id}>
-                          {player.name}
-                        </option>
-                      ))}
+                      {players
+                        .filter((p) => !selectedPlayerIds.includes(p.id) || p.id === row.player_id)
+                        .map((player) => (
+                          <option key={player.id} value={player.id}>
+                            {player.name}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -478,11 +484,13 @@ export function NewMatchModal() {
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     >
                       <option value="">— seleccionar —</option>
-                      {players.map((player) => (
-                        <option key={player.id} value={player.id}>
-                          {player.name}
-                        </option>
-                      ))}
+                      {players
+                        .filter((p) => !selectedPlayerIds.includes(p.id) || p.id === row.player_id)
+                        .map((player) => (
+                          <option key={player.id} value={player.id}>
+                            {player.name}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
