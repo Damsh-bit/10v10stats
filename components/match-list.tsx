@@ -106,7 +106,7 @@ export function MatchList({
                     className={cn(
                       "inline-flex items-center rounded px-2 py-1 font-mono text-[11px] font-bold",
                       winnerLabel.toLowerCase().includes('papi') 
-                        ? "bg-rose-500/15 text-rose-500" 
+                        ? "bg-amber-500/15 text-amber-500 ring-1 ring-inset ring-amber-500/30" 
                         : "bg-primary/15 text-primary"
                     )}
                   >
