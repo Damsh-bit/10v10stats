@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { CheckCircle2, Crown, Loader2, ShieldCheck, Skull, Vote, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import confetti from 'canvas-confetti'
 
 type PlayerOption = {
   id: string
@@ -38,6 +39,8 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
 
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  
+  const [winnerPopup, setWinnerPopup] = useState<{ show: boolean; name: string } | null>(null)
 
   // Iniciar Prompt
   const [showStartPrompt, setShowStartPrompt] = useState(false)
@@ -161,7 +164,43 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
       setMessage(`Votación finalizada. Ganador: ${result.winner?.name ?? 'Nadie'}`)
       setShowFinishPrompt(false)
       setFinishPassword('')
-      router.refresh()
+
+      if (result.winner) {
+        setWinnerPopup({ show: true, name: result.winner.name })
+        
+        // Trigger confetti
+        const duration = 3000
+        const end = Date.now() + duration
+        
+        const frame = () => {
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#8B4513', '#A0522D', '#D2691E']
+          })
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#8B4513', '#A0522D', '#D2691E']
+          })
+          
+          if (Date.now() < end) {
+            requestAnimationFrame(frame)
+          }
+        }
+        frame()
+
+        setTimeout(() => {
+          setWinnerPopup(null)
+          router.refresh()
+        }, 5000)
+      } else {
+        router.refresh()
+      }
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Error al finalizar')
     } finally {
@@ -385,6 +424,23 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
           </div>
         </div>
       ) : null}
+
+      {/* Pop-up Ganador */}
+      {winnerPopup?.show && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-500">
+          <div className="animate-in zoom-in-50 fade-in duration-500 flex flex-col items-center justify-center space-y-6 text-center">
+            <div className="text-9xl animate-bounce">
+              💩
+            </div>
+            <div className="rounded-xl border border-border bg-card/90 px-8 py-6 shadow-2xl backdrop-blur-md">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">El nuevo Nelson es</h2>
+              <p className="mt-2 text-4xl font-bold text-foreground drop-shadow-md">
+                {winnerPopup.name}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
