@@ -9,6 +9,7 @@ const mapColors: Record<CSMap, string> = {
   Inferno: '#c2453b',
   Nuke: '#3b8ac2',
   Ancient: '#3b8a5a',
+  Anubis: '#8c7657',
 }
 
 export function RecentMatches({ matches }: { matches: Match[] }) {
