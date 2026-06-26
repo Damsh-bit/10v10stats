@@ -24,10 +24,20 @@ export default async function EstadisticasPage() {
     }
   }
 
-  // Tops
-  const topKills = [...stats].sort((a, b) => b.kills - a.kills)[0]
-  const topDeaths = [...stats].sort((a, b) => b.deaths - a.deaths)[0]
-  const topAssists = [...stats].sort((a, b) => b.assists - a.assists)[0]
+  let recordKills = { value: 0, playerName: 'Sin datos' }
+  let recordDeaths = { value: 0, playerName: 'Sin datos' }
+  let recordAssists = { value: 0, playerName: 'Sin datos' }
+  let recordDamage = { value: 0, playerName: 'Sin datos' }
+  
+  data.matches.forEach(m => {
+    m.players.forEach(p => {
+      const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
+      if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName }
+      if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName }
+      if (p.assists > recordAssists.value) recordAssists = { value: p.assists, playerName: pName }
+      if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName }
+    })
+  })
   const topHs = [...stats].filter(s => s.hsPct > 0).sort((a, b) => b.hsPct - a.hsPct)[0]
 
   const statCards = [
@@ -45,22 +55,28 @@ export default async function EstadisticasPage() {
       bgImage: `/maps/${mostPlayedMap.toLowerCase().replace(/\s+/g, '')}.webp`
     },
     {
-      title: 'Más Kills (Total)',
-      value: topKills ? String(topKills.kills) : '0',
-      subtitle: topKills ? topKills.player.name : 'Sin datos',
+      title: 'Más Kills (Partida)',
+      value: String(recordKills.value),
+      subtitle: recordKills.value > 0 ? recordKills.playerName : 'Sin datos',
       color: 'text-green-400'
     },
     {
-      title: 'Más Muertes (Total)',
-      value: topDeaths ? String(topDeaths.deaths) : '0',
-      subtitle: topDeaths ? topDeaths.player.name : 'Sin datos',
+      title: 'Más Muertes (Partida)',
+      value: String(recordDeaths.value),
+      subtitle: recordDeaths.value > 0 ? recordDeaths.playerName : 'Sin datos',
       color: 'text-red-400'
     },
     {
-      title: 'Más Asistencias (Total)',
-      value: topAssists ? String(topAssists.assists) : '0',
-      subtitle: topAssists ? topAssists.player.name : 'Sin datos',
+      title: 'Más Asistencias (Partida)',
+      value: String(recordAssists.value),
+      subtitle: recordAssists.value > 0 ? recordAssists.playerName : 'Sin datos',
       color: 'text-purple-400'
+    },
+    {
+      title: 'Más Daño (Partida)',
+      value: recordDamage.value > 0 ? recordDamage.value.toLocaleString() : '0',
+      subtitle: recordDamage.value > 0 ? recordDamage.playerName : 'Sin datos',
+      color: 'text-orange-400'
     },
     {
       title: 'Mejor % de HS',

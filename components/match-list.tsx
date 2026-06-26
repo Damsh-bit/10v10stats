@@ -40,8 +40,10 @@ export function MatchList({ matches }: { matches: Match[] }) {
 
       <div className="flex flex-col gap-3">
         {filtered.map((match) => {
-          const winner = match.winnerTeam || (match.ctScore > match.tScore ? 'CT' : 'T')
-          const winnerLabel = winner === 'CT'
+          const isCtWinner = match.winnerTeam 
+            ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName)
+            : (match.ctScore > match.tScore)
+          const winnerLabel = isCtWinner
             ? (match.teamAName || 'CT')
             : (match.teamBName || 'T')
           return (

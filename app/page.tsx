@@ -36,11 +36,20 @@ export default async function Page() {
     0,
   )
 
-  const rankedStats = [...stats].sort((a, b) => b.kills - a.kills)
-  const mostKills = rankedStats[0] ?? null
-  const mostDeaths = [...stats].sort((a, b) => b.deaths - a.deaths)[0] ?? null
   const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
-  const mostDamage = [...stats].sort((a, b) => b.damage - a.damage)[0] ?? null
+  
+  let recordKills = { value: 0, playerName: 'Sin datos' }
+  let recordDeaths = { value: 0, playerName: 'Sin datos' }
+  let recordDamage = { value: 0, playerName: 'Sin datos' }
+  
+  data.matches.forEach(m => {
+    m.players.forEach(p => {
+      const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
+      if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName }
+      if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName }
+      if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName }
+    })
+  })
 
   const latestHighlight = data.highlights[0]
   const latestHighlightPlayer = latestHighlight
@@ -56,14 +65,14 @@ export default async function Page() {
     },
     {
       label: 'Más Kills',
-      value: mostKills ? String(mostKills.kills) : '0',
-      sub: mostKills ? `por ${mostKills.player.name}` : 'Sin datos',
+      value: String(recordKills.value),
+      sub: recordKills.value > 0 ? `por ${recordKills.playerName}` : 'Sin datos',
       icon: dashboardIcons.Crosshair,
     },
     {
       label: 'Más Muertes',
-      value: mostDeaths ? String(mostDeaths.deaths) : '0',
-      sub: mostDeaths ? `por ${mostDeaths.player.name}` : 'Sin datos',
+      value: String(recordDeaths.value),
+      sub: recordDeaths.value > 0 ? `por ${recordDeaths.playerName}` : 'Sin datos',
       icon: dashboardIcons.Skull,
     },
   ]
@@ -71,13 +80,13 @@ export default async function Page() {
   const chips = [
     {
       label: 'Mejor KDA',
-      stat: bestKda,
+      playerName: bestKda?.player.name,
       value: bestKda ? bestKda.kda.toFixed(2) : 'Sin info',
     },
     {
       label: 'Más daño',
-      stat: mostDamage,
-      value: mostDamage ? mostDamage.damage.toLocaleString() : 'Sin info',
+      playerName: recordDamage.value > 0 ? recordDamage.playerName : undefined,
+      value: recordDamage.value > 0 ? recordDamage.value.toLocaleString() : 'Sin info',
     },
   ]
 
@@ -124,7 +133,7 @@ export default async function Page() {
                 {c.label}
               </span>
               <span className="text-[13px] font-semibold text-foreground">
-                {c.stat?.player?.name ?? 'Sin info'}
+                {c.playerName ?? 'Sin info'}
               </span>
               <span className="font-mono text-[13px] font-bold text-primary">
                 {c.value}
@@ -151,10 +160,10 @@ export default async function Page() {
 
               const playersTeamA = recentMatch.players
                 .filter((p) => p.team === teamA)
-                .sort((a, b) => b.kills - a.kills)
+                .sort((a, b) => b.damage - a.damage)
               const playersTeamB = recentMatch.players
                 .filter((p) => p.team === teamB)
-                .sort((a, b) => b.kills - a.kills)
+                .sort((a, b) => b.damage - a.damage)
 
               const scoreA = recentMatch.ctScore ?? 0
               const scoreB = recentMatch.tScore ?? 0
@@ -191,12 +200,12 @@ export default async function Page() {
                     <span className="font-mono text-2xl font-black text-white drop-shadow">{score}</span>
                   </div>
 
-                  {/* Column headers */}
-                  <div className="grid grid-cols-[1fr_repeat(4,_auto)] items-center gap-x-3 border-b border-border/60 bg-black/30 px-3 py-1">
+                  <div className="grid grid-cols-[1fr_repeat(5,_auto)] items-center gap-x-3 border-b border-border/60 bg-black/30 px-3 py-1">
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Player</span>
                     <span className="w-6 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">K</span>
                     <span className="w-6 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">D</span>
                     <span className="w-6 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">A</span>
+                    <span className="w-8 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">HS%</span>
                     <span className="w-12 text-right text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">DMG</span>
                   </div>
 
@@ -208,7 +217,7 @@ export default async function Page() {
                       return (
                         <li
                           key={p.playerId}
-                          className={`grid grid-cols-[1fr_repeat(4,_auto)] items-center gap-x-3 px-3 py-1.5 ${i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-black/20'
+                          className={`grid grid-cols-[1fr_repeat(5,_auto)] items-center gap-x-3 px-3 py-1.5 ${i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-black/20'
                             } ${isTopFragger ? 'border-l-2 border-yellow-400' : ''}`}
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
@@ -225,6 +234,7 @@ export default async function Page() {
                           <span className="w-6 text-center font-mono text-[12px] font-bold text-green-400">{p.kills}</span>
                           <span className="w-6 text-center font-mono text-[12px] text-red-400">{p.deaths}</span>
                           <span className="w-6 text-center font-mono text-[12px] text-blue-300">{p.assists}</span>
+                          <span className="w-8 text-center font-mono text-[12px] text-yellow-500/80">{p.hsPct}%</span>
                           <span className="w-12 text-right font-mono text-[11px] text-muted-foreground">{p.damage.toLocaleString()}</span>
                         </li>
                       )

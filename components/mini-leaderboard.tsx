@@ -66,18 +66,19 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
                   )}
                 </div>
                 <span className="font-mono text-[11px] text-muted-foreground">
-                  {s.kills}/{s.deaths}/{s.assists} · {s.wins}W-{s.losses}L
+                  {s.kills}/{s.deaths}/{s.assists} · <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span> · {s.wins}W-{s.losses}L
                 </span>
               </div>
               <span
                 className={cn(
-                  'font-mono text-[15px] font-bold',
+                  'font-mono text-[15px] font-bold w-10 text-right',
                   i < 3
                     ? 'text-emerald-500'
                     : i >= stats.length - 3
                       ? 'text-primary'
                       : 'text-yellow-500',
                 )}
+                title="KDA"
               >
                 {s.kda.toFixed(2)}
               </span>

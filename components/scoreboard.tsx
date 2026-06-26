@@ -18,7 +18,7 @@ export function Scoreboard({
   isWinner: boolean
   players: Player[]
 }) {
-  const sorted = [...entries].sort((a, b) => b.kills - a.kills)
+  const sorted = [...entries].sort((a, b) => b.damage - a.damage)
   return (
     <div
       className={cn(
@@ -46,6 +46,7 @@ export function Scoreboard({
             <th className="px-2 py-2 text-right font-medium">K</th>
             <th className="px-2 py-2 text-right font-medium">D</th>
             <th className="px-2 py-2 text-right font-medium">A</th>
+            <th className="px-2 py-2 text-right font-medium">HS%</th>
             <th className="px-2 py-2 text-right font-medium">Dmg</th>
           </tr>
         </thead>
@@ -60,6 +61,7 @@ export function Scoreboard({
             const kills = e.kills ?? 0
             const deaths = e.deaths ?? 0
             const assists = e.assists ?? 0
+            const hsPct = e.hsPct ?? 0
             const damage = e.damage ?? 0
             
             return (
@@ -81,6 +83,7 @@ export function Scoreboard({
                 <Cell>{kills}</Cell>
                 <Cell>{deaths}</Cell>
                 <Cell>{assists}</Cell>
+                <Cell className="text-yellow-500/80">{hsPct}%</Cell>
                 <Cell>{damage}</Cell>
               </tr>
             )

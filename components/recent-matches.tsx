@@ -27,8 +27,10 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
       </header>
       <ul className="flex flex-col">
         {matches.map((match) => {
-          const winner = match.ctScore > match.tScore ? 'CT' : 'T'
-          const winnerLabel = winner === 'CT'
+          const isCtWinner = match.winnerTeam 
+            ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName)
+            : (match.ctScore > match.tScore)
+          const winnerLabel = isCtWinner
             ? (match.teamAName || 'CT')
             : (match.teamBName || 'T')
           return (
@@ -37,12 +39,14 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
                 href={`/matches/${match.id}`}
                 className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/60"
               >
-                <span
-                  className="flex h-9 w-14 shrink-0 items-center justify-center rounded-sm font-mono text-[11px] font-bold text-background"
-                  style={{ backgroundColor: mapColors[match.map] }}
-                >
-                  {match.map}
-                </span>
+                <div
+                  className="h-9 w-16 shrink-0 overflow-hidden rounded-sm bg-cover bg-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]"
+                  style={{ 
+                    backgroundImage: `url('/maps/${match.map.toLowerCase().replace(/\s+/g, '')}.webp')`,
+                    backgroundColor: mapColors[match.map] || '#1e293b'
+                  }}
+                  title={match.map}
+                />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-mono text-[15px] font-bold text-foreground">
                     {match.ctScore}-{match.tScore}

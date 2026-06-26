@@ -21,7 +21,7 @@ export default async function MatchDetail({
 
   const ctPlayers = match.players.filter((p) => p.team === teamALabel || p.team === 'CT')
   const tPlayers = match.players.filter((p) => p.team === teamBLabel || p.team === 'T')
-  const ctWins = match.winnerTeam ? match.winnerTeam === 'CT' : match.ctScore > match.tScore
+  const ctWins = match.winnerTeam ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName) : (match.ctScore > match.tScore)
   const matchHighlights = data.highlights.filter((h) => h.matchId === id)
 
   return (
