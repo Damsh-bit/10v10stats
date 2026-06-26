@@ -3,7 +3,7 @@ import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 const TABULADOR_BUCKET = process.env.SUPABASE_TABULADOR_BUCKET ?? 'tabulador'
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^\w.-]+/g, '_').slice(0, 120)
@@ -52,7 +52,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'La imagen no puede superar los 5 MB' }, { status: 400 })
       }
       if (!ALLOWED_IMAGE_TYPES.has(photoFile.type)) {
-        return NextResponse.json({ error: 'Formato no soportado. Usa PNG, JPG o WEBP.' }, { status: 400 })
+        return NextResponse.json({ error: 'Formato no soportado. Usa PNG, JPG, WEBP o GIF.' }, { status: 400 })
       }
       
       const storagePath = `players/${id}/${Date.now()}-${sanitizeFileName(photoFile.name || 'foto.png')}`

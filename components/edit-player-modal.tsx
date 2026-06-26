@@ -114,7 +114,7 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
               <label className="font-semibold text-muted-foreground">O subir desde tu PC</label>
               <input
                 type="file"
-                accept="image/png, image/jpeg, image/webp"
+                accept="image/png, image/jpeg, image/webp, image/gif"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
