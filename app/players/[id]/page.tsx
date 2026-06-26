@@ -155,12 +155,12 @@ export default async function PlayerProfile({
                   </div>
                 </div>
                 <div className="flex items-center gap-4 font-mono text-[12px] text-muted-foreground">
-                  <div className="flex items-center gap-1 font-semibold tracking-wide text-primary">
-                    <span>{entry.kills}</span>
-                    <span className="text-primary/50">/</span>
-                    <span>{entry.deaths}</span>
-                    <span className="text-primary/50">/</span>
-                    <span>{entry.assists}</span>
+                  <div className="flex items-center gap-1 font-semibold tracking-wide">
+                    <span className="text-green-400">{entry.kills}</span>
+                    <span className="text-muted-foreground/40">/</span>
+                    <span className="text-primary">{entry.deaths}</span>
+                    <span className="text-muted-foreground/40">/</span>
+                    <span className="text-blue-400">{entry.assists}</span>
                   </div>
                   <span className="hidden sm:inline">{entry.damage} dmg</span>
                   <span className="w-20 text-right">{formatDate(match.date)}</span>
