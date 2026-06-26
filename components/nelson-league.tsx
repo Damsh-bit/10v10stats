@@ -29,7 +29,7 @@ export function NelsonLeague({ entries }: { entries: NelsonEntry[] }) {
 
       <ol className="flex flex-col">
         {entries.map((entry, i) => {
-          const isSuperNelson = i === entries.length - 1
+          const isSuperNelson = i === 0
           return (
             <li
               key={entry.rank}
