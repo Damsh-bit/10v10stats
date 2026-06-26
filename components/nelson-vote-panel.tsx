@@ -246,7 +246,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
               Iniciar Votación
             </Button>
           ) : (
-            <form onSubmit={handleStartVote} className="flex w-full items-center gap-2">
+            <form onSubmit={handleStartVote} className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="password"
                 autoFocus
@@ -256,14 +256,16 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
                   setStartPassword(e.target.value)
                   setAuthError(null)
                 }}
-                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary sm:flex-none sm:w-48"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary sm:w-48 sm:flex-none"
               />
-              <Button type="submit" size="sm" disabled={isLoading || !startPassword}>
-                Iniciar
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setShowStartPrompt(false)}>
-                Cancelar
-              </Button>
+              <div className="flex w-full gap-2 sm:w-auto">
+                <Button type="submit" size="sm" className="flex-1 sm:flex-none" disabled={isLoading || !startPassword}>
+                  Iniciar
+                </Button>
+                <Button type="button" variant="ghost" size="sm" className="flex-1 sm:flex-none" onClick={() => setShowStartPrompt(false)}>
+                  Cancelar
+                </Button>
+              </div>
             </form>
           )
         ) : (
@@ -289,7 +291,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
                     Finalizar Votación
                   </Button>
                 ) : (
-                  <form onSubmit={handleFinishVote} className="flex w-full items-center gap-2">
+                  <form onSubmit={handleFinishVote} className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
                     <input
                       type="password"
                       autoFocus
@@ -299,14 +301,16 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
                         setFinishPassword(e.target.value)
                         setAuthError(null)
                       }}
-                      className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary sm:w-48 sm:flex-none"
                     />
-                    <Button type="submit" size="sm" disabled={isLoading || !finishPassword}>
-                      Confirmar
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setShowFinishPrompt(false)}>
-                      Cancelar
-                    </Button>
+                    <div className="flex w-full gap-2 sm:w-auto">
+                      <Button type="submit" size="sm" className="flex-1 sm:flex-none" disabled={isLoading || !finishPassword}>
+                        Confirmar
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" className="flex-1 sm:flex-none" onClick={() => setShowFinishPrompt(false)}>
+                        Cancelar
+                      </Button>
+                    </div>
                   </form>
                 )}
               </>
