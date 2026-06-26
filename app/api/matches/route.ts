@@ -44,6 +44,7 @@ type MatchPlayerPayload = {
   deaths: number
   assists: number
   damage: number
+  hs_pct: number
 }
 
 type MatchPayload = {
@@ -144,6 +145,7 @@ export async function POST(request: Request) {
       deaths: player.deaths,
       assists: player.assists,
       damage: player.damage,
+      hs_pct: player.hs_pct,
     }))
 
     const { error: playersError } = await supabase.from('match_players').insert(rows)

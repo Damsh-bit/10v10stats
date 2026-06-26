@@ -20,6 +20,7 @@ type PlayerRow = {
   deaths: string
   assists: string
   damage: string
+  hsPct: string
 }
 
 type FormState = {
@@ -55,6 +56,7 @@ function createInitialFormState(): FormState {
       deaths: '',
       assists: '',
       damage: '',
+      hsPct: '',
     })
   }
 
@@ -219,6 +221,7 @@ export function NewMatchModal() {
           deaths: Number(row.deaths || 0),
           assists: Number(row.assists || 0),
           damage: Number(row.damage || 0),
+          hs_pct: Number(row.hsPct || 0),
         })),
       }
 
@@ -415,7 +418,7 @@ export function NewMatchModal() {
             </div>
             <div className="space-y-3">
               {form.players.filter((row) => row.team === 'CT').map((row) => (
-                <div key={row.id} className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 md:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr_0.7fr]">
+                <div key={row.id} className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 md:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr]">
                   <div className="space-y-1">
                     <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Jugador</label>
                     <select
@@ -470,6 +473,17 @@ export function NewMatchModal() {
                       min="0"
                       value={row.damage}
                       onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <span>HS%</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={row.hsPct}
+                      onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     />
                   </label>
@@ -484,7 +498,7 @@ export function NewMatchModal() {
             </div>
             <div className="space-y-3">
               {form.players.filter((row) => row.team === 'T').map((row) => (
-                <div key={row.id} className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 md:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr_0.7fr]">
+                <div key={row.id} className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 md:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr]">
                   <div className="space-y-1">
                     <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Jugador</label>
                     <select
@@ -539,6 +553,17 @@ export function NewMatchModal() {
                       min="0"
                       value={row.damage}
                       onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <span>HS%</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={row.hsPct}
+                      onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     />
                   </label>

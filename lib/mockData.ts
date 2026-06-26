@@ -73,6 +73,7 @@ export type PlayerStats = {
   damage: number
   kda: number
   mvps: number
+  hsPct: number
 }
 
 type SupabasePlayerRecord = {
@@ -107,6 +108,7 @@ type SupabaseMatchPlayerRecord = {
   deaths: number | null
   assists: number | null
   damage: number | null
+  hs_pct: number | null
 }
 
 type SupabaseHighlightRecord = {
@@ -190,7 +192,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
       if (matchIds.length > 0) {
         const { data: matchPlayerRows, error: matchPlayersError } = await supabase
           .from('match_players')
-          .select('match_id, player_id, team, won, kills, deaths, assists, damage')
+          .select('match_id, player_id, team, won, kills, deaths, assists, damage, hs_pct')
           .in('match_id', matchIds)
 
         if (!matchPlayersError && matchPlayerRows) {
@@ -237,7 +239,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
             assists: normalizeNumber(entry.assists),
             damage: normalizeNumber(entry.damage),
             adr: 0,
-            hsPct: 0,
+            hsPct: normalizeNumber(entry.hs_pct),
             mvps: entry.player_id === mvpId ? 1 : 0,
             won: normalizeBoolean(entry.won),
           })),
@@ -296,6 +298,11 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   const losses = entries.length - wins
   const kda = deaths === 0 ? kills + assists : (kills + assists) / deaths
   const mvps = sum(entries.map((e) => e.mvps))
+  
+  const validHsEntries = entries.filter((e) => e.hsPct > 0)
+  const hsPct = validHsEntries.length > 0 
+    ? sum(validHsEntries.map((e) => e.hsPct)) / validHsEntries.length 
+    : 0
 
   return {
     player,
@@ -308,6 +315,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     damage,
     kda: Math.round(kda * 100) / 100,
     mvps,
+    hsPct: Math.round(hsPct),
   }
 }
 

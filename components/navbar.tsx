@@ -10,6 +10,7 @@ const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/matches', label: 'Partidas' },
   { href: '/highlights', label: 'Highlights' },
+  { href: '/estadisticas', label: 'Estadísticas' },
 ]
 
 export function Navbar() {
