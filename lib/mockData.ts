@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '@/lib/supabase'
+import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 export type Player = {
   id: string
@@ -153,7 +153,7 @@ function createAvatarColor(value: string) {
 }
 
 async function getSupabaseLiveData(): Promise<LiveData | null> {
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
   if (!supabase) return null
 
   try {

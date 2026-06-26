@@ -23,6 +23,7 @@ export default async function PlayerProfile({
     .sort((a, b) => b.match.date.localeCompare(a.match.date))
 
   const playerHighlights = data.highlights.filter((h) => h.playerId === id)
+  const playerMatchMapById = new Map(data.matches.map((match) => [match.id, match.map]))
 
   const playerStats = data.matches
     .flatMap((m) => m.players.filter((entry) => entry.playerId === id))
@@ -150,7 +151,7 @@ export default async function PlayerProfile({
                 <HighlightCard
                   key={h.id}
                   highlight={h}
-                  matchLabel={data.matches.find((m) => m.id === h.matchId)?.map}
+                  matchLabel={h.matchId ? playerMatchMapById.get(h.matchId) : undefined}
                 />
               ))}
             </div>

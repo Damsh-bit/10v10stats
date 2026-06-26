@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getAllPlayerStats, getLiveData } from '@/lib/mockData'
 import { MiniLeaderboard } from '@/components/mini-leaderboard'
 import { NelsonLeague } from '@/components/nelson-league'
@@ -92,7 +93,9 @@ export default async function Page() {
         </div>
 
         <div className="mb-6">
-          <DashboardStats stats={overview} />
+          <Suspense fallback={<div className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted-foreground">Cargando resumen…</div>}>
+            <DashboardStats stats={overview} />
+          </Suspense>
         </div>
 
         <div className="mb-6 flex flex-wrap gap-2">
@@ -116,20 +119,28 @@ export default async function Page() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <MiniLeaderboard stats={stats} />
+            <Suspense fallback={<div className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted-foreground">Cargando leaderboard…</div>}>
+              <MiniLeaderboard stats={stats} />
+            </Suspense>
           </div>
           <div className="flex flex-col gap-6">
-            <NelsonLeague entries={nelsonData.league} />
-            <NelsonVotePanel
-              initialPlayers={nelsonData.players.map((player) => ({
-                id: player.id,
-                name: player.name,
-                nelsonPoints: player.nelsonPoints,
-              }))}
-              initialVoteState={nelsonData.voteState}
-              initialAdminPasswordConfigured={nelsonData.adminPasswordConfigured}
-            />
-            <RecentMatches matches={data.matches.slice(0, 4)} />
+            <Suspense fallback={<div className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted-foreground">Cargando Nelson…</div>}>
+              <NelsonLeague entries={nelsonData.league} />
+            </Suspense>
+            <Suspense fallback={<div className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted-foreground">Cargando votos…</div>}>
+              <NelsonVotePanel
+                initialPlayers={nelsonData.players.map((player) => ({
+                  id: player.id,
+                  name: player.name,
+                  nelsonPoints: player.nelsonPoints,
+                }))}
+                initialVoteState={nelsonData.voteState}
+                initialAdminPasswordConfigured={nelsonData.adminPasswordConfigured}
+              />
+            </Suspense>
+            <Suspense fallback={<div className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted-foreground">Cargando partidas recientes…</div>}>
+              <RecentMatches matches={data.matches.slice(0, 4)} />
+            </Suspense>
           </div>
         </div>
       </div>

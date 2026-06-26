@@ -73,6 +73,10 @@ export function getVideoEmbed(
     return { kind: 'video', src: trimmed }
   }
 
+  if (trimmed.includes('supabase.co/storage/v1/object/public/')) {
+    return { kind: 'video', src: trimmed }
+  }
+
   let url: URL
   try {
     url = new URL(trimmed)
