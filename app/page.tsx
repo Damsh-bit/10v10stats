@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { getAllPlayerStats, getLiveData, formatDate } from '@/lib/mockData'
 import { MiniLeaderboard } from '@/components/mini-leaderboard'
 import { NelsonLeague } from '@/components/nelson-league'
@@ -8,6 +9,20 @@ import { NewHighlightModal } from '@/components/new-highlight-modal'
 import { NewMatchModal } from '@/components/new-match-modal'
 import { NelsonVotePanel } from '@/components/nelson-vote-panel'
 import { getNelsonData } from '@/lib/nelson'
+import { VideoEmbed } from '@/components/video-embed'
+import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
+
+function resolveClipUrl(clipUrl: string | null | undefined): string | null {
+  if (!clipUrl) return null
+  const trimmed = clipUrl.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+
+  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+  if (!supabase) return null
+  const { data } = supabase.storage.from('highlights').getPublicUrl(trimmed)
+  return data.publicUrl
+}
 
 export default async function Page() {
   const data = await getLiveData()
@@ -18,7 +33,17 @@ export default async function Page() {
     (acc, m) => acc + m.players.reduce((s, p) => s + p.kills, 0),
     0,
   )
-  const aces = data.highlights.filter((h) => h.type === 'ACE').length
+
+  const rankedStats = [...stats].sort((a, b) => b.kills - a.kills)
+  const mostKills = rankedStats[0] ?? null
+  const mostDeaths = [...stats].sort((a, b) => b.deaths - a.deaths)[0] ?? null
+  const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
+  const mostDamage = [...stats].sort((a, b) => b.damage - a.damage)[0] ?? null
+
+  const latestHighlight = data.highlights[0]
+  const latestHighlightPlayer = latestHighlight
+    ? data.players.find((p) => p.id === latestHighlight.playerId)?.name || 'Jugador'
+    : null
 
   const overview = [
     {
@@ -28,36 +53,20 @@ export default async function Page() {
       icon: dashboardIcons.Swords,
     },
     {
-      label: 'Jugadores',
-      value: String(data.players.length),
-      sub: 'en el roster',
-      icon: dashboardIcons.Users,
-    },
-    {
-      label: 'Kills',
-      value: totalKills.toLocaleString(),
-      sub: 'acumuladas',
+      label: 'Más Kills',
+      value: mostKills ? String(mostKills.kills) : '0',
+      sub: mostKills ? `por ${mostKills.player.name}` : 'Sin datos',
       icon: dashboardIcons.Crosshair,
     },
     {
-      label: 'Highlights',
-      value: String(data.highlights.length),
-      sub: `${aces} aces registrados`,
-      icon: dashboardIcons.Flame,
+      label: 'Más Muertes',
+      value: mostDeaths ? String(mostDeaths.deaths) : '0',
+      sub: mostDeaths ? `por ${mostDeaths.player.name}` : 'Sin datos',
+      icon: dashboardIcons.Skull,
     },
   ]
 
-  const rankedStats = [...stats].sort((a, b) => b.kills - a.kills)
-  const mostKills = rankedStats[0] ?? null
-  const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
-  const mostDamage = [...stats].sort((a, b) => b.damage - a.damage)[0] ?? null
-
   const chips = [
-    {
-      label: 'Más kills',
-      stat: mostKills,
-      value: mostKills ? `${mostKills.kills}` : 'Sin info',
-    },
     {
       label: 'Mejor KDA',
       stat: bestKda,
@@ -93,7 +102,7 @@ export default async function Page() {
         </div>
 
         <div className="mb-6">
-          <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse"/><span>Cargando resumen…</span></div>}>
+          <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando resumen…</span></div>}>
             <DashboardStats stats={overview} />
           </Suspense>
         </div>
@@ -119,7 +128,7 @@ export default async function Page() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 flex flex-col gap-6">
-            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse"/><span>Cargando leaderboard…</span></div>}>
+            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando leaderboard…</span></div>}>
               <MiniLeaderboard stats={stats} />
             </Suspense>
 
@@ -192,9 +201,8 @@ export default async function Page() {
                       return (
                         <li
                           key={p.playerId}
-                          className={`grid grid-cols-[1fr_repeat(4,_auto)] items-center gap-x-3 px-3 py-1.5 ${
-                            i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-black/20'
-                          } ${isTopFragger ? 'border-l-2 border-yellow-400' : ''}`}
+                          className={`grid grid-cols-[1fr_repeat(4,_auto)] items-center gap-x-3 px-3 py-1.5 ${i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-black/20'
+                            } ${isTopFragger ? 'border-l-2 border-yellow-400' : ''}`}
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="w-4 shrink-0 font-mono text-[10px] text-muted-foreground/60">
@@ -253,10 +261,30 @@ export default async function Page() {
           </div>
 
           <div className="flex flex-col gap-6">
-            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse"/><span>Cargando Nelson…</span></div>}>
+            {latestHighlight && resolveClipUrl(latestHighlight.clipUrl) && (
+              <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
+                    <span className="text-[#950c42]">▶</span> Highlight Reciente
+                  </h2>
+                  <span className="rounded bg-[#950c42]/10 px-2 py-0.5 font-mono text-[11px] font-bold text-[#950c42]">
+                    {latestHighlight.type.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="overflow-hidden rounded-md border border-border/60">
+                  <VideoEmbed url={resolveClipUrl(latestHighlight.clipUrl)!} title={latestHighlight.description || 'Highlight'} />
+                </div>
+                <div className="text-[13px] font-medium text-foreground">
+                  Por <Link href={`/players/${latestHighlight.playerId}`} className="font-semibold text-primary hover:underline transition-colors">{latestHighlightPlayer}</Link>
+                  {latestHighlight.description ? <p className="mt-1 text-[12px] text-muted-foreground font-normal">{latestHighlight.description}</p> : null}
+                </div>
+              </section>
+            )}
+
+            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando Nelson…</span></div>}>
               <NelsonLeague entries={nelsonData.league} />
             </Suspense>
-            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse"/><span>Cargando votos…</span></div>}>
+            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando votos…</span></div>}>
               <NelsonVotePanel
                 initialPlayers={nelsonData.players.map((player) => ({
                   id: player.id,
@@ -267,7 +295,7 @@ export default async function Page() {
                 initialAdminPasswordConfigured={nelsonData.adminPasswordConfigured}
               />
             </Suspense>
-            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse"/><span>Cargando partidas recientes…</span></div>}>
+            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando partidas recientes…</span></div>}>
               <RecentMatches matches={data.matches.slice(0, 4)} />
             </Suspense>
           </div>

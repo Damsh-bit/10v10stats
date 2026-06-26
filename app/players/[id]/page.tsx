@@ -39,6 +39,7 @@ export default async function PlayerProfile({
         acc.damage += entry.damage
         acc.wins += entry.won ? 1 : 0
         acc.losses += entry.won ? 0 : 1
+        acc.mvps += entry.mvps || 0
         return acc
       },
       {
@@ -49,6 +50,7 @@ export default async function PlayerProfile({
         deaths: 0,
         assists: 0,
         damage: 0,
+        mvps: 0,
       },
     )
 
@@ -79,7 +81,17 @@ export default async function PlayerProfile({
             <h1 className="text-xl font-bold leading-none text-foreground">
               {stats.name}
             </h1>
-            <BadgePill>{stats.badge}</BadgePill>
+            <div className="flex items-center gap-2">
+              <BadgePill>{stats.badge}</BadgePill>
+              {playerStats.mvps > 0 && (
+                <div className="flex items-center gap-1.5 rounded border border-[#d4af37]/30 bg-[#101010] px-2.5 py-0.5 shadow-sm">
+                  <span className="text-[11px] text-[#d4af37] opacity-90">👑</span>
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-[#d4af37]">
+                    {playerStats.mvps} MVP{playerStats.mvps !== 1 ? 'S' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

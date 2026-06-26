@@ -71,6 +71,7 @@ export type PlayerStats = {
   assists: number
   damage: number
   kda: number
+  mvps: number
 }
 
 type SupabasePlayerRecord = {
@@ -92,6 +93,7 @@ type SupabaseMatchRecord = {
   notes?: string | null
   team_a_name?: string | null
   team_b_name?: string | null
+  mvp_id?: string | null
 }
 
 type SupabaseMatchPlayerRecord = {
@@ -175,7 +177,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     let matches: Match[] = []
     const { data: matchRows, error: matchesError } = await supabase
       .from('matches')
-      .select('id, played_at, map, winner_team, score_ct, score_t, total_rounds, video_url, notes, team_a_name, team_b_name')
+      .select('id, map, played_at, score_ct, score_t, total_rounds, winner_team, video_url, notes, team_a_name, team_b_name, mvp_id')
       .order('played_at', { ascending: false })
 
     if (!matchesError && matchRows) {
@@ -193,22 +195,38 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
         }
       }
 
-      matches = matchRows.map((row) => ({
-        id: normalizeString(row.id, 'sin-id'),
-        map: normalizeMap(row.map),
-        date: normalizeString(row.played_at, ''),
-        ctScore: normalizeNumber(row.score_ct),
-        tScore: normalizeNumber(row.score_t),
-        durationMin: normalizeNumber(row.total_rounds),
-        winnerTeam: row.winner_team ?? undefined,
-        totalRounds: normalizeNumber(row.total_rounds),
-        videoUrl: row.video_url ?? undefined,
-        notes: row.notes ?? undefined,
-        teamAName: row.team_a_name ?? undefined,
-        teamBName: row.team_b_name ?? undefined,
-        players: matchPlayers
-          .filter((entry) => entry.match_id === row.id)
-          .map((entry) => ({
+      matches = matchRows.map((row) => {
+        const filteredPlayers = matchPlayers.filter((entry) => entry.match_id === row.id)
+        
+        let mvpId = row.mvp_id || ''
+        
+        // Si la partida no tiene MVP guardado (partidas viejas), lo calculamos
+        if (!mvpId) {
+          let maxScore = -1
+          filteredPlayers.forEach((p) => {
+            const d = Math.max(1, p.deaths || 0)
+            const score = ((p.kills || 0) + (p.assists || 0)) / d + ((p.damage || 0) / 100)
+            if (score > maxScore) {
+              maxScore = score
+              mvpId = p.player_id
+            }
+          })
+        }
+
+        return {
+          id: normalizeString(row.id, 'sin-id'),
+          map: normalizeMap(row.map),
+          date: normalizeString(row.played_at, ''),
+          ctScore: normalizeNumber(row.score_ct),
+          tScore: normalizeNumber(row.score_t),
+          durationMin: normalizeNumber(row.total_rounds),
+          winnerTeam: row.winner_team ?? undefined,
+          totalRounds: normalizeNumber(row.total_rounds),
+          videoUrl: row.video_url ?? undefined,
+          notes: row.notes ?? undefined,
+          teamAName: row.team_a_name ?? undefined,
+          teamBName: row.team_b_name ?? undefined,
+          players: filteredPlayers.map((entry) => ({
             playerId: normalizeString(entry.player_id, 'sin-player'),
             team: normalizeString(entry.team, 'CT'),
             kills: normalizeNumber(entry.kills),
@@ -217,10 +235,11 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
             damage: normalizeNumber(entry.damage),
             adr: 0,
             hsPct: 0,
-            mvps: 0,
+            mvps: entry.player_id === mvpId ? 1 : 0,
             won: normalizeBoolean(entry.won),
           })),
-      }))
+        }
+      })
     }
 
     let highlights: Highlight[] = []
@@ -273,6 +292,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   const wins = entries.filter((e) => e.won).length
   const losses = entries.length - wins
   const kda = deaths === 0 ? kills + assists : (kills + assists) / deaths
+  const mvps = sum(entries.map((e) => e.mvps))
 
   return {
     player,
@@ -284,6 +304,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     assists,
     damage,
     kda: Math.round(kda * 100) / 100,
+    mvps,
   }
 }
 

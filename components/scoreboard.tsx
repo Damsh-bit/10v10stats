@@ -70,8 +70,11 @@ export function Scoreboard({
                     className="flex items-center gap-2 transition-colors hover:text-primary"
                   >
                     <PlayerAvatar player={player} size={26} />
-                    <span className="text-[14px] font-medium text-foreground">
+                    <span className="text-[14px] font-medium text-foreground flex items-center gap-1.5">
                       {player.name}
+                      {e.mvps > 0 && (
+                        <span title="Match MVP" className="text-yellow-500 text-[12px]">👑</span>
+                      )}
                     </span>
                   </Link>
                 </td>

@@ -99,6 +99,20 @@ export async function POST(request: Request) {
     const teamBName = typeof payload.team_b_name === 'string' && payload.team_b_name.trim() ? payload.team_b_name.trim() : 'Equipo B'
     const winnerTeam = winnerTeamRaw === 'CT' ? teamAName : teamBName
 
+    // 1. Calcular MVP de la partida
+    let mvpPlayerId = ''
+    let maxScore = -1
+
+    payload.players.forEach((p) => {
+      const d = Math.max(1, p.deaths || 0)
+      const score = (p.kills + p.assists) / d + (p.damage / 100)
+      if (score > maxScore) {
+        maxScore = score
+        mvpPlayerId = p.player_id
+      }
+    })
+
+    // 2. Insertar la partida (match)
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
       .insert({
@@ -111,6 +125,7 @@ export async function POST(request: Request) {
         played_at: playedAt,
         video_url: videoUrl,
         notes,
+        mvp_id: mvpPlayerId || null, // Guardamos el MVP en la tabla matches
       })
       .select('id')
       .single()
@@ -119,6 +134,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: matchError?.message || 'No se pudo crear la partida' }, { status: 500 })
     }
 
+    // 3. Insertar a los jugadores en match_players
     const rows = payload.players.map((player) => ({
       match_id: matchData.id,
       player_id: player.player_id,
@@ -134,6 +150,35 @@ export async function POST(request: Request) {
 
     if (playersError) {
       return NextResponse.json({ error: playersError.message || 'No se pudieron guardar los jugadores' }, { status: 500 })
+    }
+
+    // 4. Intentar actualizar el total de MVPs en la tabla players
+    if (mvpPlayerId) {
+      const { data: playerData, error: fetchError } = await supabase
+        .from('players')
+        .select('mvps')
+        .eq('id', mvpPlayerId)
+        .single()
+        
+      if (fetchError) {
+        console.error('Error fetching player mvps:', fetchError)
+      }
+        
+      const currentMvps = playerData?.mvps || 0
+      
+      const { error: updateError, data: updateData } = await supabase
+        .from('players')
+        .update({ mvps: currentMvps + 1 })
+        .eq('id', mvpPlayerId)
+        .select()
+        
+      if (updateError) {
+        console.error('Error updating player mvps:', updateError)
+      } else if (!updateData || updateData.length === 0) {
+        console.warn('Update silencioso fallido por RLS en la tabla players.')
+      } else {
+        console.log(`MVP updated successfully for player ${mvpPlayerId}. New total: ${currentMvps + 1}`)
+      }
     }
 
     return NextResponse.json({ success: true, matchId: matchData.id })

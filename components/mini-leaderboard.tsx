@@ -23,7 +23,7 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
           <li key={s.player.id}>
             <button
               onClick={() => router.push(`/players/${s.player.id}`)}
-              className="flex w-full items-center gap-3 border-b border-border px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60"
+              className="flex w-full cursor-pointer items-center gap-3 border-b border-border px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60"
             >
               <div className="flex w-12 shrink-0 items-center justify-center gap-0.5">
                 <div className="flex w-4 items-center justify-end">

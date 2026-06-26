@@ -1,4 +1,4 @@
-import { Swords, Users, Crosshair, Flame } from 'lucide-react'
+import { Swords, Users, Crosshair, Flame, Skull } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 type Stat = {
@@ -10,7 +10,7 @@ type Stat = {
 
 export function DashboardStats({ stats }: { stats: Stat[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className={`grid grid-cols-2 gap-3 lg:grid-cols-${stats.length}`}>
       {stats.map((s) => {
         const Icon = s.icon
         return (
@@ -37,4 +37,4 @@ export function DashboardStats({ stats }: { stats: Stat[] }) {
   )
 }
 
-export const dashboardIcons = { Swords, Users, Crosshair, Flame }
+export const dashboardIcons = { Swords, Users, Crosshair, Flame, Skull }

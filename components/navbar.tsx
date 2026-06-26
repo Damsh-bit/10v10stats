@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/matches', label: 'Partidas' },
+  { href: '/highlights', label: 'Highlights' },
 ]
 
 export function Navbar() {
