@@ -81,7 +81,6 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
     }, 5000)
   }
 
-  // Polling para detectar cuando se finaliza la votación o hay cambios
   useEffect(() => {
     if (!voteState.active) return
 
@@ -90,12 +89,12 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
         const response = await fetch('/api/nelson', { cache: 'no-store' })
         if (!response.ok) return
         const data = await response.json()
-        
+
         // Si nosotros teníamos la votación activa y ahora ya no lo está, y hay ganador
         if (!data.voteState.active && data.voteState.winnerName) {
-           triggerWinnerAnimation(data.voteState.winnerName)
+          triggerWinnerAnimation(data.voteState.winnerName)
         }
-        
+
         setPlayers(data.players ?? [])
         setVoteState(data.voteState)
       } catch (e) {
@@ -104,7 +103,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
     }, 3000)
 
     return () => clearInterval(intervalId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voteState.active])
 
   const voteResults = useMemo(() => {
