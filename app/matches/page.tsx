@@ -1,6 +1,8 @@
 import { getLiveData } from '@/lib/mockData'
 import { MatchList } from '@/components/match-list'
 
+export const dynamic = 'force-dynamic'
+
 export default async function MatchesPage() {
   const data = await getLiveData()
   const sorted = [...data.matches].sort((a, b) => b.date.localeCompare(a.date))
