@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { PlayerStats } from '@/lib/mockData'
 import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
 import { cn } from '@/lib/utils'
+import { Star } from 'lucide-react'
 
 export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
   const router = useRouter()
@@ -30,15 +31,24 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
               onClick={() => router.push(`/players/${s.player.id}`)}
               className="cursor-pointer border-t border-border transition-colors hover:bg-accent/60"
             >
-              <td className="px-3 py-3 text-center">
-                <span
-                  className={cn(
-                    'font-mono text-[13px] font-bold',
-                    i === 0 ? 'text-primary' : 'text-muted-foreground',
-                  )}
-                >
-                  {i + 1}
-                </span>
+              <td className="px-3 py-3 align-middle text-center">
+                <div className="mx-auto flex w-12 items-center justify-center gap-0.5">
+                  <div className="flex w-4 items-center justify-end">
+                    {i === 0 && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-500" />}
+                    {i === 1 && <Star className="h-3.5 w-3.5 fill-slate-300 text-slate-400" />}
+                    {i === 2 && <Star className="h-3.5 w-3.5 fill-amber-700 text-amber-800" />}
+                    {i >= stats.length - 3 && <span className="text-[12px]">💀</span>}
+                  </div>
+                  <span
+                    className={cn(
+                      'w-4 text-center font-mono text-[13px] font-bold',
+                      i === 0 ? 'text-primary' : 'text-muted-foreground',
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="w-4" />
+                </div>
               </td>
               <td className="px-3 py-3">
                 <div className="flex items-center gap-3">
@@ -58,7 +68,16 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
               <Td className="text-right">{s.assists}</Td>
               <Td className="text-right">{s.damage.toLocaleString()}</Td>
               <td className="px-3 py-3 text-right">
-                <span className="font-mono text-[13px] font-bold text-primary">
+                <span
+                  className={cn(
+                    'font-mono text-[13px] font-bold',
+                    i < 3
+                      ? 'text-emerald-500'
+                      : i >= stats.length - 3
+                        ? 'text-primary'
+                        : 'text-yellow-500',
+                  )}
+                >
                   {s.kda.toFixed(2)}
                 </span>
               </td>

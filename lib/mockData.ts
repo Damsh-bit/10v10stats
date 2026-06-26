@@ -10,7 +10,7 @@ export type Player = {
 
 export type MatchPlayer = {
   playerId: string
-  team: 'CT' | 'T'
+  team: string
   kills: number
   deaths: number
   assists: number
@@ -97,7 +97,7 @@ type SupabaseMatchRecord = {
 type SupabaseMatchPlayerRecord = {
   match_id: string
   player_id: string
-  team: 'CT' | 'T' | null
+  team: string | null
   won: boolean | null
   kills: number | null
   deaths: number | null
@@ -211,7 +211,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
           .filter((entry) => entry.match_id === row.id)
           .map((entry) => ({
             playerId: normalizeString(entry.player_id, 'sin-player'),
-            team: (entry.team === 'CT' || entry.team === 'T' ? entry.team : 'CT') as 'CT' | 'T',
+            team: normalizeString(entry.team, 'CT'),
             kills: normalizeNumber(entry.kills),
             deaths: normalizeNumber(entry.deaths),
             assists: normalizeNumber(entry.assists),

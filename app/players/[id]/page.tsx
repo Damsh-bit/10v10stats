@@ -114,14 +114,23 @@ export default async function PlayerProfile({
               >
                 <div className="flex items-center gap-3">
                   <ResultChip won={entry.won} />
-                  <span className="text-[14px] font-medium text-foreground">
-                    {match.map}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-medium text-foreground">
+                      {match.map}
+                    </span>
+                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      {entry.team}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-4 font-mono text-[12px] text-muted-foreground">
-                  <span className="text-foreground">
-                    {entry.kills}/{entry.deaths}/{entry.assists}
-                  </span>
+                  <div className="flex items-center gap-1 font-semibold tracking-wide text-primary">
+                    <span>{entry.kills}</span>
+                    <span className="text-primary/50">/</span>
+                    <span>{entry.deaths}</span>
+                    <span className="text-primary/50">/</span>
+                    <span>{entry.assists}</span>
+                  </div>
                   <span className="hidden sm:inline">{entry.damage} dmg</span>
                   <span className="w-20 text-right">{formatDate(match.date)}</span>
                 </div>

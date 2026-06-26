@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { PlayerStats } from '@/lib/mockData'
 import { PlayerAvatar } from '@/components/strike-ui'
 import { cn } from '@/lib/utils'
+import { Star } from 'lucide-react'
 
 export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
   const router = useRouter()
@@ -24,14 +25,23 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
               onClick={() => router.push(`/players/${s.player.id}`)}
               className="flex w-full items-center gap-3 border-b border-border px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60"
             >
-              <span
-                className={cn(
-                  'w-5 text-center font-mono text-[13px] font-bold',
-                  i === 0 ? 'text-primary' : 'text-muted-foreground',
-                )}
-              >
-                {i + 1}
-              </span>
+              <div className="flex w-12 shrink-0 items-center justify-center gap-0.5">
+                <div className="flex w-4 items-center justify-end">
+                  {i === 0 && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-500" />}
+                  {i === 1 && <Star className="h-3.5 w-3.5 fill-slate-300 text-slate-400" />}
+                  {i === 2 && <Star className="h-3.5 w-3.5 fill-amber-700 text-amber-800" />}
+                  {i >= stats.length - 3 && <span className="text-[12px]">💀</span>}
+                </div>
+                <span
+                  className={cn(
+                    'w-4 text-center font-mono text-[13px] font-bold',
+                    i === 0 ? 'text-primary' : 'text-muted-foreground',
+                  )}
+                >
+                  {i + 1}
+                </span>
+                <div className="w-4" />
+              </div>
               <PlayerAvatar player={s.player} size={32} />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-[14px] font-semibold leading-tight text-foreground">
@@ -41,7 +51,16 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
                   {s.kills}/{s.deaths}/{s.assists} · {s.wins}W-{s.losses}L
                 </span>
               </div>
-              <span className="font-mono text-[15px] font-bold text-primary">
+              <span
+                className={cn(
+                  'font-mono text-[15px] font-bold',
+                  i < 3
+                    ? 'text-emerald-500'
+                    : i >= stats.length - 3
+                      ? 'text-primary'
+                      : 'text-yellow-500',
+                )}
+              >
                 {s.kda.toFixed(2)}
               </span>
             </button>
