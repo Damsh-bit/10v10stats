@@ -29,7 +29,6 @@ export default async function EstadisticasPage() {
   let recordAssists = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordMinDamage = { value: Infinity, playerName: 'Sin datos', matchId: '' }
-  let recordHs = { value: 0, playerName: 'Sin datos', matchId: '' }
   
   data.matches.forEach(m => {
     m.players.forEach(p => {
@@ -39,7 +38,6 @@ export default async function EstadisticasPage() {
       if (p.assists > recordAssists.value) recordAssists = { value: p.assists, playerName: pName, matchId: m.id }
       if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName, matchId: m.id }
       if (p.damage < recordMinDamage.value) recordMinDamage = { value: p.damage, playerName: pName, matchId: m.id }
-      if ((p.hsPct || 0) > recordHs.value) recordHs = { value: p.hsPct || 0, playerName: pName, matchId: m.id }
     })
   })
 
@@ -93,13 +91,6 @@ export default async function EstadisticasPage() {
       subtitle: hasMinDamage ? recordMinDamage.playerName : 'Sin datos',
       color: 'text-slate-400',
       matchId: hasMinDamage ? recordMinDamage.matchId : undefined
-    },
-    {
-      title: 'Mejor % de HS (Partida)',
-      value: recordHs.value > 0 ? `${recordHs.value}%` : '0%',
-      subtitle: recordHs.value > 0 ? recordHs.playerName : 'Sin datos',
-      color: 'text-yellow-400',
-      matchId: recordHs.matchId
     }
   ]
 
