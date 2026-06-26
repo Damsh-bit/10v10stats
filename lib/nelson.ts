@@ -30,7 +30,7 @@ type NelsonStoreData = {
 
 const DATA_DIR = path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'nelson.json')
-const ADMIN_PASSWORD = 'admin'
+const ADMIN_PASSWORD = 'alzhannah2026'
 const globalForNelsonStore = globalThis as typeof globalThis & {
   __nelsonStore?: NelsonStoreData
 }
@@ -198,7 +198,7 @@ async function syncPlayerPoints(playerId: string, points: number) {
   if (!supabase) return
 
   try {
-    await supabase.from('players').update({ badge: buildBadgeValue(points) }).eq('id', playerId)
+    await supabase.from('players').update({ contador_nelson: points }).eq('id', playerId)
   } catch {
     // ignore sync errors and keep local state
   }
@@ -208,7 +208,7 @@ function mapSupabasePlayers(rows: Awaited<ReturnType<typeof getPlayersFromSupaba
   return rows.map((player) => ({
     id: normalizeName(player.id, 'sin-id'),
     name: normalizeName(player.name, 'Sin info'),
-    nelsonPoints: normalizeBadgePoints(player.badge),
+    nelsonPoints: player.contador_nelson ?? normalizeBadgePoints(player.badge),
     badge: player.badge ?? null,
   }))
 }
@@ -275,10 +275,10 @@ export async function startNelsonVote(password: string) {
   }
 }
 
-export async function voteForNelson(options: { voterKey: string; voteForPlayerId: string }) {
-  const { voterKey, voteForPlayerId } = options
+export async function voteForNelson(options: { voterPlayerId: string; voteForPlayerId: string }) {
+  const { voterPlayerId, voteForPlayerId } = options
 
-  if (!voterKey || !voteForPlayerId) {
+  if (!voterPlayerId || !voteForPlayerId) {
     throw new Error('Faltan datos para la votación')
   }
 
@@ -289,16 +289,16 @@ export async function voteForNelson(options: { voterKey: string; voteForPlayerId
     throw new Error('La votación no está activa')
   }
 
-  if (store.state.voters[voterKey]) {
-    throw new Error('Ya participaste en esta votación')
+  if (store.state.voters[voterPlayerId]) {
+    throw new Error('Este jugador ya votó')
   }
 
   const target = players.find((player) => player.id === voteForPlayerId)
   if (!target) {
-    throw new Error('Jugador no encontrado')
+    throw new Error('Jugador votado no encontrado')
   }
 
-  store.state.voters[voterKey] = voteForPlayerId
+  store.state.voters[voterPlayerId] = voteForPlayerId
   store.state.voteCounts[voteForPlayerId] = (store.state.voteCounts[voteForPlayerId] ?? 0) + 1
   await writeStore(store)
 

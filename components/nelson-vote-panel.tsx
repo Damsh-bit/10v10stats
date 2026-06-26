@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Crown, Loader2, ShieldCheck, Skull, Vote } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { CheckCircle2, Crown, Loader2, ShieldCheck, Skull, Vote, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 
 type PlayerOption = {
   id: string
@@ -27,25 +29,50 @@ type NelsonVotePanelProps = {
   initialAdminPasswordConfigured: boolean
 }
 
-function getVoterKey() {
-  if (typeof window === 'undefined') return ''
-  const existing = window.localStorage.getItem('nelson-voter-key')
-  if (existing) return existing
-
-  const generated = `voter-${Math.random().toString(36).slice(2, 10)}`
-  window.localStorage.setItem('nelson-voter-key', generated)
-  return generated
-}
-
-export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdminPasswordConfigured }: NelsonVotePanelProps) {
+export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVotePanelProps) {
+  const router = useRouter()
   const [players, setPlayers] = useState(initialPlayers)
   const [voteState, setVoteState] = useState(initialVoteState)
-  const [adminPasswordConfigured, setAdminPasswordConfigured] = useState(initialAdminPasswordConfigured)
-  const [password, setPassword] = useState('')
-  const [selectedPlayerId, setSelectedPlayerId] = useState('')
+  
+  const [authError, setAuthError] = useState<string | null>(null)
+
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [voterKey] = useState(getVoterKey)
+
+  // Iniciar Prompt
+  const [showStartPrompt, setShowStartPrompt] = useState(false)
+  const [startPassword, setStartPassword] = useState('')
+
+  // Votar Modal
+  const [showVoteModal, setShowVoteModal] = useState(false)
+  const [voterId, setVoterId] = useState('')
+  const [voteForId, setVoteForId] = useState('')
+
+  // Finalizar Prompt
+  const [showFinishPrompt, setShowFinishPrompt] = useState(false)
+  const [finishPassword, setFinishPassword] = useState('')
+
+  const [deviceAlreadyVoted, setDeviceAlreadyVoted] = useState(false)
+
+  useEffect(() => {
+    if (voteState.voteId) {
+      setDeviceAlreadyVoted(localStorage.getItem(`nelson_voted_${voteState.voteId}`) === 'true')
+    } else {
+      setDeviceAlreadyVoted(false)
+    }
+  }, [voteState.voteId])
+
+  const voteResults = useMemo(() => {
+    if (!voteState.voteCounts) return []
+    
+    return players
+      .map(p => ({
+        name: p.name,
+        votes: voteState.voteCounts[p.id] || 0
+      }))
+      .filter(p => p.votes > 0)
+      .sort((a, b) => b.votes - a.votes)
+  }, [players, voteState.voteCounts])
 
   useEffect(() => {
     const load = async () => {
@@ -53,41 +80,37 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
       const data = await response.json()
       setPlayers(data.players ?? [])
       setVoteState(data.voteState ?? initialVoteState)
-      setAdminPasswordConfigured(Boolean(data.adminPasswordConfigured))
     }
-
     load()
   }, [initialVoteState])
 
-  const canVote = useMemo(() => {
-    return voteState.active && !voteState.voters[voterKey] && players.length > 0
-  }, [players.length, voteState.active, voteState.voters, voterKey])
-
-  const handleStartVote = async () => {
+  const handleStartVote = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setMessage(null)
-
     try {
       const response = await fetch('/api/nelson', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', password }),
+        body: JSON.stringify({ action: 'start', password: startPassword }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'No se pudo iniciar la votación')
       setVoteState(result.voteState)
       setMessage('Votación iniciada correctamente')
-      setPassword('')
+      setShowStartPrompt(false)
+      setStartPassword('')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar la votación')
+      setAuthError(error instanceof Error ? error.message : 'Error al iniciar')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleVote = async () => {
-    if (!selectedPlayerId) {
-      setMessage('Selecciona un jugador para votar')
+  const handleVote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!voterId || !voteForId) {
+      setMessage('Selecciona ambos jugadores')
       return
     }
 
@@ -98,13 +121,21 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
       const response = await fetch('/api/nelson', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'vote', voterKey, voteForPlayerId: selectedPlayerId }),
+        body: JSON.stringify({ action: 'vote', voterPlayerId: voterId, voteForPlayerId: voteForId }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'No se pudo registrar el voto')
+      
       setVoteState(result.voteState)
-      setMessage('Tu voto fue registrado')
-      setSelectedPlayerId('')
+      setMessage('Voto registrado correctamente')
+      setShowVoteModal(false)
+      setVoterId('')
+      setVoteForId('')
+      
+      if (result.voteState.voteId) {
+        localStorage.setItem(`nelson_voted_${result.voteState.voteId}`, 'true')
+        setDeviceAlreadyVoted(true)
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No se pudo registrar el voto')
     } finally {
@@ -112,7 +143,8 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
     }
   }
 
-  const handleFinishVote = async () => {
+  const handleFinishVote = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setMessage(null)
 
@@ -120,18 +152,28 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
       const response = await fetch('/api/nelson', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'finish', password }),
+        body: JSON.stringify({ action: 'finish', password: finishPassword }),
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'No se pudo finalizar la votación')
+      
       setVoteState(result.voteState)
-      setMessage(`Votación finalizada. Ganador: ${result.winner?.name ?? 'Sin datos'}`)
-      setPassword('')
+      setMessage(`Votación finalizada. Ganador: ${result.winner?.name ?? 'Nadie'}`)
+      setShowFinishPrompt(false)
+      setFinishPassword('')
+      router.refresh()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo finalizar la votación')
+      setAuthError(error instanceof Error ? error.message : 'Error al finalizar')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const openVoteModal = () => {
+    setMessage(null)
+    setVoterId('')
+    setVoteForId('')
+    setShowVoteModal(true)
   }
 
   return (
@@ -139,7 +181,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">Nelson Vote</p>
-          <h3 className="text-base font-semibold text-foreground">Votación del Nelson de la fecha</h3>
+          <h3 className="text-base font-semibold text-foreground">Votación de la fecha</h3>
         </div>
         <div className="rounded-full bg-primary/10 p-2 text-primary">
           <Vote className="h-4 w-4" />
@@ -160,93 +202,183 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState, initialAdmin
         )}
 
         {voteState.winnerName ? (
-          <div className="flex items-center gap-2 text-primary">
-            <Crown className="h-4 w-4" />
-            <span>Último ganador: {voteState.winnerName}</span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-primary">
+              <Crown className="h-4 w-4" />
+              <span>Último ganador: {voteState.winnerName}</span>
+            </div>
+            {voteState.closedAt && (
+              <div className="text-[11px] text-muted-foreground ml-6">
+                Votado el {new Date(voteState.closedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {!voteState.active && voteResults.length > 0 ? (
+          <div className="mt-3 space-y-2 border-t border-border pt-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground">Resultados finales</p>
+            <div className="grid gap-1.5">
+              {voteResults.map((result, idx) => (
+                <div key={result.name} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{idx + 1}. {result.name}</span>
+                  <span className="font-medium text-foreground">{result.votes} voto{result.votes !== 1 ? 's' : ''}</span>
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 space-y-3">
-        {adminPasswordConfigured ? (
-          <div className="space-y-2">
-            <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Contraseña admin</label>
-            <input
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              type="password"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-              placeholder="Contraseña"
-            />
-          </div>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        {!voteState.active ? (
+          !showStartPrompt ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAuthError(null)
+                setShowStartPrompt(true)
+              }}
+              disabled={isLoading}
+              className="w-full sm:w-auto"
+            >
+              {isLoading ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
+              Iniciar Votación
+            </Button>
+          ) : (
+            <form onSubmit={handleStartVote} className="flex w-full items-center gap-2">
+              <input
+                type="password"
+                autoFocus
+                placeholder="Clave admin"
+                value={startPassword}
+                onChange={(e) => {
+                  setStartPassword(e.target.value)
+                  setAuthError(null)
+                }}
+                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary sm:flex-none sm:w-48"
+              />
+              <Button type="submit" size="sm" disabled={isLoading || !startPassword}>
+                Iniciar
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setShowStartPrompt(false)}>
+                Cancelar
+              </Button>
+            </form>
+          )
         ) : (
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
-            La contraseña admin ya está habilitada. Usa la clave "admin" para iniciar o cerrar la votación.
+              <>
+                <Button
+                  onClick={openVoteModal}
+                  disabled={isLoading || deviceAlreadyVoted}
+                  className="w-full sm:w-auto"
+                >
+                  {deviceAlreadyVoted ? 'Ya votaste' : 'Votar'}
+                </Button>
+                
+                {!showFinishPrompt ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setAuthError(null)
+                      setShowFinishPrompt(true)
+                    }}
+                    disabled={isLoading}
+                    className="w-full sm:w-auto"
+                  >
+                    Finalizar Votación
+                  </Button>
+                ) : (
+                  <form onSubmit={handleFinishVote} className="flex w-full items-center gap-2">
+                    <input
+                      type="password"
+                      autoFocus
+                      placeholder="Clave para finalizar"
+                      value={finishPassword}
+                      onChange={(e) => {
+                        setFinishPassword(e.target.value)
+                        setAuthError(null)
+                      }}
+                      className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    />
+                    <Button type="submit" size="sm" disabled={isLoading || !finishPassword}>
+                      Confirmar
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setShowFinishPrompt(false)}>
+                      Cancelar
+                    </Button>
+                  </form>
+                )}
+              </>
+            )}
           </div>
-        )}
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleStartVote}
-            disabled={isLoading || !adminPasswordConfigured}
-            className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoading ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
-            Iniciar votación
-          </button>
-          <button
-            type="button"
-            onClick={handleFinishVote}
-            disabled={isLoading || !adminPasswordConfigured}
-            className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoading ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
-            Finalizar votación
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-lg border border-border bg-background/70 p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-foreground">Votar al Nelson de la fecha</h4>
-          <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">1 voto por persona</span>
-        </div>
-
-        <div className="space-y-2">
-          {players.map((player) => (
-            <label key={player.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm text-foreground">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="nelson-vote"
-                  value={player.id}
-                  checked={selectedPlayerId === player.id}
-                  onChange={() => setSelectedPlayerId(player.id)}
-                  disabled={!canVote}
-                />
-                <span>{player.name}</span>
-              </div>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{player.nelsonPoints} pts</span>
-            </label>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleVote}
-          disabled={isLoading || !canVote || !selectedPlayerId}
-          className="mt-3 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isLoading ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin" /> : null}
-          Enviar voto
-        </button>
-      </div>
-
+      {authError && (showFinishPrompt || showStartPrompt) && <p className="mt-2 text-xs text-destructive">{authError}</p>}
+      
       {message ? (
         <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
           <CheckCircle2 className="h-4 w-4" />
           <span>{message}</span>
+        </div>
+      ) : null}
+
+      {/* Votar Modal */}
+      {showVoteModal ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+              <h3 className="font-semibold text-foreground">Registrar Voto</h3>
+              <button onClick={() => setShowVoteModal(false)} className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleVote} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">¿Quién vota?</label>
+                <select
+                  value={voterId}
+                  onChange={(e) => setVoterId(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                  required
+                >
+                  <option value="">— Seleccionar —</option>
+                  {players.map((p) => {
+                    const alreadyVoted = !!voteState.voters[p.id]
+                    return (
+                      <option key={p.id} value={p.id} disabled={alreadyVoted}>
+                        {p.name} {alreadyVoted ? '(Ya votó)' : ''}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">¿A quién vota para Nelson?</label>
+                <select
+                  value={voteForId}
+                  onChange={(e) => setVoteForId(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                  required
+                >
+                  <option value="">— Seleccionar —</option>
+                  {players.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {message && <p className="text-sm text-destructive">{message}</p>}
+
+              <Button type="submit" className="w-full" disabled={isLoading || !voterId || !voteForId}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Enviar Voto
+              </Button>
+            </form>
+          </div>
         </div>
       ) : null}
     </section>

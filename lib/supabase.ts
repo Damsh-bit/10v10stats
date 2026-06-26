@@ -5,6 +5,7 @@ export type SupabasePlayerRecord = {
   name: string | null
   badge?: string | null
   photo_url?: string | null
+  contador_nelson?: number | null
 }
 
 function isValidHttpUrl(value: string | undefined): value is string {
@@ -71,7 +72,7 @@ export async function getPlayersFromSupabase(): Promise<SupabasePlayerRecord[]> 
   if (!supabase) return []
 
   try {
-    const { data, error } = await supabase.from('players').select('id, name, badge, photo_url').order('name')
+    const { data, error } = await supabase.from('players').select('id, name, badge, photo_url, contador_nelson').order('name')
 
     if (error || !data) return []
 
@@ -80,6 +81,7 @@ export async function getPlayersFromSupabase(): Promise<SupabasePlayerRecord[]> 
       name: player.name ?? 'Sin info',
       badge: player.badge ?? null,
       photo_url: player.photo_url ?? null,
+      contador_nelson: player.contador_nelson ?? null,
     }))
   } catch {
     return []

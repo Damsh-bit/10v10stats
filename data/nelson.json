@@ -1,66 +1,105 @@
 {
   "players": {
-    "fallback-ct-1": {
-      "id": "fallback-ct-1",
-      "name": "Jugador CT 1",
-      "nelsonPoints": 0
+    "a59dbe21-932a-453e-b2c8-a518c1b9f705": {
+      "id": "a59dbe21-932a-453e-b2c8-a518c1b9f705",
+      "name": "Asta",
+      "nelsonPoints": 0,
+      "badge": "Spray Control"
     },
-    "fallback-ct-2": {
-      "id": "fallback-ct-2",
-      "name": "Jugador CT 2",
-      "nelsonPoints": 0
+    "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45": {
+      "id": "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45",
+      "name": "Foco",
+      "nelsonPoints": 4,
+      "badge": "Nelson 1",
+      "votes": 1,
+      "points": 3
     },
-    "fallback-ct-3": {
-      "id": "fallback-ct-3",
-      "name": "Jugador CT 3",
-      "nelsonPoints": 0
+    "485befe1-fcec-4f05-8a61-07d81991a453": {
+      "id": "485befe1-fcec-4f05-8a61-07d81991a453",
+      "name": "Jey",
+      "nelsonPoints": 1,
+      "badge": "Support"
     },
-    "fallback-ct-4": {
-      "id": "fallback-ct-4",
-      "name": "Jugador CT 4",
-      "nelsonPoints": 0
+    "361eeb81-9df5-4206-b300-0365e0ad736c": {
+      "id": "361eeb81-9df5-4206-b300-0365e0ad736c",
+      "name": "Kike",
+      "nelsonPoints": 0,
+      "badge": null
     },
-    "fallback-ct-5": {
-      "id": "fallback-ct-5",
-      "name": "Jugador CT 5",
-      "nelsonPoints": 0
+    "b26a5ea5-e30b-4dc0-992b-1de0130700fc": {
+      "id": "b26a5ea5-e30b-4dc0-992b-1de0130700fc",
+      "name": "Neitor",
+      "nelsonPoints": 0,
+      "badge": "Ninja Defuser"
     },
-    "fallback-t-1": {
-      "id": "fallback-t-1",
-      "name": "Jugador T 1",
-      "nelsonPoints": 0
+    "8d0bd860-d9a4-4ad8-96ab-4e7bfe2bfa7d": {
+      "id": "8d0bd860-d9a4-4ad8-96ab-4e7bfe2bfa7d",
+      "name": "Papi",
+      "nelsonPoints": 1,
+      "badge": "El Clutcher"
     },
-    "fallback-t-2": {
-      "id": "fallback-t-2",
-      "name": "Jugador T 2",
-      "nelsonPoints": 0
+    "e4f70983-2c88-40e2-b8bb-18a7b27a6727": {
+      "id": "e4f70983-2c88-40e2-b8bb-18a7b27a6727",
+      "name": "Pepo",
+      "nelsonPoints": 0,
+      "badge": "IGL"
     },
-    "fallback-t-3": {
-      "id": "fallback-t-3",
-      "name": "Jugador T 3",
-      "nelsonPoints": 0
+    "1d15ac80-8e6b-421f-a0cb-aefb318d276b": {
+      "id": "1d15ac80-8e6b-421f-a0cb-aefb318d276b",
+      "name": "Pucha",
+      "nelsonPoints": 0,
+      "badge": "Nelson"
     },
-    "fallback-t-4": {
-      "id": "fallback-t-4",
-      "name": "Jugador T 4",
-      "nelsonPoints": 0
+    "8fe17956-e5ef-466e-980d-c82867fbb742": {
+      "id": "8fe17956-e5ef-466e-980d-c82867fbb742",
+      "name": "Roro",
+      "nelsonPoints": 0,
+      "badge": "Anchor"
     },
-    "fallback-t-5": {
-      "id": "fallback-t-5",
-      "name": "Jugador T 5",
-      "nelsonPoints": 0
+    "954b75ac-e887-4b8f-8881-523e5d28cf64": {
+      "id": "954b75ac-e887-4b8f-8881-523e5d28cf64",
+      "name": "Shorsh",
+      "nelsonPoints": 0,
+      "badge": "Headshot Queen"
+    },
+    "94b3489e-d678-4cf6-8539-3741bb2166ed": {
+      "id": "94b3489e-d678-4cf6-8539-3741bb2166ed",
+      "name": "Tiky",
+      "nelsonPoints": 0,
+      "badge": "AWP Diva"
+    },
+    "24a3fd32-972e-475c-98aa-8cbfaf789b8a": {
+      "id": "24a3fd32-972e-475c-98aa-8cbfaf789b8a",
+      "name": "Tutu",
+      "nelsonPoints": 0,
+      "badge": "Lurker"
     }
   },
   "state": {
     "active": false,
-    "startedAt": null,
-    "startedBy": null,
-    "voteId": null,
-    "voters": {},
-    "voteCounts": {},
-    "winnerPlayerId": null,
-    "winnerName": null,
-    "closedAt": null
+    "startedAt": "2026-06-26T14:43:05.686Z",
+    "startedBy": "admin",
+    "voteId": "bda998a1-0b82-44e6-a295-3a4f248bf865",
+    "voters": {
+      "a59dbe21-932a-453e-b2c8-a518c1b9f705": "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45"
+    },
+    "voteCounts": {
+      "a59dbe21-932a-453e-b2c8-a518c1b9f705": 0,
+      "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45": 1,
+      "485befe1-fcec-4f05-8a61-07d81991a453": 0,
+      "361eeb81-9df5-4206-b300-0365e0ad736c": 0,
+      "b26a5ea5-e30b-4dc0-992b-1de0130700fc": 0,
+      "8d0bd860-d9a4-4ad8-96ab-4e7bfe2bfa7d": 0,
+      "e4f70983-2c88-40e2-b8bb-18a7b27a6727": 0,
+      "1d15ac80-8e6b-421f-a0cb-aefb318d276b": 0,
+      "8fe17956-e5ef-466e-980d-c82867fbb742": 0,
+      "954b75ac-e887-4b8f-8881-523e5d28cf64": 0,
+      "94b3489e-d678-4cf6-8539-3741bb2166ed": 0,
+      "24a3fd32-972e-475c-98aa-8cbfaf789b8a": 0
+    },
+    "winnerPlayerId": "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45",
+    "winnerName": "Foco",
+    "closedAt": "2026-06-26T14:43:13.947Z"
   },
-  "lastUpdatedAt": null
+  "lastUpdatedAt": "2026-06-26T14:43:14.126Z"
 }

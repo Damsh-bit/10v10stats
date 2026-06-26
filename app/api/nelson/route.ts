@@ -12,7 +12,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { action?: string; password?: string; voterKey?: string; voteForPlayerId?: string }
+    const body = (await request.json()) as { action?: string; password?: string; voterPlayerId?: string; voteForPlayerId?: string }
 
     if (body.action === 'start') {
       const result = await startNelsonVote(body.password ?? '')
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     if (body.action === 'vote') {
-      const result = await voteForNelson({ voterKey: body.voterKey ?? '', voteForPlayerId: body.voteForPlayerId ?? '' })
+      const result = await voteForNelson({ voterPlayerId: body.voterPlayerId ?? '', voteForPlayerId: body.voteForPlayerId ?? '' })
       return NextResponse.json(result)
     }
 
