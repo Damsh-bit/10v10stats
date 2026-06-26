@@ -24,21 +24,22 @@ export default async function EstadisticasPage() {
     }
   }
 
-  let recordKills = { value: 0, playerName: 'Sin datos' }
-  let recordDeaths = { value: 0, playerName: 'Sin datos' }
-  let recordAssists = { value: 0, playerName: 'Sin datos' }
-  let recordDamage = { value: 0, playerName: 'Sin datos' }
+  let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordAssists = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordHs = { value: 0, playerName: 'Sin datos', matchId: '' }
   
   data.matches.forEach(m => {
     m.players.forEach(p => {
       const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
-      if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName }
-      if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName }
-      if (p.assists > recordAssists.value) recordAssists = { value: p.assists, playerName: pName }
-      if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName }
+      if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName, matchId: m.id }
+      if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
+      if (p.assists > recordAssists.value) recordAssists = { value: p.assists, playerName: pName, matchId: m.id }
+      if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName, matchId: m.id }
+      if ((p.hsPct || 0) > recordHs.value) recordHs = { value: p.hsPct || 0, playerName: pName, matchId: m.id }
     })
   })
-  const topHs = [...stats].filter(s => s.hsPct > 0).sort((a, b) => b.hsPct - a.hsPct)[0]
 
   const statCards = [
     {
@@ -58,31 +59,36 @@ export default async function EstadisticasPage() {
       title: 'Más Kills (Partida)',
       value: String(recordKills.value),
       subtitle: recordKills.value > 0 ? recordKills.playerName : 'Sin datos',
-      color: 'text-green-400'
+      color: 'text-green-400',
+      matchId: recordKills.matchId
     },
     {
       title: 'Más Muertes (Partida)',
       value: String(recordDeaths.value),
       subtitle: recordDeaths.value > 0 ? recordDeaths.playerName : 'Sin datos',
-      color: 'text-red-400'
+      color: 'text-red-400',
+      matchId: recordDeaths.matchId
     },
     {
       title: 'Más Asistencias (Partida)',
       value: String(recordAssists.value),
       subtitle: recordAssists.value > 0 ? recordAssists.playerName : 'Sin datos',
-      color: 'text-purple-400'
+      color: 'text-purple-400',
+      matchId: recordAssists.matchId
     },
     {
       title: 'Más Daño (Partida)',
       value: recordDamage.value > 0 ? recordDamage.value.toLocaleString() : '0',
       subtitle: recordDamage.value > 0 ? recordDamage.playerName : 'Sin datos',
-      color: 'text-orange-400'
+      color: 'text-orange-400',
+      matchId: recordDamage.matchId
     },
     {
-      title: 'Mejor % de HS',
-      value: topHs ? `${topHs.hsPct}%` : '0%',
-      subtitle: topHs ? topHs.player.name : 'Sin datos',
-      color: 'text-yellow-400'
+      title: 'Mejor % de HS (Partida)',
+      value: recordHs.value > 0 ? `${recordHs.value}%` : '0%',
+      subtitle: recordHs.value > 0 ? recordHs.playerName : 'Sin datos',
+      color: 'text-yellow-400',
+      matchId: recordHs.matchId
     }
   ]
 
@@ -117,9 +123,20 @@ export default async function EstadisticasPage() {
               )}
               
               <div className="relative z-10 flex flex-col gap-1">
-                <h3 className={`text-sm font-semibold uppercase tracking-wider ${card.bgImage ? 'text-white/80' : 'text-muted-foreground'}`}>
-                  {card.title}
-                </h3>
+                <div className="flex items-start justify-between">
+                  <h3 className={`text-sm font-semibold uppercase tracking-wider ${card.bgImage ? 'text-white/80' : 'text-muted-foreground'}`}>
+                    {card.title}
+                  </h3>
+                  {card.matchId && (
+                    <Link
+                      href={`/matches/${card.matchId}`}
+                      className={`flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase transition-colors hover:bg-primary hover:text-white ${card.bgImage ? 'text-white bg-white/20 hover:bg-white/40' : 'text-primary'}`}
+                      title="Ver partida del récord"
+                    >
+                      Ver
+                    </Link>
+                  )}
+                </div>
                 <p className={`font-mono text-3xl font-bold ${card.color}`}>
                   {card.value}
                 </p>

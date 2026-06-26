@@ -38,16 +38,16 @@ export default async function Page() {
 
   const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
   
-  let recordKills = { value: 0, playerName: 'Sin datos' }
-  let recordDeaths = { value: 0, playerName: 'Sin datos' }
-  let recordDamage = { value: 0, playerName: 'Sin datos' }
+  let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
   
   data.matches.forEach(m => {
     m.players.forEach(p => {
       const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
-      if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName }
-      if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName }
-      if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName }
+      if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName, matchId: m.id }
+      if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
+      if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName, matchId: m.id }
     })
   })
 
@@ -68,12 +68,14 @@ export default async function Page() {
       value: String(recordKills.value),
       sub: recordKills.value > 0 ? `por ${recordKills.playerName}` : 'Sin datos',
       icon: dashboardIcons.Crosshair,
+      matchId: recordKills.matchId,
     },
     {
       label: 'Más Muertes',
       value: String(recordDeaths.value),
       sub: recordDeaths.value > 0 ? `por ${recordDeaths.playerName}` : 'Sin datos',
       icon: dashboardIcons.Skull,
+      matchId: recordDeaths.matchId,
     },
   ]
 
@@ -87,6 +89,7 @@ export default async function Page() {
       label: 'Más daño',
       playerName: recordDamage.value > 0 ? recordDamage.playerName : undefined,
       value: recordDamage.value > 0 ? recordDamage.value.toLocaleString() : 'Sin info',
+      matchId: recordDamage.matchId,
     },
   ]
 
@@ -124,10 +127,14 @@ export default async function Page() {
         </div>
 
         <div className="mb-6 flex flex-wrap gap-2">
-          {chips.map((c) => (
-            <div
+          {chips.map((c) => {
+            const Wrapper = c.matchId ? Link : 'div'
+            return (
+            <Wrapper
               key={c.label}
-              className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-1.5"
+              href={c.matchId ? `/matches/${c.matchId}` : ''}
+              className={`flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-1.5 ${c.matchId ? 'transition-colors hover:border-primary/50 hover:bg-accent/50 cursor-pointer' : ''}`}
+              title={c.matchId ? 'Ver partida del récord' : undefined}
             >
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 {c.label}
@@ -138,8 +145,8 @@ export default async function Page() {
               <span className="font-mono text-[13px] font-bold text-primary">
                 {c.value}
               </span>
-            </div>
-          ))}
+            </Wrapper>
+          )})}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

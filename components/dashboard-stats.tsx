@@ -1,4 +1,5 @@
-import { Swords, Users, Crosshair, Flame, Skull } from 'lucide-react'
+import Link from 'next/link'
+import { Swords, Users, Crosshair, Flame, Skull, ExternalLink } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 type Stat = {
@@ -6,6 +7,7 @@ type Stat = {
   value: string
   sub: string
   icon: LucideIcon
+  matchId?: string
 }
 
 export function DashboardStats({ stats }: { stats: Stat[] }) {
@@ -27,8 +29,19 @@ export function DashboardStats({ stats }: { stats: Stat[] }) {
             <div className="mt-2 font-mono text-2xl font-bold text-foreground">
               {s.value}
             </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">
-              {s.sub}
+            <div className="mt-0.5 flex items-center justify-between">
+              <div className="text-[11px] text-muted-foreground">
+                {s.sub}
+              </div>
+              {s.matchId && (
+                <Link 
+                  href={`/matches/${s.matchId}`}
+                  className="flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-white"
+                  title="Ver partida del récord"
+                >
+                  Ver <ExternalLink className="h-2.5 w-2.5" />
+                </Link>
+              )}
             </div>
           </div>
         )
