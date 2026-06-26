@@ -41,6 +41,7 @@ export default async function Page() {
   let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordMinDamage = { value: Infinity, playerName: 'Sin datos', matchId: '' }
   
   data.matches.forEach(m => {
     m.players.forEach(p => {
@@ -48,8 +49,11 @@ export default async function Page() {
       if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName, matchId: m.id }
       if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
       if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName, matchId: m.id }
+      if (p.damage < recordMinDamage.value) recordMinDamage = { value: p.damage, playerName: pName, matchId: m.id }
     })
   })
+
+  const hasMinDamage = Number.isFinite(recordMinDamage.value)
 
   const latestHighlight = data.highlights[0]
   const latestHighlightPlayer = latestHighlight
@@ -77,6 +81,13 @@ export default async function Page() {
       icon: dashboardIcons.Skull,
       matchId: recordDeaths.matchId,
     },
+    {
+      label: 'Menor daño',
+      value: hasMinDamage ? recordMinDamage.value.toLocaleString() : 'Sin datos',
+      sub: hasMinDamage ? `por ${recordMinDamage.playerName}` : 'Sin datos',
+      icon: dashboardIcons.Flame,
+      matchId: hasMinDamage ? recordMinDamage.matchId : undefined,
+    },
   ]
 
   const chips = [
@@ -90,6 +101,12 @@ export default async function Page() {
       playerName: recordDamage.value > 0 ? recordDamage.playerName : undefined,
       value: recordDamage.value > 0 ? recordDamage.value.toLocaleString() : 'Sin info',
       matchId: recordDamage.matchId,
+    },
+    {
+      label: 'Menor daño',
+      playerName: hasMinDamage ? recordMinDamage.playerName : undefined,
+      value: hasMinDamage ? recordMinDamage.value.toLocaleString() : 'Sin info',
+      matchId: hasMinDamage ? recordMinDamage.matchId : undefined,
     },
   ]
 

@@ -28,6 +28,7 @@ export default async function EstadisticasPage() {
   let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordAssists = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordMinDamage = { value: Infinity, playerName: 'Sin datos', matchId: '' }
   let recordHs = { value: 0, playerName: 'Sin datos', matchId: '' }
   
   data.matches.forEach(m => {
@@ -37,9 +38,12 @@ export default async function EstadisticasPage() {
       if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
       if (p.assists > recordAssists.value) recordAssists = { value: p.assists, playerName: pName, matchId: m.id }
       if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName, matchId: m.id }
+      if (p.damage < recordMinDamage.value) recordMinDamage = { value: p.damage, playerName: pName, matchId: m.id }
       if ((p.hsPct || 0) > recordHs.value) recordHs = { value: p.hsPct || 0, playerName: pName, matchId: m.id }
     })
   })
+
+  const hasMinDamage = Number.isFinite(recordMinDamage.value)
 
   const statCards = [
     {
@@ -82,6 +86,13 @@ export default async function EstadisticasPage() {
       subtitle: recordDamage.value > 0 ? recordDamage.playerName : 'Sin datos',
       color: 'text-orange-400',
       matchId: recordDamage.matchId
+    },
+    {
+      title: 'Menor Daño (Partida)',
+      value: hasMinDamage ? recordMinDamage.value.toLocaleString() : '0',
+      subtitle: hasMinDamage ? recordMinDamage.playerName : 'Sin datos',
+      color: 'text-slate-400',
+      matchId: hasMinDamage ? recordMinDamage.matchId : undefined
     },
     {
       title: 'Mejor % de HS (Partida)',
