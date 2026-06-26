@@ -12,7 +12,7 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
     <section className="rounded-lg border border-border bg-card">
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="font-heading text-base font-bold uppercase tracking-widest text-foreground">
-          Leaderboard
+          Ladder histórico
         </h2>
         <span className="text-[11px] text-muted-foreground">
           {stats.length} jugadores · por KDA

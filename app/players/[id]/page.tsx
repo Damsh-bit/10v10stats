@@ -22,7 +22,10 @@ export default async function PlayerProfile({
     }))
     .sort((a, b) => b.match.date.localeCompare(a.match.date))
 
-  const playerHighlights = data.highlights.filter((h) => h.playerId === id)
+  // Filter highlights directly from the already-fetched data for ID consistency
+  const playerHighlights = data.highlights.filter(
+    (h) => h.playerId.trim().toLowerCase() === id.trim().toLowerCase()
+  )
   const playerMatchMapById = new Map(data.matches.map((match) => [match.id, match.map]))
 
   const playerStats = data.matches
@@ -156,7 +159,8 @@ export default async function PlayerProfile({
               ))}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-border bg-card px-3 py-6 text-center text-[13px] text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-border bg-card px-3 py-8 text-center text-[13px] text-muted-foreground flex flex-col items-center gap-2">
+              <img src="/Sticker loader.png" alt="loader" className="h-8 w-8 opacity-40" />
               No highlights recorded yet.
             </div>
           )}

@@ -313,24 +313,32 @@ export async function getAllPlayerStats(): Promise<PlayerStats[]> {
   return buildAllPlayerStatsForData(data)
 }
 
-export function getPlayerMatches(playerId: string) {
-  return []
+export async function getPlayerHighlights(playerId: string): Promise<Highlight[]> {
+  const data = await getLiveData();
+  return data.highlights.filter((h) => h.playerId === playerId);
 }
 
-export function getPlayerHighlights(playerId: string) {
-  return []
+export async function getMatchHighlights(matchId: string): Promise<Highlight[]> {
+  const data = await getLiveData();
+  return data.highlights.filter((h) => h.matchId === matchId);
 }
 
-export function getMatchHighlights(matchId: string) {
-  return []
+// Returns matches for a specific player.
+export async function getPlayerMatches(playerId: string): Promise<Match[]> {
+  const data = await getLiveData();
+  return data.matches.filter((m) =>
+    m.players.some((p) => p.playerId === playerId)
+  );
 }
 
-export function getMatch(matchId: string) {
-  return null
+export async function getMatch(matchId: string): Promise<Match | null> {
+  const data = await getLiveData();
+  return data.matches.find((m) => m.id === matchId) ?? null;
 }
 
-export function getPlayer(playerId: string) {
-  return null
+export async function getPlayer(playerId: string): Promise<Player | null> {
+  const data = await getLiveData();
+  return data.players.find((p) => p.id === playerId) ?? null;
 }
 
 export const leaderHighlights = {
