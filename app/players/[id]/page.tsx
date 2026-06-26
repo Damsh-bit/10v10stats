@@ -7,6 +7,7 @@ import {
   PlayerHighlightsGrid,
   PlayerHighlightsSkeleton,
 } from '@/components/player-highlights-grid'
+import { EditPlayerModal } from '@/components/edit-player-modal'
 
 export default async function PlayerProfile({
   params,
@@ -78,9 +79,12 @@ export default async function PlayerProfile({
         <div className="flex items-center gap-4">
           <PlayerAvatar player={stats} size={80} />
           <div className="flex flex-col gap-2">
-            <h1 className="text-xl font-bold leading-none text-foreground">
-              {stats.name}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold leading-none text-foreground">
+                {stats.name}
+              </h1>
+              <EditPlayerModal player={{ id: stats.id, name: stats.name, photoUrl: stats.photoUrl }} />
+            </div>
             <div className="flex items-center gap-2">
               <BadgePill>{stats.badge}</BadgePill>
               {playerStats.mvps > 0 && (
