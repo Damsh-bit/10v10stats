@@ -65,7 +65,7 @@ async function uploadScreenshot(matchId: string, screenshot: File) {
   }
 
   const { data: publicUrlData } = supabase.storage.from(TABULADOR_BUCKET).getPublicUrl(storagePath)
-  return { screenshotUrl: publicUrlData.publicUrl }
+  return { screenshotUrl: publicUrlData.publicUrl, storagePath }
 }
 
 export async function GET() {
@@ -77,7 +77,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('matches')
-      .select('id, map, played_at, score_ct, score_t, team_a_name, team_b_name')
+      .select('id, map, played_at, score_ct, score_t, team_a_name, team_b_name, foto_url')
       .order('played_at', { ascending: false })
 
     if (error) {
@@ -92,6 +92,7 @@ export async function GET() {
       score_t: match.score_t ?? 0,
       team_a_name: match.team_a_name ?? 'Equipo A',
       team_b_name: match.team_b_name ?? 'Equipo B',
+      foto_url: match.foto_url ?? null,
     }))
 
     return NextResponse.json(matches)
@@ -231,6 +232,21 @@ export async function POST(request: Request) {
         await supabase.from('match_players').delete().eq('match_id', matchData.id)
         await supabase.from('matches').delete().eq('id', matchData.id)
         return NextResponse.json({ error: uploadResult.error }, { status: 500 })
+      }
+
+      const { error: fotoError } = await supabase
+        .from('matches')
+        .update({ foto_url: uploadResult.screenshotUrl })
+        .eq('id', matchData.id)
+
+      if (fotoError) {
+        await supabase.storage.from(TABULADOR_BUCKET).remove([uploadResult.storagePath])
+        await supabase.from('match_players').delete().eq('match_id', matchData.id)
+        await supabase.from('matches').delete().eq('id', matchData.id)
+        return NextResponse.json(
+          { error: fotoError.message || 'No se pudo guardar la URL de la captura' },
+          { status: 500 },
+        )
       }
 
       screenshotUrl = uploadResult.screenshotUrl

@@ -47,6 +47,7 @@ export type Match = {
   winnerTeam?: 'CT' | 'T'
   totalRounds?: number
   videoUrl?: string
+  fotoUrl?: string
   notes?: string
   teamAName?: string
   teamBName?: string
@@ -93,6 +94,7 @@ type SupabaseMatchRecord = {
   score_t: number | null
   total_rounds: number | null
   video_url?: string | null
+  foto_url?: string | null
   notes?: string | null
   team_a_name?: string | null
   team_b_name?: string | null
@@ -182,7 +184,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     let matches: Match[] = []
     const { data: matchRows, error: matchesError } = await supabase
       .from('matches')
-      .select('id, map, played_at, score_ct, score_t, total_rounds, winner_team, video_url, notes, team_a_name, team_b_name, mvp_id')
+      .select('id, map, played_at, score_ct, score_t, total_rounds, winner_team, video_url, foto_url, notes, team_a_name, team_b_name, mvp_id')
       .order('played_at', { ascending: false })
 
     if (!matchesError && matchRows) {
@@ -228,6 +230,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
           winnerTeam: row.winner_team ?? undefined,
           totalRounds: normalizeNumber(row.total_rounds),
           videoUrl: row.video_url ?? undefined,
+          fotoUrl: row.foto_url ?? undefined,
           notes: row.notes ?? undefined,
           teamAName: row.team_a_name ?? undefined,
           teamBName: row.team_b_name ?? undefined,

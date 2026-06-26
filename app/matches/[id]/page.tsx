@@ -67,6 +67,21 @@ export default async function MatchDetail({
         </div>
       </div>
 
+      {match.fotoUrl ? (
+        <section className="mt-6">
+          <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Captura del tabulador
+          </h2>
+          <div className="overflow-hidden rounded-lg border border-border bg-card p-3">
+            <img
+              src={match.fotoUrl}
+              alt={`Captura de ${match.map}`}
+              className="mx-auto max-h-[480px] w-full rounded-md object-contain"
+            />
+          </div>
+        </section>
+      ) : null}
+
       {/* Scoreboards */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Scoreboard
