@@ -3,6 +3,7 @@ import { MiniLeaderboard } from '@/components/mini-leaderboard'
 import { NelsonLeague } from '@/components/nelson-league'
 import { RecentMatches } from '@/components/recent-matches'
 import { DashboardStats, dashboardIcons } from '@/components/dashboard-stats'
+import { NewHighlightModal } from '@/components/new-highlight-modal'
 import { NewMatchModal } from '@/components/new-match-modal'
 import { NelsonVotePanel } from '@/components/nelson-vote-panel'
 import { getNelsonData } from '@/lib/nelson'
@@ -84,7 +85,10 @@ export default async function Page() {
               últimas partidas.
             </p>
           </div>
-          <NewMatchModal />
+          <div className="flex flex-wrap gap-2">
+            <NewMatchModal />
+            <NewHighlightModal />
+          </div>
         </div>
 
         <div className="mb-6">

@@ -86,7 +86,7 @@ export default async function MatchDetail({
               <HighlightCard
                 key={h.id}
                 highlight={h}
-                className="w-72 shrink-0"
+                className="w-96 shrink-0"
                 matchLabel={match.map}
               />
             ))}

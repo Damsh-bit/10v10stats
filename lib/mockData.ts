@@ -26,7 +26,7 @@ export type HighlightType = 'ACE' | 'QUAD_KILL' | 'TRIPLE_KILL' | 'CLUTCH' | 'EN
 export type Highlight = {
   id: string
   playerId: string
-  matchId: string
+  matchId?: string
   type: HighlightType
   description: string
   round: number
@@ -108,7 +108,7 @@ type SupabaseMatchPlayerRecord = {
 type SupabaseHighlightRecord = {
   id: string
   player_id: string
-  match_id: string
+  match_id?: string | null
   type: string | null
   description: string | null
   round_number: number | null
@@ -234,7 +234,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
       highlights = (highlightRows as SupabaseHighlightRecord[]).map((row) => ({
         id: normalizeString(row.id, 'sin-id'),
         playerId: normalizeString(row.player_id, 'sin-player'),
-        matchId: normalizeString(row.match_id, 'sin-match'),
+        matchId: row.match_id ?? undefined,
         type: (row.type as HighlightType | null) ?? 'OTHER',
         description: normalizeString(row.description),
         round: normalizeNumber(row.round_number),

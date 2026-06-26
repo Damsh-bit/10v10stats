@@ -70,7 +70,7 @@ export function getSupabaseAdminClient() {
 }
 
 export async function getPlayersFromSupabase(): Promise<SupabasePlayerRecord[]> {
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
   if (!supabase) return []
 
   try {

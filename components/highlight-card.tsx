@@ -1,5 +1,6 @@
 import type { Highlight } from '@/lib/mockData'
 import { highlightTypeColors } from '@/lib/mockData'
+import { VideoEmbed } from '@/components/video-embed'
 
 export function HighlightCard({
   highlight,
@@ -30,14 +31,9 @@ export function HighlightCard({
         {highlight.description || 'Sin descripción'}
       </p>
       {highlight.clipUrl ? (
-        <a
-          href={highlight.clipUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="w-fit rounded border border-primary/40 px-2 py-1 text-[12px] font-medium text-primary transition-colors hover:bg-primary/10"
-        >
-          Ver clip
-        </a>
+        <div className="overflow-hidden rounded-md border border-border/60">
+          <VideoEmbed url={highlight.clipUrl} title={highlight.description || highlight.type} />
+        </div>
       ) : null}
     </div>
   )

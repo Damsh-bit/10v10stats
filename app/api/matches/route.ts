@@ -1,6 +1,41 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
+export async function GET() {
+  try {
+    const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'No se pudo inicializar el cliente de Supabase' }, { status: 500 })
+    }
+
+    const { data, error } = await supabase
+      .from('matches')
+      .select('id, map, played_at, score_ct, score_t, team_a_name, team_b_name')
+      .order('played_at', { ascending: false })
+
+    if (error) {
+      return NextResponse.json({ error: error.message || 'No se pudieron cargar las partidas' }, { status: 500 })
+    }
+
+    const matches = (data ?? []).map((match) => ({
+      id: match.id,
+      map: match.map ?? 'Sin mapa',
+      played_at: match.played_at,
+      score_ct: match.score_ct ?? 0,
+      score_t: match.score_t ?? 0,
+      team_a_name: match.team_a_name ?? 'Equipo A',
+      team_b_name: match.team_b_name ?? 'Equipo B',
+    }))
+
+    return NextResponse.json(matches)
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'No se pudieron cargar las partidas' },
+      { status: 500 },
+    )
+  }
+}
+
 type MatchPlayerPayload = {
   player_id: string
   team: 'CT' | 'T'
