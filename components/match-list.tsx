@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { Match, CSMap } from '@/lib/mockData'
 import { formatDate } from '@/lib/mockData'
+import { toDateKey } from '@/lib/matches-calendar'
 import { cn } from '@/lib/utils'
 
 const mapColors: Record<CSMap, string> = {
@@ -15,7 +16,13 @@ const mapColors: Record<CSMap, string> = {
   Anubis: '#8c7657',
 }
 
-export function MatchList({ matches }: { matches: Match[] }) {
+export function MatchList({
+  matches,
+  calendarDateFilter = null,
+}: {
+  matches: Match[]
+  calendarDateFilter?: string | null
+}) {
   const maps = Array.from(new Set(matches.map((m) => m.map)))
   const dates = Array.from(new Set(matches.map((m) => formatDate(m.date)))).filter((d) => d !== 'Sin info')
 
@@ -25,7 +32,8 @@ export function MatchList({ matches }: { matches: Match[] }) {
   const filtered = matches.filter((m) => {
     const passMap = mapFilter === 'ALL' || m.map === mapFilter
     const passDate = dateFilter === 'ALL' || formatDate(m.date) === dateFilter
-    return passMap && passDate
+    const passCalendar = !calendarDateFilter || toDateKey(m.date) === calendarDateFilter
+    return passMap && passDate && passCalendar
   })
 
   return (
