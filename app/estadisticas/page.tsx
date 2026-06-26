@@ -37,7 +37,9 @@ export default async function EstadisticasPage() {
   })
 
   let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordMinKills = { value: Infinity, playerName: 'Sin datos', matchId: '' }
   let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
+  let recordMinDeaths = { value: Infinity, playerName: 'Sin datos', matchId: '' }
   let recordAssists = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordMinDamage = { value: Infinity, playerName: 'Sin datos', matchId: '' }
@@ -46,7 +48,9 @@ export default async function EstadisticasPage() {
     m.players.forEach(p => {
       const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
       if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName, matchId: m.id }
+      if (p.kills < recordMinKills.value) recordMinKills = { value: p.kills, playerName: pName, matchId: m.id }
       if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
+      if (p.deaths < recordMinDeaths.value) recordMinDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
       if (p.assists > recordAssists.value) recordAssists = { value: p.assists, playerName: pName, matchId: m.id }
       if (p.damage > recordDamage.value) recordDamage = { value: p.damage, playerName: pName, matchId: m.id }
       if (p.damage < recordMinDamage.value) recordMinDamage = { value: p.damage, playerName: pName, matchId: m.id }
@@ -54,6 +58,8 @@ export default async function EstadisticasPage() {
   })
 
   const hasMinDamage = Number.isFinite(recordMinDamage.value)
+  const hasMinKills = Number.isFinite(recordMinKills.value)
+  const hasMinDeaths = Number.isFinite(recordMinDeaths.value)
 
   const statCards = [
     {
@@ -103,6 +109,20 @@ export default async function EstadisticasPage() {
       subtitle: hasMinDamage ? recordMinDamage.playerName : 'Sin datos',
       color: 'text-slate-400',
       matchId: hasMinDamage ? recordMinDamage.matchId : undefined
+    },
+    {
+      title: 'Menos Kills (Partida)',
+      value: hasMinKills ? String(recordMinKills.value) : '0',
+      subtitle: hasMinKills ? recordMinKills.playerName : 'Sin datos',
+      color: 'text-red-300',
+      matchId: hasMinKills ? recordMinKills.matchId : undefined
+    },
+    {
+      title: 'Menos Muertes (Partida)',
+      value: hasMinDeaths ? String(recordMinDeaths.value) : '0',
+      subtitle: hasMinDeaths ? recordMinDeaths.playerName : 'Sin datos',
+      color: 'text-green-300',
+      matchId: hasMinDeaths ? recordMinDeaths.matchId : undefined
     },
     {
       title: 'Más Victorias (Histórico)',
