@@ -34,12 +34,12 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
   const router = useRouter()
   const [players, setPlayers] = useState(initialPlayers)
   const [voteState, setVoteState] = useState(initialVoteState)
-  
+
   const [authError, setAuthError] = useState<string | null>(null)
 
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  
+
   const [winnerPopup, setWinnerPopup] = useState<{ show: boolean; name: string } | null>(null)
 
   // Iniciar Prompt
@@ -67,7 +67,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
 
   const voteResults = useMemo(() => {
     if (!voteState.voteCounts) return []
-    
+
     return players
       .map(p => ({
         name: p.name,
@@ -128,13 +128,13 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'No se pudo registrar el voto')
-      
+
       setVoteState(result.voteState)
       setMessage('Voto registrado correctamente')
       setShowVoteModal(false)
       setVoterId('')
       setVoteForId('')
-      
+
       if (result.voteState.voteId) {
         localStorage.setItem(`nelson_voted_${result.voteState.voteId}`, 'true')
         setDeviceAlreadyVoted(true)
@@ -159,7 +159,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'No se pudo finalizar la votación')
-      
+
       setVoteState(result.voteState)
       setMessage(`Votación finalizada. Ganador: ${result.winner?.name ?? 'Nadie'}`)
       setShowFinishPrompt(false)
@@ -167,11 +167,11 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
 
       if (result.winner) {
         setWinnerPopup({ show: true, name: result.winner.name })
-        
+
         // Trigger confetti
         const duration = 3000
         const end = Date.now() + duration
-        
+
         const frame = () => {
           confetti({
             particleCount: 5,
@@ -187,7 +187,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
             origin: { x: 1 },
             colors: ['#8B4513', '#A0522D', '#D2691E']
           })
-          
+
           if (Date.now() < end) {
             requestAnimationFrame(frame)
           }
@@ -308,56 +308,56 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
             </form>
           )
         ) : (
-              <>
-                <Button
-                  onClick={openVoteModal}
-                  disabled={isLoading || deviceAlreadyVoted}
-                  className="w-full sm:w-auto"
-                >
-                  {deviceAlreadyVoted ? 'Ya votaste' : 'Votar'}
-                </Button>
-                
-                {!showFinishPrompt ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setAuthError(null)
-                      setShowFinishPrompt(true)
-                    }}
-                    disabled={isLoading}
-                    className="w-full sm:w-auto"
-                  >
-                    Finalizar Votación
+          <>
+            <Button
+              onClick={openVoteModal}
+              disabled={isLoading || deviceAlreadyVoted}
+              className="w-full sm:w-auto"
+            >
+              {deviceAlreadyVoted ? 'Ya votaste' : 'Votar'}
+            </Button>
+
+            {!showFinishPrompt ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAuthError(null)
+                  setShowFinishPrompt(true)
+                }}
+                disabled={isLoading}
+                className="w-full sm:w-auto"
+              >
+                Finalizar Votación
+              </Button>
+            ) : (
+              <form onSubmit={handleFinishVote} className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  type="password"
+                  autoFocus
+                  placeholder="Clave para finalizar"
+                  value={finishPassword}
+                  onChange={(e) => {
+                    setFinishPassword(e.target.value)
+                    setAuthError(null)
+                  }}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary sm:w-48 sm:flex-none"
+                />
+                <div className="flex w-full gap-2 sm:w-auto">
+                  <Button type="submit" size="sm" className="flex-1 sm:flex-none" disabled={isLoading || !finishPassword}>
+                    Confirmar
                   </Button>
-                ) : (
-                  <form onSubmit={handleFinishVote} className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-                    <input
-                      type="password"
-                      autoFocus
-                      placeholder="Clave para finalizar"
-                      value={finishPassword}
-                      onChange={(e) => {
-                        setFinishPassword(e.target.value)
-                        setAuthError(null)
-                      }}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary sm:w-48 sm:flex-none"
-                    />
-                    <div className="flex w-full gap-2 sm:w-auto">
-                      <Button type="submit" size="sm" className="flex-1 sm:flex-none" disabled={isLoading || !finishPassword}>
-                        Confirmar
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" className="flex-1 sm:flex-none" onClick={() => setShowFinishPrompt(false)}>
-                        Cancelar
-                      </Button>
-                    </div>
-                  </form>
-                )}
-              </>
+                  <Button type="button" variant="ghost" size="sm" className="flex-1 sm:flex-none" onClick={() => setShowFinishPrompt(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
             )}
-          </div>
+          </>
+        )}
+      </div>
 
       {authError && (showFinishPrompt || showStartPrompt) && <p className="mt-2 text-xs text-destructive">{authError}</p>}
-      
+
       {message ? (
         <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
           <CheckCircle2 className="h-4 w-4" />
@@ -433,7 +433,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
               💩
             </div>
             <div className="rounded-xl border border-border bg-card/90 px-8 py-6 shadow-2xl backdrop-blur-md">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">El nuevo Nelson es</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">El nuevo Nelson es:</h2>
               <p className="mt-2 text-4xl font-bold text-foreground drop-shadow-md">
                 {winnerPopup.name}
               </p>
