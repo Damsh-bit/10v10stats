@@ -102,7 +102,14 @@ export function MatchList({
                 </div>
 
                 <div className="flex items-center gap-3 mt-1 sm:mt-0">
-                  <span className="inline-flex items-center rounded bg-primary/15 px-2 py-1 font-mono text-[11px] font-bold text-primary">
+                  <span 
+                    className={cn(
+                      "inline-flex items-center rounded px-2 py-1 font-mono text-[11px] font-bold",
+                      winnerLabel.toLowerCase().includes('papi') 
+                        ? "bg-blue-500/15 text-blue-500" 
+                        : "bg-primary/15 text-primary"
+                    )}
+                  >
                     {winnerLabel} WINS
                   </span>
                   <Link
