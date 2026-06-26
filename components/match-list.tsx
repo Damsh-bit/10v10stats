@@ -17,26 +17,49 @@ const mapColors: Record<CSMap, string> = {
 
 export function MatchList({ matches }: { matches: Match[] }) {
   const maps = Array.from(new Set(matches.map((m) => m.map)))
-  const [filter, setFilter] = useState<CSMap | 'ALL'>('ALL')
+  const dates = Array.from(new Set(matches.map((m) => formatDate(m.date)))).filter((d) => d !== 'Sin info')
 
-  const filtered =
-    filter === 'ALL' ? matches : matches.filter((m) => m.map === filter)
+  const [mapFilter, setMapFilter] = useState<CSMap | 'ALL'>('ALL')
+  const [dateFilter, setDateFilter] = useState<string | 'ALL'>('ALL')
+
+  const filtered = matches.filter((m) => {
+    const passMap = mapFilter === 'ALL' || m.map === mapFilter
+    const passDate = dateFilter === 'ALL' || formatDate(m.date) === dateFilter
+    return passMap && passDate
+  })
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap gap-2">
-        <FilterButton active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
-          All maps
-        </FilterButton>
-        {maps.map((m) => (
-          <FilterButton
-            key={m}
-            active={filter === m}
-            onClick={() => setFilter(m)}
-          >
-            {m}
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <FilterButton active={mapFilter === 'ALL'} onClick={() => setMapFilter('ALL')}>
+            All maps
           </FilterButton>
-        ))}
+          {maps.map((m) => (
+            <FilterButton
+              key={m}
+              active={mapFilter === m}
+              onClick={() => setMapFilter(m)}
+            >
+              {m}
+            </FilterButton>
+          ))}
+        </div>
+
+        {dates.length > 0 && (
+          <select
+            className="bg-card border border-border text-foreground text-[13px] rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/50 cursor-pointer w-full sm:w-auto"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          >
+            <option value="ALL">Todas las fechas</option>
+            {dates.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="flex flex-col gap-3">
