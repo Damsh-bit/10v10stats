@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
+import { getSupabaseAdminClient } from '@/lib/supabase'
 
 const HIGHLIGHTS_BUCKET = process.env.SUPABASE_HIGHLIGHTS_BUCKET ?? 'highlights'
 const MAX_VIDEO_BYTES = 10 * 1024 * 1024 * 1024
@@ -60,9 +60,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La ronda debe ser un número válido' }, { status: 400 })
     }
 
-    const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+    const supabase = getSupabaseAdminClient()
     if (!supabase) {
-      return NextResponse.json({ error: 'No se pudo inicializar el cliente de Supabase' }, { status: 500 })
+      return NextResponse.json(
+        {
+          error:
+            'No se pudo inicializar el cliente de Supabase con permisos de servidor. Verifica SUPABASE_SERVICE_ROLE_KEY.',
+        },
+        { status: 500 },
+      )
     }
 
     const storagePath = buildStoragePath(playerId, videoFile.name || 'clip.mp4')

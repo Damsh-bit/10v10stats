@@ -30,28 +30,25 @@ function hasPlaceholderValue(value: string | undefined) {
 
 function getSupabaseConfig() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
 
-  if (
-    !isValidHttpUrl(supabaseUrl) ||
-    !supabaseAnonKey ||
-    hasPlaceholderValue(supabaseUrl) ||
-    hasPlaceholderValue(supabaseAnonKey)
-  ) {
+  if (!isValidHttpUrl(supabaseUrl) || hasPlaceholderValue(supabaseUrl)) {
     return null
   }
 
   return {
     url: supabaseUrl.trim(),
-    anonKey: supabaseAnonKey.trim(),
   }
 }
 
 export function getSupabaseClient() {
   const config = getSupabaseConfig()
-  if (!config) return null
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
 
-  return createClient(config.url, config.anonKey, {
+  if (!config || !supabaseAnonKey || hasPlaceholderValue(supabaseAnonKey)) {
+    return null
+  }
+
+  return createClient(config.url, supabaseAnonKey.trim(), {
     auth: { persistSession: false },
   })
 }
