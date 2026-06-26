@@ -10,9 +10,7 @@
       "id": "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45",
       "name": "Foco",
       "nelsonPoints": 4,
-      "badge": "Nelson 1",
-      "votes": 1,
-      "points": 3
+      "badge": "Nelson 1"
     },
     "485befe1-fcec-4f05-8a61-07d81991a453": {
       "id": "485befe1-fcec-4f05-8a61-07d81991a453",
@@ -76,16 +74,14 @@
     }
   },
   "state": {
-    "active": false,
-    "startedAt": "2026-06-26T14:43:05.686Z",
+    "active": true,
+    "startedAt": "2026-06-26T17:27:08.396Z",
     "startedBy": "admin",
-    "voteId": "bda998a1-0b82-44e6-a295-3a4f248bf865",
-    "voters": {
-      "a59dbe21-932a-453e-b2c8-a518c1b9f705": "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45"
-    },
+    "voteId": "3e49d8e9-20c1-4ecd-908d-2d1616e1d47c",
+    "voters": {},
     "voteCounts": {
       "a59dbe21-932a-453e-b2c8-a518c1b9f705": 0,
-      "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45": 1,
+      "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45": 0,
       "485befe1-fcec-4f05-8a61-07d81991a453": 0,
       "361eeb81-9df5-4206-b300-0365e0ad736c": 0,
       "b26a5ea5-e30b-4dc0-992b-1de0130700fc": 0,
@@ -97,9 +93,9 @@
       "94b3489e-d678-4cf6-8539-3741bb2166ed": 0,
       "24a3fd32-972e-475c-98aa-8cbfaf789b8a": 0
     },
-    "winnerPlayerId": "7d6ee18d-e1af-4d9e-a1e0-d27ee8f61c45",
-    "winnerName": "Foco",
-    "closedAt": "2026-06-26T14:43:13.947Z"
+    "winnerPlayerId": null,
+    "winnerName": null,
+    "closedAt": null
   },
-  "lastUpdatedAt": "2026-06-26T14:43:14.126Z"
+  "lastUpdatedAt": "2026-06-26T17:27:08.397Z"
 }

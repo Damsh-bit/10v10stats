@@ -1,6 +1,4 @@
-import { promises as fs } from 'fs'
-import path from 'path'
-import { getPlayersFromSupabase, getSupabaseClient } from '@/lib/supabase'
+import { getPlayersFromSupabase, getSupabaseClient, getSupabaseAdminClient } from '@/lib/supabase'
 import type { NelsonEntry, NelsonTrend } from '@/lib/mockData'
 
 type NelsonPlayer = {
@@ -28,12 +26,7 @@ type NelsonStoreData = {
   lastUpdatedAt: string | null
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data')
-const DATA_FILE = path.join(DATA_DIR, 'nelson.json')
 const ADMIN_PASSWORD = 'alzhannah2026'
-const globalForNelsonStore = globalThis as typeof globalThis & {
-  __nelsonStore?: NelsonStoreData
-}
 
 function createInitialState(): NelsonVoteState {
   return {
@@ -47,35 +40,6 @@ function createInitialState(): NelsonVoteState {
     winnerName: null,
     closedAt: null,
   }
-}
-
-function createEmptyStore(players: NelsonPlayer[]): NelsonStoreData {
-  const playerMap = Object.fromEntries(players.map((player) => [player.id, player]))
-
-  return {
-    players: playerMap,
-    state: createInitialState(),
-    lastUpdatedAt: null,
-  }
-}
-
-function getMemoryStore(players: NelsonPlayer[]): NelsonStoreData {
-  if (globalForNelsonStore.__nelsonStore) {
-    return globalForNelsonStore.__nelsonStore
-  }
-
-  const freshStore = createEmptyStore(players)
-  globalForNelsonStore.__nelsonStore = freshStore
-  return freshStore
-}
-
-function isReadOnlyFilesystemError(error: unknown) {
-  if (!error || typeof error !== 'object') return false
-
-  const code = 'code' in error ? String((error as { code?: string }).code).toLowerCase() : ''
-  const message = 'message' in error ? String((error as { message?: string }).message).toLowerCase() : ''
-
-  return code.includes('eros') || code.includes('eacces') || code.includes('eperm') || message.includes('read-only') || message.includes('readonly')
 }
 
 function normalizeName(value: unknown, fallback = 'Sin info') {
@@ -115,81 +79,71 @@ function buildBadgeValue(points: number) {
   return points > 0 ? `Nelson ${points}` : 'Nelson'
 }
 
-async function ensureStoreFile() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true })
-    try {
-      await fs.access(DATA_FILE)
-    } catch {
-      await fs.writeFile(DATA_FILE, JSON.stringify(createEmptyStore([]), null, 2), 'utf8')
-    }
-    return true
-  } catch (error) {
-    if (isReadOnlyFilesystemError(error)) {
-      return false
-    }
-    throw error
-  }
-}
-
 async function readStore(players: NelsonPlayer[]): Promise<NelsonStoreData> {
-  const persisted = await ensureStoreFile()
-  if (!persisted) {
-    return getMemoryStore(players)
-  }
-
-  try {
-    const content = await fs.readFile(DATA_FILE, 'utf8')
-    const parsed = JSON.parse(content) as Partial<NelsonStoreData>
-
+  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+  
   const normalizedPlayers = players.reduce<Record<string, NelsonPlayer>>((acc, player) => {
-    acc[player.id] = {
-      ...player,
-      nelsonPoints: parsed.players?.[player.id]?.nelsonPoints ?? player.nelsonPoints ?? 0,
-    }
+    acc[player.id] = { ...player }
     return acc
   }, {})
 
-  const existingState = parsed.state ?? createInitialState()
-  const voteCounts = Object.fromEntries(players.map((player) => [player.id, existingState.voteCounts?.[player.id] ?? 0]))
+  const initialState = createInitialState()
+  
+  if (!supabase) {
+    return { players: normalizedPlayers, state: initialState, lastUpdatedAt: null }
+  }
 
-    const store = {
-      players: normalizedPlayers,
-      state: {
-        ...createInitialState(),
-        ...existingState,
-        voters: existingState.voters ?? {},
-        voteCounts,
-      },
-      lastUpdatedAt: parsed.lastUpdatedAt ?? null,
+  try {
+    const { data, error } = await supabase.from('nelson_vote_state').select('*').eq('id', 1).single()
+    
+    let existingState = initialState
+    let lastUpdatedAt = null
+    
+    if (!error && data) {
+      existingState = {
+        active: data.active,
+        startedAt: data.started_at,
+        startedBy: data.started_by,
+        voteId: data.vote_id,
+        voters: data.voters ?? {},
+        voteCounts: data.vote_counts ?? {},
+        winnerPlayerId: data.winner_player_id,
+        winnerName: data.winner_name,
+        closedAt: data.closed_at,
+      }
+      lastUpdatedAt = data.last_updated_at
     }
 
-    globalForNelsonStore.__nelsonStore = store
-    return store
+    const voteCounts = Object.fromEntries(players.map((player) => [player.id, existingState.voteCounts?.[player.id] ?? 0]))
+    existingState.voteCounts = voteCounts
+
+    return { players: normalizedPlayers, state: existingState, lastUpdatedAt }
   } catch (error) {
-    if (isReadOnlyFilesystemError(error)) {
-      return getMemoryStore(players)
-    }
-    throw error
+    return { players: normalizedPlayers, state: initialState, lastUpdatedAt: null }
   }
 }
 
 async function writeStore(store: NelsonStoreData) {
-  const persisted = await ensureStoreFile()
-  if (!persisted) {
-    globalForNelsonStore.__nelsonStore = store
-    return
-  }
+  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+  if (!supabase) return
 
   try {
-    await fs.writeFile(DATA_FILE, JSON.stringify({ ...store, lastUpdatedAt: new Date().toISOString() }, null, 2), 'utf8')
-    globalForNelsonStore.__nelsonStore = store
+    const { state } = store
+    await supabase.from('nelson_vote_state').upsert({
+      id: 1,
+      active: state.active,
+      started_at: state.startedAt,
+      started_by: state.startedBy,
+      vote_id: state.voteId,
+      voters: state.voters,
+      vote_counts: state.voteCounts,
+      winner_player_id: state.winnerPlayerId,
+      winner_name: state.winnerName,
+      closed_at: state.closedAt,
+      last_updated_at: new Date().toISOString()
+    })
   } catch (error) {
-    if (isReadOnlyFilesystemError(error)) {
-      globalForNelsonStore.__nelsonStore = store
-      return
-    }
-    throw error
+    console.error('Error al guardar el estado de la votación en Supabase:', error)
   }
 }
 

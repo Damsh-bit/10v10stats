@@ -76,7 +76,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
 
   useEffect(() => {
     const load = async () => {
-      const response = await fetch('/api/nelson')
+      const response = await fetch('/api/nelson', { cache: 'no-store' })
       const data = await response.json()
       setPlayers(data.players ?? [])
       setVoteState(data.voteState ?? initialVoteState)

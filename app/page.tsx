@@ -12,6 +12,8 @@ import { getNelsonData } from '@/lib/nelson'
 import { VideoEmbed } from '@/components/video-embed'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 function resolveClipUrl(clipUrl: string | null | undefined): string | null {
   if (!clipUrl) return null
   const trimmed = clipUrl.trim()

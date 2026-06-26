@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { finishNelsonVote, getNelsonData, startNelsonVote, voteForNelson } from '@/lib/nelson'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const data = await getNelsonData()
