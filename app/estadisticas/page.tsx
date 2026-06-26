@@ -24,6 +24,18 @@ export default async function EstadisticasPage() {
     }
   }
 
+  let topWins = { value: 0, playerName: 'Sin datos' }
+  let topLosses = { value: 0, playerName: 'Sin datos' }
+
+  stats.forEach(s => {
+    if (s.wins > topWins.value) {
+      topWins = { value: s.wins, playerName: s.player.name }
+    }
+    if (s.losses > topLosses.value) {
+      topLosses = { value: s.losses, playerName: s.player.name }
+    }
+  })
+
   let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordAssists = { value: 0, playerName: 'Sin datos', matchId: '' }
@@ -91,6 +103,18 @@ export default async function EstadisticasPage() {
       subtitle: hasMinDamage ? recordMinDamage.playerName : 'Sin datos',
       color: 'text-slate-400',
       matchId: hasMinDamage ? recordMinDamage.matchId : undefined
+    },
+    {
+      title: 'Más Victorias (Histórico)',
+      value: String(topWins.value),
+      subtitle: topWins.value > 0 ? topWins.playerName : 'Sin datos',
+      color: 'text-emerald-400'
+    },
+    {
+      title: 'Más Derrotas (Histórico)',
+      value: String(topLosses.value),
+      subtitle: topLosses.value > 0 ? topLosses.playerName : 'Sin datos',
+      color: 'text-rose-500'
     }
   ]
 
