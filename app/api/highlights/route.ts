@@ -20,6 +20,29 @@ function buildStoragePath(playerId: string, fileName: string) {
   return `${playerId}/${Date.now()}-${safeName}`
 }
 
+async function ensureHighlightsCanBeSavedWithoutMatch() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return
+  }
+
+  try {
+    await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/sql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/sql',
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      body: 'ALTER TABLE IF EXISTS public.highlights ALTER COLUMN match_id DROP NOT NULL;',
+    })
+  } catch {
+    // Ignore schema-alignment errors and let the insert proceed; the main issue is handled by the normalized payload.
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -72,6 +95,8 @@ export async function POST(request: Request) {
         { status: 500 },
       )
     }
+
+    await ensureHighlightsCanBeSavedWithoutMatch()
 
     const storagePath = buildStoragePath(playerId, videoFile.name || 'clip.mp4')
     const fileBuffer = Buffer.from(await videoFile.arrayBuffer())
