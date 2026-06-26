@@ -14,13 +14,20 @@ export function MatchesPageContent({ matches, matchesByDate }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   return (
-    <>
-      <ActivityCalendar
-        matchesByDate={matchesByDate}
-        selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
-      />
-      <MatchList matches={matches} calendarDateFilter={selectedDate} />
-    </>
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      {/* ── Partidas (80%) ─────────────────────────────────── */}
+      <div className="min-w-0 lg:flex-[4]">
+        <MatchList matches={matches} calendarDateFilter={selectedDate} />
+      </div>
+
+      {/* ── Match Activity (20%) ───────────────────────────── */}
+      <aside className="w-full lg:w-[20%] lg:shrink-0">
+        <ActivityCalendar
+          matchesByDate={matchesByDate}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      </aside>
+    </div>
   )
 }

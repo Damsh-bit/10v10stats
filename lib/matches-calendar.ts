@@ -30,19 +30,25 @@ export type CalendarCell = {
   count: number
 }
 
+/** Number of weeks shown in the activity calendar (≈ 6 months). */
+const WEEKS = 26
+
 export function buildCalendarGrid(matchesByDate: Record<string, number>) {
   const endDate = getTodayUTC()
-  const startDate = addDaysUTC(endDate, -363)
+  // Start far enough back so we always fill WEEKS full columns.
+  const startDate = addDaysUTC(endDate, -(WEEKS * 7 - 1))
   const firstMonday = addDaysUTC(startDate, -getMondayRow(startDate))
 
-  const grid: (CalendarCell | null)[][] = Array.from({ length: 52 }, () => Array(7).fill(null))
+  const grid: (CalendarCell | null)[][] = Array.from({ length: WEEKS }, () => Array(7).fill(null))
 
-  for (let i = 0; i < 364; i += 1) {
-    const date = addDaysUTC(startDate, i)
-    const col = Math.floor((date.getTime() - firstMonday.getTime()) / (7 * MS_DAY))
+  for (let i = 0; i < WEEKS * 7; i += 1) {
+    const date = addDaysUTC(firstMonday, i)
+    // Skip future dates
+    if (date.getTime() > endDate.getTime()) break
+    const col = Math.floor(i / 7)
     const row = getMondayRow(date)
 
-    if (col >= 0 && col < 52) {
+    if (col >= 0 && col < WEEKS) {
       const dateKey = toDateKey(date)
       grid[col][row] = {
         date,
@@ -52,16 +58,16 @@ export function buildCalendarGrid(matchesByDate: Record<string, number>) {
     }
   }
 
-  const monthLabels: (string | null)[] = Array(52).fill(null)
+  const monthLabels: (string | null)[] = Array(WEEKS).fill(null)
   let previousMonth: number | null = null
 
-  for (let col = 0; col < 52; col += 1) {
+  for (let col = 0; col < WEEKS; col += 1) {
     const cell = grid[col].find(Boolean)
     if (!cell) continue
 
     const month = cell.date.getUTCMonth()
     if (month !== previousMonth) {
-      monthLabels[col] = cell.date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
+      monthLabels[col] = cell.date.toLocaleDateString('es-AR', { month: 'short', timeZone: 'UTC' })
       previousMonth = month
     }
   }
@@ -69,16 +75,17 @@ export function buildCalendarGrid(matchesByDate: Record<string, number>) {
   return { grid, monthLabels }
 }
 
+/** Returns a background color from the site's dark-blue/crimson palette. */
 export function getLevelColor(count: number): string {
-  if (count <= 0) return '#161b22'
-  if (count === 1) return '#0e4429'
-  if (count === 2) return '#006d32'
-  if (count <= 4) return '#26a641'
-  return '#39d353'
+  if (count <= 0) return '#0b3e64'      // muted – empty cell
+  if (count === 1) return '#5a0a28'     // low – dark crimson
+  if (count === 2) return '#7d1040'     // medium-low
+  if (count <= 4) return '#950c42'      // medium – primary
+  return '#c41a5a'                      // high – bright primary
 }
 
 export function formatCalendarTooltip(date: Date, count: number): string {
-  const formatted = date.toLocaleDateString('en-US', {
+  const formatted = date.toLocaleDateString('es-AR', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -86,8 +93,8 @@ export function formatCalendarTooltip(date: Date, count: number): string {
     timeZone: 'UTC',
   })
 
-  if (count === 0) return `No matches on ${formatted}`
-  return `${count} match${count === 1 ? '' : 'es'} on ${formatted}`
+  if (count === 0) return `Sin partidas el ${formatted}`
+  return `${count} partida${count === 1 ? '' : 's'} el ${formatted}`
 }
 
 export function formatCalendarFilterLabel(dateKey: string): string {
