@@ -42,9 +42,17 @@ export default function RootLayout({
       lang="en"
       className={`dark ${geistSans.variable} ${geistMono.variable} ${oswald.variable} bg-background`}
     >
-      <body className="font-sans antialiased">
+      <body className="flex min-h-screen flex-col font-sans antialiased">
         <Navbar />
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="border-t border-border bg-background py-8 text-center text-sm text-muted-foreground">
+          <p className="flex items-center justify-center gap-1.5">
+            Desarrollado con <span className="text-rose-500">❤️</span> por
+            <span className="font-heading font-bold uppercase tracking-widest text-primary">
+              Papi y Tutu
+            </span>
+          </p>
+        </footer>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
