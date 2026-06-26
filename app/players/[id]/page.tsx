@@ -57,9 +57,11 @@ export default async function PlayerProfile({
 
   const kda = playerStats.deaths === 0 ? playerStats.kills + playerStats.assists : (playerStats.kills + playerStats.assists) / playerStats.deaths
   const adm = playerStats.matches > 0 ? Math.round(playerStats.damage / playerStats.matches) : 0
+  const winrate = playerStats.matches > 0 ? ((playerStats.wins / playerStats.matches) * 100).toFixed(1) + '%' : '0%'
   const statCards = [
     { label: 'Matches', value: `${playerStats.matches}` },
     { label: 'W / L', value: `${playerStats.wins} / ${playerStats.losses}` },
+    { label: 'Win %', value: winrate },
     { label: 'KDA', value: kda.toFixed(2), accent: true },
     { label: 'Kills', value: `${playerStats.kills}` },
     { label: 'Deaths', value: `${playerStats.deaths}` },

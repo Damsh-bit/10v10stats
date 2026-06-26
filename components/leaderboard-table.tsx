@@ -17,6 +17,7 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
             <Th>Player</Th>
             <Th className="text-center">W</Th>
             <Th className="text-center">L</Th>
+            <Th className="text-center">WR</Th>
             <Th className="text-right">Kills</Th>
             <Th className="text-right">Deaths</Th>
             <Th className="text-right">Assists</Th>
@@ -64,6 +65,9 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
               </td>
               <Td className="text-center text-success">{s.wins}</Td>
               <Td className="text-center text-destructive">{s.losses}</Td>
+              <Td className="text-center">
+                {s.wins + s.losses > 0 ? ((s.wins / (s.wins + s.losses)) * 100).toFixed(0) + '%' : '0%'}
+              </Td>
               <Td className="text-right">{s.kills}</Td>
               <Td className="text-right">{s.deaths}</Td>
               <Td className="text-right">{s.assists}</Td>
