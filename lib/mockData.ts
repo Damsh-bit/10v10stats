@@ -108,7 +108,6 @@ type SupabaseMatchPlayerRecord = {
 type SupabaseHighlightRecord = {
   id: string
   player_id: string
-  match_id?: string | null
   type: string | null
   description: string | null
   round_number: number | null
@@ -227,14 +226,14 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     let highlights: Highlight[] = []
     const { data: highlightRows, error: highlightsError } = await supabase
       .from('highlights')
-      .select('id, player_id, match_id, type, description, round_number, clip_url')
+      .select('id, player_id, type, description, round_number, clip_url')
       .order('round_number')
 
     if (!highlightsError && highlightRows) {
       highlights = (highlightRows as SupabaseHighlightRecord[]).map((row) => ({
         id: normalizeString(row.id, 'sin-id'),
         playerId: normalizeString(row.player_id, 'sin-player'),
-        matchId: row.match_id ?? undefined,
+        matchId: undefined,
         type: (row.type as HighlightType | null) ?? 'OTHER',
         description: normalizeString(row.description),
         round: normalizeNumber(row.round_number),

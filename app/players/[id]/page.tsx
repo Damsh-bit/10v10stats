@@ -1,8 +1,12 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { formatDate, getLiveData } from '@/lib/mockData'
 import { PlayerAvatar, BadgePill, ResultChip } from '@/components/strike-ui'
-import { HighlightCard } from '@/components/highlight-card'
+import {
+  PlayerHighlightsGrid,
+  PlayerHighlightsSkeleton,
+} from '@/components/player-highlights-grid'
 
 export default async function PlayerProfile({
   params,
@@ -22,10 +26,6 @@ export default async function PlayerProfile({
     }))
     .sort((a, b) => b.match.date.localeCompare(a.match.date))
 
-  // Filter highlights directly from the already-fetched data for ID consistency
-  const playerHighlights = data.highlights.filter(
-    (h) => h.playerId.trim().toLowerCase() === id.trim().toLowerCase()
-  )
   const playerMatchMapById = new Map(data.matches.map((match) => [match.id, match.map]))
 
   const playerStats = data.matches
@@ -102,7 +102,7 @@ export default async function PlayerProfile({
         </div>
       </div>
 
-      {/* Two columns */}
+      {/* Two columns: Match history (left) + Highlights (right) */}
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Match history */}
         <section>
@@ -143,27 +143,14 @@ export default async function PlayerProfile({
           </div>
         </section>
 
-        {/* Highlights */}
+        {/* Highlights — streams with Suspense skeleton */}
         <section>
           <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
             Highlights
           </h2>
-          {playerHighlights.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {playerHighlights.map((h) => (
-                <HighlightCard
-                  key={h.id}
-                  highlight={h}
-                  matchLabel={h.matchId ? playerMatchMapById.get(h.matchId) : undefined}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-lg border border-dashed border-border bg-card px-3 py-8 text-center text-[13px] text-muted-foreground flex flex-col items-center gap-2">
-              <img src="/Sticker loader.png" alt="loader" className="h-8 w-8 opacity-40" />
-              No highlights recorded yet.
-            </div>
-          )}
+          <Suspense fallback={<PlayerHighlightsSkeleton />}>
+            <PlayerHighlightsGrid playerId={id} />
+          </Suspense>
         </section>
       </div>
     </main>
