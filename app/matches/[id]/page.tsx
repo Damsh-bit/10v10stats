@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Video } from 'lucide-react'
 import { formatDate, getLiveData } from '@/lib/mockData'
 import { Scoreboard } from '@/components/scoreboard'
 import { HighlightCard } from '@/components/highlight-card'
@@ -26,12 +27,26 @@ export default async function MatchDetail({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <Link
-        href="/matches"
-        className="mb-6 inline-block text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ← Partidas
-      </Link>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <Link
+          href="/matches"
+          className="inline-block text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Partidas
+        </Link>
+
+        {match.videoUrl && (
+          <a
+            href={match.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md bg-primary/15 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-white"
+          >
+            <Video className="h-4 w-4" />
+            Ir al video
+          </a>
+        )}
+      </div>
 
       {/* Header */}
       <div className="relative overflow-hidden flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">

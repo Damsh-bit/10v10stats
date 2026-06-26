@@ -477,16 +477,6 @@ export function NewMatchModal() {
                     />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Damage</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.damage}
-                      onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
-                  </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>HS%</span>
                     <input
                       type="number"
@@ -494,6 +484,16 @@ export function NewMatchModal() {
                       max="100"
                       value={row.hsPct}
                       onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <span>Damage</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={row.damage}
+                      onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     />
                   </label>
@@ -557,16 +557,6 @@ export function NewMatchModal() {
                     />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Damage</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.damage}
-                      onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
-                  </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>HS%</span>
                     <input
                       type="number"
@@ -574,6 +564,16 @@ export function NewMatchModal() {
                       max="100"
                       value={row.hsPct}
                       onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    />
+                  </label>
+                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <span>Damage</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={row.damage}
+                      onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     />
                   </label>
