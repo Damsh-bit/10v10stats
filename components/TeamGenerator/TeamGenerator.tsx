@@ -9,6 +9,21 @@ import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
 
 const MAP_POOL = ['Mirage', 'Inferno', 'Nuke', 'Overpass', 'Vertigo', 'Ancient', 'Anubis', 'Dust II']
 
+function getMapImageUrl(mapName: string) {
+  const nameMap: Record<string, string> = {
+    'Mirage': 'mirage.webp',
+    'Inferno': 'inferno.webp',
+    'Nuke': 'nuke.webp',
+    'Overpass': 'overpass.webp',
+    'Vertigo': '', // Sin imagen
+    'Ancient': 'ancient.webp',
+    'Anubis': 'anubis.webp',
+    'Dust II': 'dust2.webp'
+  }
+  const file = nameMap[mapName]
+  return file ? `/maps/${file}` : null
+}
+
 export function TeamGenerator({ players }: { players: PlayerStats[] }) {
   // Sort players alphabetically for the selector
   const sortedPlayers = useMemo(() => {
@@ -93,6 +108,30 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
 
       {teams && (
         <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          
+          {recommendedMap && (
+            <div className="relative mx-auto flex w-full max-w-sm flex-col items-center justify-center overflow-hidden rounded-xl border border-border bg-card shadow-md">
+              {(() => {
+                const img = getMapImageUrl(recommendedMap)
+                if (img) {
+                  return (
+                    <img src={img} alt={recommendedMap} className="absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-luminosity" />
+                  )
+                }
+                return null
+              })()}
+              <div className="relative z-10 flex flex-col items-center p-6 text-center">
+                <span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <MapIcon className="h-4 w-4" />
+                  Mapa recomendado
+                </span>
+                <span className="font-heading text-3xl font-black uppercase tracking-widest text-primary drop-shadow-md">
+                  {recommendedMap}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TeamResultCard teamName="Equipo 1" players={teams[0]} />
             <TeamResultCard teamName="Equipo 2" players={teams[1]} />
@@ -126,18 +165,6 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
                 </div>
               )
             })()}
-
-            {recommendedMap && (
-              <div className="flex flex-col items-center justify-center gap-1 mt-2">
-                <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <MapIcon className="w-3.5 h-3.5" />
-                  Mapa recomendado
-                </span>
-                <span className="font-heading text-xl font-black tracking-wider text-primary">
-                  {recommendedMap}
-                </span>
-              </div>
-            )}
 
             <button
               onClick={handleCopy}
