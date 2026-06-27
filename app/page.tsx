@@ -186,9 +186,8 @@ export default async function Page() {
               if (!recentMatch) return null
               const playerMap = new Map(data.players.map((p) => [p.id, p.name]))
 
-              const teams = [...new Set(recentMatch.players.map((p) => p.team))]
-              const teamA = teams[0] ?? 'CT'
-              const teamB = teams[1] ?? 'T'
+              const teamA = 'CT'
+              const teamB = 'T'
 
               const playersTeamA = recentMatch.players
                 .filter((p) => p.team === teamA)
