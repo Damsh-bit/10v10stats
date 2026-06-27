@@ -6,9 +6,12 @@ import { PlayerAvatar } from '@/components/strike-ui'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
 import { KDaBadges } from '@/components/kda-badges'
+import type { PlayerRecordMap } from '@/lib/records'
+import { RecordBadge } from '@/components/record-badges'
 
-export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
+export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], records?: PlayerRecordMap }) {
   const router = useRouter()
+
   return (
     <section className="rounded-lg border border-border bg-card">
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -45,7 +48,7 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
               </div>
               <PlayerAvatar player={s.player} size={32} />
               <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="truncate text-[14px] font-semibold leading-tight text-foreground">
                     {s.player.name}
                   </span>
@@ -57,6 +60,9 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
                       👑 {s.mvps}
                     </span>
                   )}
+                  {records?.[s.player.id]?.map((record) => (
+                    <RecordBadge key={record} type={record} />
+                  ))}
                   {s.player.nelsons > 0 && (
                     <span 
                       title="Total de Nelsons"

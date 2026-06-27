@@ -57,6 +57,7 @@ export type NelsonTrend = 'up' | 'down' | 'same'
 
 export type NelsonEntry = {
   rank: number
+  id: string
   name: string
   points: number
   trend: NelsonTrend
@@ -334,6 +335,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
 
 function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
   return data.players
+    .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
     .map((p) => buildPlayerStatsForData(data, p.id))
     .filter((s): s is PlayerStats => s !== null)
     .sort((a, b) => b.kda - a.kda)

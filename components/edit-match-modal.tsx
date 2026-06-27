@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, X, CheckCircle2 } from 'lucide-react'
+import { Loader2, X, CheckCircle2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 
@@ -37,6 +37,7 @@ export function EditMatchModal({
 }: EditMatchProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -46,23 +47,26 @@ export function EditMatchModal({
   const [scoreT, setScoreT] = useState(String(initialTScore))
 
   const [players, setPlayers] = useState<PlayerRow[]>(() => {
-    return matchPlayers.map((p: any) => {
-      const fullPlayer = allPlayers.find((ap) => ap.id === p.playerId)
-      return {
-        player_id: p.playerId,
-        name: fullPlayer?.name || 'Desconocido',
-        team: p.team,
-        kills: String(p.kills),
-        deaths: String(p.deaths),
-        assists: String(p.assists),
-        damage: String(p.damage),
-        hsPct: String(p.hsPct),
-      }
-    })
+    return matchPlayers
+      .map((p: any) => {
+        const fullPlayer = allPlayers.find((ap) => ap.id === p.playerId)
+        return {
+          player_id: p.playerId,
+          name: fullPlayer?.name || 'Desconocido',
+          team: p.team,
+          kills: String(p.kills),
+          deaths: String(p.deaths),
+          assists: String(p.assists),
+          damage: String(p.damage),
+          hsPct: String(p.hsPct),
+        }
+      })
+      .sort((a, b) => Number(b.damage) - Number(a.damage))
   })
 
   const handleOpen = () => {
     setIsOpen(true)
+    setIsAuthenticated(false)
     setError(null)
     setSuccess(null)
     setPassword('')
@@ -76,6 +80,31 @@ export function EditMatchModal({
     setPlayers((prev) =>
       prev.map((row) => (row.player_id === playerId ? { ...row, [field]: value } : row))
     )
+  }
+
+  const swapAllTeams = () => {
+    setPlayers((prev) =>
+      prev.map((row) => {
+        const isTeamA = row.team === teamALabel || row.team === 'CT'
+        return { ...row, team: isTeamA ? teamBLabel : teamALabel }
+      })
+    )
+  }
+
+  const handleGroupTeamChange = (currentLabel: string, newLabel: string) => {
+    if (currentLabel !== newLabel) {
+      swapAllTeams()
+    }
+  }
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password === 'alzhannah2026') {
+      setIsAuthenticated(true)
+      setError(null)
+    } else {
+      setError('Clave incorrecta')
+    }
   }
 
   const handleSubmit = async () => {
@@ -150,8 +179,33 @@ export function EditMatchModal({
                 </button>
               </div>
 
-              <div className="mt-6 space-y-6">
-                {/* Scores */}
+              {!isAuthenticated ? (
+                <div className="mt-6 flex flex-col items-center py-6 text-center">
+                  <div className="mb-4 rounded-full bg-primary/10 p-3">
+                    <Lock className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="mb-2 text-lg font-semibold text-foreground">Acceso Restringido</h3>
+                  <p className="mb-6 text-sm text-muted-foreground">
+                    Ingresa la clave de administrador para editar la partida.
+                  </p>
+                  <form onSubmit={handleAuth} className="w-full max-w-sm space-y-4">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Clave de administrador"
+                      className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                      autoFocus
+                    />
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                    <Button type="submit" className="w-full">
+                      Autenticar
+                    </Button>
+                  </form>
+                </div>
+              ) : (
+                <div className="mt-6 space-y-6">
+                  {/* Scores */}
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2 text-sm">
                     <span className="text-muted-foreground">Score {teamALabel}</span>
@@ -180,7 +234,14 @@ export function EditMatchModal({
                   {/* Team A */}
                   <div className="space-y-3">
                     <div className="rounded-xl border border-border bg-card/60 p-4">
-                      <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">{teamALabel}</h3>
+                      <select
+                        value={teamALabel}
+                        onChange={(e) => handleGroupTeamChange(teamALabel, e.target.value)}
+                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-primary outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        <option value={teamALabel}>{teamALabel}</option>
+                        <option value={teamBLabel}>{teamBLabel}</option>
+                      </select>
                     </div>
                     {players
                       .filter((row) => row.team === teamALabel || row.team === 'CT')
@@ -267,7 +328,14 @@ export function EditMatchModal({
                   {/* Team B */}
                   <div className="space-y-3">
                     <div className="rounded-xl border border-border bg-card/60 p-4">
-                      <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">{teamBLabel}</h3>
+                      <select
+                        value={teamBLabel}
+                        onChange={(e) => handleGroupTeamChange(teamBLabel, e.target.value)}
+                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-primary outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        <option value={teamALabel}>{teamALabel}</option>
+                        <option value={teamBLabel}>{teamBLabel}</option>
+                      </select>
                     </div>
                     {players
                       .filter((row) => row.team !== teamALabel && row.team !== 'CT')
@@ -353,17 +421,6 @@ export function EditMatchModal({
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-border">
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Clave de administrador (para guardar cambios)</span>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                      placeholder="••••••••"
-                    />
-                  </label>
-
                   {error ? <p className="text-sm text-destructive">{error}</p> : null}
                   {success ? (
                     <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
@@ -382,7 +439,8 @@ export function EditMatchModal({
                     </Button>
                   </div>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

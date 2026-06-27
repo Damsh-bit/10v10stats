@@ -184,6 +184,7 @@ export async function getNelsonData() {
   const league = orderedPlayers
     .map((player) => ({
       rank: 0,
+      id: player.id,
       name: player.name,
       points: player.nelsonPoints,
       trend: 'same' as NelsonTrend,

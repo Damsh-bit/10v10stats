@@ -43,9 +43,14 @@ export default async function EstadisticasPage() {
   let recordAssists = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordMinDamage = { value: Infinity, playerName: 'Sin datos', matchId: '' }
-  
+
+  const excludedPlayerNames = ['sergio vergara']
+  const excludedPlayerIds = data.players.filter(p => excludedPlayerNames.includes(p.name.toLowerCase())).map(p => p.id)
+
   data.matches.forEach(m => {
     m.players.forEach(p => {
+      if (excludedPlayerIds.includes(p.playerId)) return
+      
       const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
       if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName, matchId: m.id }
       if (p.kills < recordMinKills.value) recordMinKills = { value: p.kills, playerName: pName, matchId: m.id }
@@ -155,7 +160,7 @@ export default async function EstadisticasPage() {
               10v10 Stats
             </span>
             <h1 className="font-heading text-3xl font-bold uppercase tracking-wide text-foreground">
-              Estadísticas Globales
+              Hall Of Fame
             </h1>
           </div>
         </div>
@@ -164,15 +169,15 @@ export default async function EstadisticasPage() {
           {statCards.map((card, i) => (
             <div key={i} className="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm">
               {card.bgImage && (
-                <div 
-                  className="absolute inset-0 z-0 bg-cover bg-center" 
-                  style={{ backgroundImage: `url('${card.bgImage}')` }} 
+                <div
+                  className="absolute inset-0 z-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url('${card.bgImage}')` }}
                 />
               )}
               {card.bgImage && (
                 <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
               )}
-              
+
               <div className="relative z-10 flex flex-col gap-1">
                 <div className="flex items-start justify-between">
                   <h3 className={`text-sm font-semibold uppercase tracking-wider ${card.bgImage ? 'text-white/80' : 'text-muted-foreground'}`}>

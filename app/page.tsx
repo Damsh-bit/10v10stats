@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { getAllPlayerStats, getLiveData, formatDate } from '@/lib/mockData'
+import { getPlayerRecords } from '@/lib/records'
 import { MiniLeaderboard } from '@/components/mini-leaderboard'
 import { NelsonLeague } from '@/components/nelson-league'
 import { RecentMatches } from '@/components/recent-matches'
@@ -38,14 +39,20 @@ export default async function Page() {
   )
 
   const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
+  const playerRecords = getPlayerRecords(data, stats)
   
   let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDamage = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordMinDamage = { value: Infinity, playerName: 'Sin datos', matchId: '' }
   
+  const excludedPlayerNames = ['sergio vergara']
+  const excludedPlayerIds = data.players.filter(p => excludedPlayerNames.includes(p.name.toLowerCase())).map(p => p.id)
+
   data.matches.forEach(m => {
     m.players.forEach(p => {
+      if (excludedPlayerIds.includes(p.playerId)) return
+
       const pName = data.players.find(pl => pl.id === p.playerId)?.name || 'Jugador'
       if (p.kills > recordKills.value) recordKills = { value: p.kills, playerName: pName, matchId: m.id }
       if (p.deaths > recordDeaths.value) recordDeaths = { value: p.deaths, playerName: pName, matchId: m.id }
@@ -170,7 +177,7 @@ export default async function Page() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 flex flex-col gap-6">
             <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando leaderboard…</span></div>}>
-              <MiniLeaderboard stats={stats} />
+              <MiniLeaderboard stats={stats} records={playerRecords} />
             </Suspense>
 
             {/* Ladder de la partida más reciente */}

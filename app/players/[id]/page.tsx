@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getLiveData } from '@/lib/mockData'
+import { getLiveData, getAllPlayerStats } from '@/lib/mockData'
 import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
 import {
   PlayerHighlightsGrid,
@@ -10,6 +10,8 @@ import {
 import { EditPlayerModal } from '@/components/edit-player-modal'
 import { PlayerMatchHistory } from '@/components/player-match-history'
 import { KDaBadges } from '@/components/kda-badges'
+import { getPlayerRecords } from '@/lib/records'
+import { RecordBadge } from '@/components/record-badges'
 
 export default async function PlayerProfile({
   params,
@@ -18,8 +20,12 @@ export default async function PlayerProfile({
 }) {
   const { id } = await params
   const data = await getLiveData()
+  const allStats = await getAllPlayerStats()
   const stats = data.players.find((p) => p.id === id)
   if (!stats) notFound()
+
+  const playerRecords = getPlayerRecords(data, allStats)
+  const myRecords = playerRecords[id] || []
 
   const playerMatches = data.matches
     .filter((m) => m.players.some((mp) => mp.playerId === id))
@@ -95,8 +101,11 @@ export default async function PlayerProfile({
               </h1>
               <EditPlayerModal player={{ id: stats.id, name: stats.name, photoUrl: stats.photoUrl }} />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <BadgePill>{stats.badge}</BadgePill>
+              {myRecords.map((record) => (
+                <RecordBadge key={record} type={record} />
+              ))}
               {playerStats.mvps > 0 && (
                 <div className="flex items-center gap-1.5 rounded border border-[#d4af37]/30 bg-[#101010] px-2.5 py-0.5 shadow-sm">
                   <span className="text-[11px] text-[#d4af37] opacity-90">👑</span>
