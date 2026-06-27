@@ -34,7 +34,8 @@ export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], reco
                   {i === 0 && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-500" />}
                   {i === 1 && <Star className="h-3.5 w-3.5 fill-slate-300 text-slate-400" />}
                   {i === 2 && <Star className="h-3.5 w-3.5 fill-amber-700 text-amber-800" />}
-                  {i >= stats.length - 3 && <span className="text-[12px]">💀</span>}
+                  {i >= stats.length - 3 && i !== stats.length - 1 && <span className="text-[12px]">💀</span>}
+                  {i === stats.length - 1 && <span className="text-[12px]">💩</span>}
                 </div>
                 <span
                   className={cn(
@@ -58,6 +59,14 @@ export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], reco
                       className="flex shrink-0 items-center gap-1 rounded border border-[#d4af37]/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-[#d4af37] shadow-sm cursor-help"
                     >
                       👑 {s.mvps}
+                    </span>
+                  )}
+                  {i === stats.length - 1 && (
+                    <span 
+                      title="Último lugar del ladder"
+                      className="flex shrink-0 items-center gap-1 rounded border border-amber-700/50 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-amber-600 shadow-sm cursor-help"
+                    >
+                      💩 MENUDA MIERDA
                     </span>
                   )}
                   {records?.[s.player.id]?.map((record) => (
