@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Film, ChevronDown } from 'lucide-react'
+import { Film } from 'lucide-react'
 import { highlightTypeColors, type HighlightType } from '@/lib/mockData'
-import { VideoEmbed } from '@/components/video-embed'
+import { VideoEmbedClient } from '@/components/video-embed-client'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type HighlightRow = {
@@ -145,7 +145,7 @@ export function HighlightsGrid({
                 {/* Video player */}
                 {row.clip_url ? (
                   <div className="overflow-hidden rounded-lg border border-border/60">
-                    <VideoEmbed url={row.clip_url} title={row.description || type} />
+                    <VideoEmbedClient url={row.clip_url} title={row.description || type} />
                   </div>
                 ) : (
                   <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-muted/20 text-xs text-muted-foreground">
