@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import type { Match, MatchPlayer } from '@/lib/mockData'
 import { formatDate } from '@/lib/mockData'
@@ -16,18 +16,87 @@ const PAGE_SIZE = 25
 
 export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
   const [page, setPage] = useState(0)
+  const [mapFilter, setMapFilter] = useState<string>('all')
+  const [teamFilter, setTeamFilter] = useState<string>('all')
+  const [mvpFilter, setMvpFilter] = useState<string>('all')
+  const [resultFilter, setResultFilter] = useState<string>('all')
 
-  const totalPages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE))
+  const uniqueMaps = useMemo(() => Array.from(new Set(matches.map((m) => m.match.map))).sort(), [matches])
+  const uniqueTeams = useMemo(() => Array.from(new Set(matches.map((m) => m.entry.team))).sort(), [matches])
+
+  const filteredMatches = useMemo(() => {
+    return matches.filter(({ match, entry }) => {
+      if (mapFilter !== 'all' && match.map !== mapFilter) return false
+      if (teamFilter !== 'all' && entry.team !== teamFilter) return false
+      if (mvpFilter === 'yes' && entry.mvps === 0) return false
+      if (mvpFilter === 'no' && entry.mvps > 0) return false
+      if (resultFilter === 'win' && !entry.won) return false
+      if (resultFilter === 'loss' && entry.won) return false
+      return true
+    })
+  }, [matches, mapFilter, teamFilter, mvpFilter, resultFilter])
+
+  useEffect(() => {
+    setPage(0)
+  }, [mapFilter, teamFilter, mvpFilter, resultFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filteredMatches.length / PAGE_SIZE))
   const start = page * PAGE_SIZE
-  const pageMatches = matches.slice(start, start + PAGE_SIZE)
+  const pageMatches = filteredMatches.slice(start, start + PAGE_SIZE)
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Filters */}
+      {matches.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+          <select
+            value={mapFilter}
+            onChange={(e) => setMapFilter(e.target.value)}
+            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="all">Todos los mapas</option>
+            {uniqueMaps.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+
+          <select
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="all">Todos los equipos</option>
+            {uniqueTeams.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+
+          <select
+            value={resultFilter}
+            onChange={(e) => setResultFilter(e.target.value)}
+            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="all">Todas las partidas</option>
+            <option value="win">Victorias</option>
+            <option value="loss">Derrotas</option>
+          </select>
+
+          <select
+            value={mvpFilter}
+            onChange={(e) => setMvpFilter(e.target.value)}
+            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="all">MVP: Todos</option>
+            <option value="yes">Solo MVP</option>
+          </select>
+        </div>
+      )}
+
       {/* Match list */}
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {pageMatches.length === 0 ? (
           <p className="px-4 py-6 text-center text-[13px] text-muted-foreground">
-            Sin partidas registradas.
+            {matches.length === 0 ? 'Sin partidas registradas.' : 'No hay partidas que coincidan con los filtros.'}
           </p>
         ) : (
           pageMatches.map(({ match, entry }, i) => (
@@ -40,13 +109,20 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
             >
               <div className="flex items-center gap-3">
                 <ResultChip won={entry.won} />
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                   <span className="text-[14px] font-medium text-foreground">
                     {match.map}
                   </span>
-                  <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                    {entry.team}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      {entry.team}
+                    </span>
+                    {entry.mvps > 0 && (
+                      <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-bold text-yellow-500" title="MVP de la partida">
+                        MVP
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -72,7 +148,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <span className="text-[12px] text-muted-foreground">
             Página {page + 1} de {totalPages}{' '}
             <span className="text-muted-foreground/60">
-              ({matches.length} partidas)
+              ({filteredMatches.length} partidas)
             </span>
           </span>
 
