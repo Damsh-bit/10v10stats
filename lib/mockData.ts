@@ -255,7 +255,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     const { data: highlightRows, error: highlightsError } = await supabase
       .from('highlights')
       .select('id, player_id, type, description, round_number, clip_url')
-      .order('round_number')
+      .order('created_at', { ascending: false })
 
     if (!highlightsError && highlightRows) {
       highlights = (highlightRows as SupabaseHighlightRecord[]).map((row) => ({
