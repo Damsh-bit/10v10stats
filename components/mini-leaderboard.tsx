@@ -27,7 +27,7 @@ export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], reco
           <li key={s.player.id}>
             <button
               onClick={() => router.push(`/players/${s.player.id}`)}
-              className="flex w-full cursor-pointer items-center gap-3 border-b border-border px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60"
+              className="flex w-full cursor-pointer items-center gap-2 sm:gap-3 border-b border-border px-2 sm:px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60"
             >
               <div className="flex w-12 shrink-0 items-center justify-center gap-0.5">
                 <div className="flex w-4 items-center justify-end">
@@ -82,23 +82,34 @@ export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], reco
                   )}
                   <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
                 </div>
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  {s.kills}/{s.deaths}/{s.assists} · <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span> · <span title="Average Damage per Match">{s.adm.toLocaleString()} ADM</span> · {s.wins}W-{s.losses}L ({s.wins + s.losses > 0 ? ((s.wins / (s.wins + s.losses)) * 100).toFixed(0) + '%' : '0%'} WR)
+                <div className="mt-1 flex flex-wrap items-center gap-x-1.5 sm:gap-x-2 gap-y-0.5 font-mono text-[10px] sm:text-[11px] text-muted-foreground">
+                  <span title="Kills/Deaths/Assists">{s.kills}/{s.deaths}/{s.assists}</span>
+                  <span className="opacity-40">·</span>
+                  <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span>
+                  <span className="opacity-40">·</span>
+                  <span title="Average Damage per Match">{s.adm.toLocaleString()} ADM</span>
+                  <span className="opacity-40">·</span>
+                  <span title="Winrate">{s.wins}W-{s.losses}L ({s.wins + s.losses > 0 ? ((s.wins / (s.wins + s.losses)) * 100).toFixed(0) + '%' : '0%'} WR)</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-end shrink-0">
+                <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 sm:hidden mb-0.5">KDA</span>
+                <span
+                  className={cn(
+                    'font-mono text-[14px] sm:text-[15px] font-bold',
+                    i < 3
+                      ? 'text-emerald-500'
+                      : i >= stats.length - 3 && i !== stats.length - 1
+                        ? 'text-primary'
+                        : i === stats.length - 1
+                          ? 'text-amber-600'
+                          : 'text-yellow-500',
+                  )}
+                  title="KDA"
+                >
+                  {s.kda.toFixed(2)}
                 </span>
               </div>
-              <span
-                className={cn(
-                  'font-mono text-[15px] font-bold w-10 text-right',
-                  i < 3
-                    ? 'text-emerald-500'
-                    : i >= stats.length - 3
-                      ? 'text-primary'
-                      : 'text-yellow-500',
-                )}
-                title="KDA"
-              >
-                {s.kda.toFixed(2)}
-              </span>
             </button>
           </li>
         ))}
