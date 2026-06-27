@@ -1,13 +1,14 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { formatDate, getLiveData } from '@/lib/mockData'
-import { PlayerAvatar, BadgePill, ResultChip } from '@/components/strike-ui'
+import { getLiveData } from '@/lib/mockData'
+import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
 import {
   PlayerHighlightsGrid,
   PlayerHighlightsSkeleton,
 } from '@/components/player-highlights-grid'
 import { EditPlayerModal } from '@/components/edit-player-modal'
+import { PlayerMatchHistory } from '@/components/player-match-history'
 
 export default async function PlayerProfile({
   params,
@@ -138,38 +139,7 @@ export default async function PlayerProfile({
           <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
             Match History
           </h2>
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            {playerMatches.map(({ match, entry }, i) => (
-              <Link
-                key={match.id}
-                href={`/matches/${match.id}`}
-                className={`flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-accent/60 ${i > 0 ? 'border-t border-border' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <ResultChip won={entry.won} />
-                  <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-medium text-foreground">
-                      {match.map}
-                    </span>
-                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                      {entry.team}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 font-mono text-[12px] text-muted-foreground">
-                  <div className="flex items-center gap-1 font-semibold tracking-wide">
-                    <span className="text-green-400">{entry.kills}</span>
-                    <span className="text-muted-foreground/40">/</span>
-                    <span className="text-primary">{entry.deaths}</span>
-                    <span className="text-muted-foreground/40">/</span>
-                    <span className="text-blue-400">{entry.assists}</span>
-                  </div>
-                  <span className="hidden sm:inline">{entry.damage} dmg</span>
-                  <span className="w-20 text-right">{formatDate(match.date)}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <PlayerMatchHistory matches={playerMatches} />
         </section>
 
         {/* Highlights — streams with Suspense skeleton */}
