@@ -55,6 +55,7 @@ export default function RootLayout({
           </p>
         </footer>
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        <SpeedInsights />
       </body>
     </html>
   )
