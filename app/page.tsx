@@ -145,34 +145,7 @@ export default async function Page() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando resumen…</span></div>}>
-            <DashboardStats stats={overview} />
-          </Suspense>
-        </div>
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          {chips.map((c) => {
-            const Wrapper = c.matchId ? Link : 'div'
-            return (
-            <Wrapper
-              key={c.label}
-              href={c.matchId ? `/matches/${c.matchId}` : ''}
-              className={`flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-1.5 ${c.matchId ? 'transition-colors hover:border-primary/50 hover:bg-accent/50 cursor-pointer' : ''}`}
-              title={c.matchId ? 'Ver partida del récord' : undefined}
-            >
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                {c.label}
-              </span>
-              <span className="text-[13px] font-semibold text-foreground">
-                {c.playerName ?? 'Sin info'}
-              </span>
-              <span className="font-mono text-[13px] font-bold text-primary">
-                {c.value}
-              </span>
-            </Wrapper>
-          )})}
-        </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 flex flex-col gap-6">
@@ -311,7 +284,11 @@ export default async function Page() {
             <MapWinrateSection />
           </div>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 lg:col-span-1">
+            <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando resumen…</span></div>}>
+              <DashboardStats stats={overview} forceCols={2} />
+            </Suspense>
+
             {latestHighlight && resolveClipUrl(latestHighlight.clipUrl) && (
               <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-center justify-between">

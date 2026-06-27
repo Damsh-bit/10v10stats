@@ -10,9 +10,13 @@ type Stat = {
   matchId?: string
 }
 
-export function DashboardStats({ stats }: { stats: Stat[] }) {
+export function DashboardStats({ stats, forceCols }: { stats: Stat[], forceCols?: number }) {
+  const gridClass = forceCols 
+    ? `grid grid-cols-2 gap-3 lg:grid-cols-${forceCols}`
+    : `grid grid-cols-2 gap-3 lg:grid-cols-${stats.length}`
+    
   return (
-    <div className={`grid grid-cols-2 gap-3 lg:grid-cols-${stats.length}`}>
+    <div className={gridClass}>
       {stats.map((s) => {
         const Icon = s.icon
         return (
