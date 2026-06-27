@@ -27,6 +27,8 @@ export default async function PlayerProfile({
   const playerRecords = getPlayerRecords(data, allStats)
   const myRecords = playerRecords[id] || []
 
+  const isLastPlace = allStats.length > 0 && allStats[allStats.length - 1].player.id === id
+
   const playerMatches = data.matches
     .filter((m) => m.players.some((mp) => mp.playerId === id))
     .map((m) => ({
@@ -106,6 +108,14 @@ export default async function PlayerProfile({
               {myRecords.map((record) => (
                 <RecordBadge key={record} type={record} />
               ))}
+              {isLastPlace && (
+                <span 
+                  title="Último lugar del ladder histórico"
+                  className="flex shrink-0 items-center gap-1 rounded border border-amber-700/50 bg-[#101010] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-amber-600 shadow-sm cursor-help"
+                >
+                  💩 MENUDA MIERDA
+                </span>
+              )}
               {playerStats.mvps > 0 && (
                 <div className="flex items-center gap-1.5 rounded border border-[#d4af37]/30 bg-[#101010] px-2.5 py-0.5 shadow-sm">
                   <span className="text-[11px] text-[#d4af37] opacity-90">👑</span>
