@@ -492,19 +492,25 @@ export function NewMatchModal() {
             </label>
             <label className="space-y-2 text-sm">
               <span className="text-muted-foreground">Nombre Equipo 1</span>
-              <input
+              <select
                 value={form.team_a_name}
-                disabled
-                className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground outline-none cursor-not-allowed"
-              />
+                onChange={(event) => setForm((prev) => ({ ...prev, team_a_name: event.target.value }))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+              >
+                <option value="Equipo Papi">Equipo Papi</option>
+                <option value="Equipo Viejo">Equipo Viejo</option>
+              </select>
             </label>
             <label className="space-y-2 text-sm">
               <span className="text-muted-foreground">Nombre Equipo 2</span>
-              <input
+              <select
                 value={form.team_b_name}
-                disabled
-                className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground outline-none cursor-not-allowed"
-              />
+                onChange={(event) => setForm((prev) => ({ ...prev, team_b_name: event.target.value }))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+              >
+                <option value="Equipo Papi">Equipo Papi</option>
+                <option value="Equipo Viejo">Equipo Viejo</option>
+              </select>
             </label>
             <label className="space-y-2 text-sm">
               <span className="text-muted-foreground">Score {teamAName}</span>
