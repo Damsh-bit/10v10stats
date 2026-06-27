@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type { Match, CSMap } from '@/lib/mockData'
 import { formatDate } from '@/lib/mockData'
 import { toDateKey } from '@/lib/matches-calendar'
-import { cn } from '@/lib/utils'
+import { cn, getTeamColorClass } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const mapColors: Record<CSMap, string> = {
@@ -119,10 +119,8 @@ export function MatchList({
                 <div className="flex items-center gap-3 mt-1 sm:mt-0">
                   <span
                     className={cn(
-                      'inline-flex items-center rounded px-2 py-1 font-mono text-[11px] font-bold',
-                      winnerLabel.toLowerCase().includes('papi')
-                        ? 'bg-amber-500/15 text-amber-500 ring-1 ring-inset ring-amber-500/30'
-                        : 'bg-primary/15 text-primary',
+                      'inline-flex items-center rounded border px-2 py-1 font-mono text-[11px] font-bold',
+                      getTeamColorClass(winnerLabel)
                     )}
                   >
                     {winnerLabel} WINS

@@ -36,7 +36,6 @@ function normalizeType(value: string | null): HighlightType {
     'CLUTCH',
     'ENTRY_FRAG',
     'KNIFE_KILL',
-    'FAKEADO',
     'OTHER',
   ]
   return validTypes.includes(upper as HighlightType) ? (upper as HighlightType) : 'OTHER'

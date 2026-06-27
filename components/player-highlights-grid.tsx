@@ -121,7 +121,6 @@ function EmptyState() {
 
 export async function PlayerHighlightsGrid({
   playerId,
-  matchMapById,
 }: {
   playerId: string
 }) {

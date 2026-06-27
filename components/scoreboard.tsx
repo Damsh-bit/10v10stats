@@ -57,6 +57,7 @@ export function Scoreboard({
               name: 'Sin info',
               badge: 'Sin info',
               avatarColor: '#64748b',
+              nelsons: 0,
             }
             const kills = e.kills ?? 0
             const deaths = e.deaths ?? 0

@@ -6,13 +6,14 @@ import type { Match, MatchPlayer } from '@/lib/mockData'
 import { formatDate } from '@/lib/mockData'
 import { ResultChip } from '@/components/strike-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { getTeamColorClass, cn } from '@/lib/utils'
 
 export type MatchEntry = {
   match: Match
   entry: MatchPlayer
 }
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 15
 
 export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
   const [page, setPage] = useState(0)
@@ -48,13 +49,13 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
     <div className="flex flex-col gap-3">
       {/* Filters */}
       {matches.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
           <select
             value={mapFilter}
             onChange={(e) => setMapFilter(e.target.value)}
-            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
           >
-            <option value="all">Todos los mapas</option>
+            <option value="all">Mapas</option>
             {uniqueMaps.map((m) => (
               <option key={m} value={m}>{m}</option>
             ))}
@@ -63,9 +64,9 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <select
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
-            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
           >
-            <option value="all">Todos los equipos</option>
+            <option value="all">Equipos</option>
             {uniqueTeams.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -74,9 +75,9 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <select
             value={resultFilter}
             onChange={(e) => setResultFilter(e.target.value)}
-            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
           >
-            <option value="all">Todas las partidas</option>
+            <option value="all">Resultados</option>
             <option value="win">Victorias</option>
             <option value="loss">Derrotas</option>
           </select>
@@ -84,9 +85,9 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <select
             value={mvpFilter}
             onChange={(e) => setMvpFilter(e.target.value)}
-            className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
           >
-            <option value="all">MVP: Todos</option>
+            <option value="all">MVP (Todos)</option>
             <option value="yes">Solo MVP</option>
           </select>
         </div>
@@ -103,9 +104,8 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
             <Link
               key={match.id}
               href={`/matches/${match.id}`}
-              className={`flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-accent/60 ${
-                i > 0 ? 'border-t border-border' : ''
-              }`}
+              className={`flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-accent/60 ${i > 0 ? 'border-t border-border' : ''
+                }`}
             >
               <div className="flex items-center gap-3">
                 <ResultChip won={entry.won} />
@@ -114,7 +114,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                     {match.map}
                   </span>
                   <div className="flex items-center gap-1">
-                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    <span className={cn("rounded border px-2 py-0.5 text-[11px] font-medium", getTeamColorClass(entry.team))}>
                       {entry.team}
                     </span>
                     {entry.mvps > 0 && (
@@ -194,11 +194,10 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                   onClick={() => setPage(i)}
                   aria-label={`Ir a página ${i + 1}`}
                   aria-current={i === page ? 'page' : undefined}
-                  className={`flex h-7 min-w-[28px] items-center justify-center rounded border px-2 text-[12px] font-medium transition-colors ${
-                    i === page
+                  className={`flex h-7 min-w-[28px] items-center justify-center rounded border px-2 text-[12px] font-medium transition-colors ${i === page
                       ? 'border-primary bg-primary/15 text-primary'
                       : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {i + 1}
                 </button>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { Match, CSMap } from '@/lib/mockData'
 import { formatDate } from '@/lib/mockData'
+import { getTeamColorClass, cn } from '@/lib/utils'
 
 const mapColors: Record<CSMap, string> = {
   Mirage: '#c2853b',
@@ -56,7 +57,7 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
                     {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
                   </span>
                 </div>
-                <span className="rounded-sm bg-primary/15 px-2 py-1 font-mono text-[11px] font-bold text-primary">
+                <span className={cn("rounded-sm border px-2 py-1 font-mono text-[11px] font-bold", getTeamColorClass(winnerLabel))}>
                   {winnerLabel} WINS
                 </span>
               </Link>
