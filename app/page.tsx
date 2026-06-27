@@ -11,6 +11,7 @@ import { NelsonVotePanel } from '@/components/nelson-vote-panel'
 import { getNelsonData } from '@/lib/nelson'
 import { VideoEmbed } from '@/components/video-embed'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
+import { MapWinrateSection } from '@/components/map-winrate-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -341,6 +342,8 @@ export default async function Page() {
             </Suspense>
           </div>
         </div>
+
+        <MapWinrateSection />
       </div>
     </main>
   )
