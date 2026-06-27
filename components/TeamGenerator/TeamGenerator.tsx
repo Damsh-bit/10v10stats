@@ -5,7 +5,9 @@ import type { PlayerStats } from '@/lib/mockData'
 import { computePlayerRating, balanceTeams, regenerateTeams, sumRating, type RatedPlayer } from '@/lib/teamBalancer'
 import { PlayerSelector } from './PlayerSelector'
 import { TeamResultCard } from './TeamResultCard'
-import { Copy, RefreshCw, Users } from 'lucide-react'
+import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
+
+const MAP_POOL = ['Mirage', 'Inferno', 'Nuke', 'Overpass', 'Vertigo', 'Ancient', 'Anubis', 'Dust II']
 
 export function TeamGenerator({ players }: { players: PlayerStats[] }) {
   // Sort players alphabetically for the selector
@@ -18,6 +20,7 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>(sortedPlayers.map(p => p.player.id))
   
   const [teams, setTeams] = useState<[RatedPlayer[], RatedPlayer[]] | null>(null)
+  const [recommendedMap, setRecommendedMap] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
 
   const togglePlayer = (id: string) => {
@@ -31,6 +34,7 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
     const selectedStats = players.filter(p => selectedIds.includes(p.player.id))
     const rated = computePlayerRating(selectedStats)
     setTeams(balanceTeams(rated))
+    setRecommendedMap(MAP_POOL[Math.floor(Math.random() * MAP_POOL.length)])
     setIsCopied(false)
   }
 
@@ -39,6 +43,7 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
     const selectedStats = players.filter(p => selectedIds.includes(p.player.id))
     const rated = computePlayerRating(selectedStats)
     setTeams(regenerateTeams(rated))
+    setRecommendedMap(MAP_POOL[Math.floor(Math.random() * MAP_POOL.length)])
     setIsCopied(false)
   }
 
@@ -47,7 +52,8 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
     const [t1, t2] = teams
     const t1Names = t1.map(p => p.player.name).join(', ')
     const t2Names = t2.map(p => p.player.name).join(', ')
-    const text = `Equipo 1: ${t1Names}\n\nEquipo 2: ${t2Names}`
+    const mapText = recommendedMap ? `\n\nMapa: ${recommendedMap}` : ''
+    const text = `Equipo 1: ${t1Names}\n\nEquipo 2: ${t2Names}${mapText}`
     navigator.clipboard.writeText(text)
     setIsCopied(true)
     setTimeout(() => setIsCopied(false), 2000)
@@ -120,6 +126,18 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
                 </div>
               )
             })()}
+
+            {recommendedMap && (
+              <div className="flex flex-col items-center justify-center gap-1 mt-2">
+                <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <MapIcon className="w-3.5 h-3.5" />
+                  Mapa recomendado
+                </span>
+                <span className="font-heading text-xl font-black tracking-wider text-primary">
+                  {recommendedMap}
+                </span>
+              </div>
+            )}
 
             <button
               onClick={handleCopy}
