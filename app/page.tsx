@@ -119,8 +119,8 @@ export default async function Page() {
   ]
 
   return (
-    <main className="cs-grid min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-8">
+    <main className="cs-grid min-h-screen overflow-x-hidden">
+      <div className="mx-auto max-w-6xl px-2 sm:px-4 py-6 sm:py-8">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div>
             <span className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
@@ -205,13 +205,13 @@ export default async function Page() {
                     <span className="font-mono text-2xl font-black text-white drop-shadow">{score}</span>
                   </div>
 
-                  <div className="grid grid-cols-[1fr_repeat(5,_auto)] items-center gap-x-3 border-b border-border/60 bg-black/30 px-3 py-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Player</span>
-                    <span className="w-6 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">K</span>
-                    <span className="w-6 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">D</span>
-                    <span className="w-6 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">A</span>
-                    <span className="w-8 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">HS%</span>
-                    <span className="w-12 text-right text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">DMG</span>
+                  <div className="grid grid-cols-[1fr_repeat(5,_auto)] items-center gap-x-1.5 sm:gap-x-3 border-b border-border/60 bg-black/30 px-2 sm:px-3 py-1">
+                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Player</span>
+                    <span className="w-5 sm:w-6 text-center text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">K</span>
+                    <span className="w-5 sm:w-6 text-center text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">D</span>
+                    <span className="w-5 sm:w-6 text-center text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">A</span>
+                    <span className="w-7 sm:w-8 text-center text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">HS%</span>
+                    <span className="w-10 sm:w-12 text-right text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">DMG</span>
                   </div>
 
                   {/* Rows */}
@@ -222,25 +222,25 @@ export default async function Page() {
                       return (
                         <li
                           key={p.playerId}
-                          className={`grid grid-cols-[1fr_repeat(5,_auto)] items-center gap-x-3 px-3 py-1.5 ${i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-black/20'
+                          className={`grid grid-cols-[1fr_repeat(5,_auto)] items-center gap-x-1.5 sm:gap-x-3 px-2 sm:px-3 py-1.5 ${i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-black/20'
                             } ${isTopFragger ? 'border-l-2 border-yellow-400' : ''}`}
                         >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="w-4 shrink-0 font-mono text-[10px] text-muted-foreground/60">
+                          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                            <span className="w-3 sm:w-4 shrink-0 font-mono text-[9px] sm:text-[10px] text-muted-foreground/60">
                               {i + 1}.
                             </span>
-                            <span className={`truncate font-mono text-[12px] font-semibold ${isTopFragger ? 'text-yellow-300' : 'text-foreground'}`}>
+                            <span className={`truncate font-mono text-[11px] sm:text-[12px] font-semibold ${isTopFragger ? 'text-yellow-300' : 'text-foreground'}`}>
                               {name}
                             </span>
                             {isTopFragger && (
-                              <span className="shrink-0 text-[9px]">⭐</span>
+                              <span className="shrink-0 text-[8px] sm:text-[9px]">⭐</span>
                             )}
                           </div>
-                          <span className="w-6 text-center font-mono text-[12px] font-bold text-green-400">{p.kills}</span>
-                          <span className="w-6 text-center font-mono text-[12px] text-red-400">{p.deaths}</span>
-                          <span className="w-6 text-center font-mono text-[12px] text-blue-300">{p.assists}</span>
-                          <span className="w-8 text-center font-mono text-[12px] text-yellow-500/80">{p.hsPct}%</span>
-                          <span className="w-12 text-right font-mono text-[11px] text-muted-foreground">{p.damage.toLocaleString()}</span>
+                          <span className="w-5 sm:w-6 text-center font-mono text-[11px] sm:text-[12px] font-bold text-green-400">{p.kills}</span>
+                          <span className="w-5 sm:w-6 text-center font-mono text-[11px] sm:text-[12px] text-red-400">{p.deaths}</span>
+                          <span className="w-5 sm:w-6 text-center font-mono text-[11px] sm:text-[12px] text-blue-300">{p.assists}</span>
+                          <span className="w-7 sm:w-8 text-center font-mono text-[11px] sm:text-[12px] text-yellow-500/80">{p.hsPct}%</span>
+                          <span className="w-10 sm:w-12 text-right font-mono text-[10px] sm:text-[11px] text-muted-foreground">{p.damage.toLocaleString()}</span>
                         </li>
                       )
                     })}
