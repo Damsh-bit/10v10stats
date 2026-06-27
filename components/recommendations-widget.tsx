@@ -66,6 +66,7 @@ export function RecommendationsWidget() {
       .insert({ content: content.trim() })
 
     if (error) {
+      console.error("Error inserting recommendation:", error)
       setStatus('error')
     } else {
       setStatus('success')

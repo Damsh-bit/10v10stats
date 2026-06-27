@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useScreenshotParser } from '@/hooks/useScreenshotParser'
 
 type Team = 'CT' | 'T'
 
@@ -89,6 +90,8 @@ export function NewMatchModal() {
   const [adminPassword, setAdminPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [isAIFilled, setIsAIFilled] = useState(false)
+  const { loading: isParsing, error: parseError, parseScreenshot } = useScreenshotParser()
 
   useEffect(() => {
     if (!isOpen) return
@@ -143,6 +146,7 @@ export function NewMatchModal() {
     setScreenshotFile(null)
     setScreenshotUrl(null)
     setAdminPassword('')
+    setIsAIFilled(false)
   }
 
   const handleClose = () => {
@@ -157,9 +161,10 @@ export function NewMatchModal() {
     setScreenshotFile(null)
     setScreenshotUrl(null)
     setAdminPassword('')
+    setIsAIFilled(false)
   }
 
-  const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScreenshotUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -171,9 +176,50 @@ export function NewMatchModal() {
     setScreenshotUrl(URL.createObjectURL(file))
     setError(null)
     setSuccessMessage(null)
+    setIsAIFilled(false)
 
-    // Auto-advance to the data form after a brief preview
-    setTimeout(() => setStep(2), 600)
+    const parsedData = await parseScreenshot(file)
+    if (parsedData) {
+      setForm(prev => {
+        const newPlayers = [...prev.players]
+        
+        parsedData.team1.forEach((p, idx) => {
+          if (idx < 5) {
+            newPlayers[idx] = {
+              ...newPlayers[idx],
+              kills: p.kills !== -1 ? String(p.kills) : '',
+              deaths: p.deaths !== -1 ? String(p.deaths) : '',
+              assists: p.assists !== -1 ? String(p.assists) : '',
+              damage: p.damage !== -1 ? String(p.damage) : '',
+              hsPct: p.hs_percent !== -1 ? String(p.hs_percent) : '',
+            }
+          }
+        })
+
+        parsedData.team2.forEach((p, idx) => {
+          if (idx < 5) {
+            newPlayers[idx + 5] = {
+              ...newPlayers[idx + 5],
+              kills: p.kills !== -1 ? String(p.kills) : '',
+              deaths: p.deaths !== -1 ? String(p.deaths) : '',
+              assists: p.assists !== -1 ? String(p.assists) : '',
+              damage: p.damage !== -1 ? String(p.damage) : '',
+              hsPct: p.hs_percent !== -1 ? String(p.hs_percent) : '',
+            }
+          }
+        })
+
+        return {
+          ...prev,
+          score_ct: parsedData.match.score_team1 !== -1 ? String(parsedData.match.score_team1) : prev.score_ct,
+          score_t: parsedData.match.score_team2 !== -1 ? String(parsedData.match.score_team2) : prev.score_t,
+          total_rounds: parsedData.match.total_rounds !== -1 ? String(parsedData.match.total_rounds) : prev.total_rounds,
+          players: newPlayers,
+        }
+      })
+      setIsAIFilled(true)
+      setTimeout(() => setStep(2), 600)
+    }
   }
 
   const handleRemoveScreenshot = () => {
@@ -284,18 +330,36 @@ export function NewMatchModal() {
           </label>
 
           {screenshotUrl ? (
-            <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3">
+            <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3 relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-foreground">Vista previa</p>
                 <button
                   type="button"
                   onClick={handleRemoveScreenshot}
-                  className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  disabled={isParsing}
+                  className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <img src={screenshotUrl} alt="Captura de referencia" className="w-full rounded-lg object-contain" />
+              <div className="relative">
+                <img src={screenshotUrl} alt="Captura de referencia" className="w-full rounded-lg object-contain" />
+                {isParsing && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                    <span className="text-sm font-medium text-foreground">Analizando captura con IA...</span>
+                  </div>
+                )}
+              </div>
+              {parseError && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive relative">
+                  <div className="flex-1">
+                    <p className="font-semibold">Error al parsear captura</p>
+                    <p className="text-xs opacity-90">{parseError}</p>
+                    <p className="text-xs mt-1 text-muted-foreground">Puedes continuar y rellenar los datos manualmente.</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : null}
 
@@ -309,7 +373,15 @@ export function NewMatchModal() {
         <div className="space-y-6">
           {screenshotUrl ? (
             <div className="space-y-2 rounded-xl border border-border bg-card/70 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Captura de referencia</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Captura de referencia</p>
+                {isAIFilled && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Autocompletado con IA
+                  </span>
+                )}
+              </div>
               <img src={screenshotUrl} alt="Captura de referencia" className="max-h-[280px] w-full rounded-xl border border-border object-contain" />
             </div>
           ) : null}
@@ -701,7 +773,7 @@ export function NewMatchModal() {
                         </Button>
                       ) : null}
                       {step < 3 ? (
-                        <Button onClick={() => setStep((prev) => prev + 1)}>
+                        <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isParsing}>
                           Siguiente
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
