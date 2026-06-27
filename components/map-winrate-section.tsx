@@ -277,7 +277,7 @@ export function MapWinrateSection() {
 
   if (loading) {
     return (
-      <section className="mt-6">
+      <section>
         <div className="mb-2">
           <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-foreground">
             ▶ Winrate por mapa
@@ -305,7 +305,7 @@ export function MapWinrateSection() {
   }
 
   return (
-    <section className="mt-6">
+    <section>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-foreground">
           ▶ Winrate por mapa

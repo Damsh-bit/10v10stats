@@ -300,6 +300,8 @@ export default async function Page() {
                 </section>
               )
             })()}
+
+            <MapWinrateSection />
           </div>
 
           <div className="flex flex-col gap-6">
@@ -342,8 +344,6 @@ export default async function Page() {
             </Suspense>
           </div>
         </div>
-
-        <MapWinrateSection />
       </div>
     </main>
   )
