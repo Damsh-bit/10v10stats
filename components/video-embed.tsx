@@ -15,9 +15,12 @@ export async function VideoEmbed({
   if (!embed) return null
 
   if (embed.kind === 'video') {
+    // Hack to force first frame to show as poster in iOS/Safari/Chrome when preload="metadata"
+    const srcWithTime = embed.src.includes('#t=') ? embed.src : `${embed.src}#t=0.001`
+
     return (
       <video
-        src={embed.src}
+        src={srcWithTime}
         controls
         playsInline
         preload="metadata"

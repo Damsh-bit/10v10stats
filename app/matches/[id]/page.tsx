@@ -4,6 +4,7 @@ import { Video } from 'lucide-react'
 import { formatDate, getLiveData } from '@/lib/mockData'
 import { Scoreboard } from '@/components/scoreboard'
 import { HighlightCard } from '@/components/highlight-card'
+import { EditMatchModal } from '@/components/edit-match-modal'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,17 +36,28 @@ export default async function MatchDetail({
           ← Partidas
         </Link>
 
-        {match.videoUrl && (
-          <a
-            href={match.videoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-md bg-primary/15 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-white"
-          >
-            <Video className="h-4 w-4" />
-            Ir al video
-          </a>
-        )}
+        <div className="flex items-center gap-2">
+          <EditMatchModal
+            matchId={match.id}
+            initialCtScore={match.ctScore}
+            initialTScore={match.tScore}
+            teamALabel={teamALabel}
+            teamBLabel={teamBLabel}
+            matchPlayers={match.players}
+            allPlayers={data.players}
+          />
+          {match.videoUrl && (
+            <a
+              href={match.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-md bg-primary/15 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-white"
+            >
+              <Video className="h-4 w-4" />
+              Ir al video
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Header */}

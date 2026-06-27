@@ -316,7 +316,7 @@ export function NewHighlightModal() {
                         {videoPreviewUrl ? (
                           <video
                             key={videoPreviewUrl}
-                            src={videoPreviewUrl}
+                            src={videoPreviewUrl.includes('#t=') ? videoPreviewUrl : `${videoPreviewUrl}#t=0.001`}
                             controls
                             playsInline
                             preload="metadata"
