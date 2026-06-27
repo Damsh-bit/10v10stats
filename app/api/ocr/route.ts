@@ -26,14 +26,14 @@ function parseJson(text: string): OcrResponse {
   return {
     players: Array.isArray(parsed.players)
       ? parsed.players.map((player) => ({
-          raw_name: typeof player.raw_name === 'string' ? player.raw_name : '',
-          team: player.team === 'T' ? 'T' : 'CT',
-          kills: typeof player.kills === 'number' ? player.kills : 0,
-          deaths: typeof player.deaths === 'number' ? player.deaths : 0,
-          assists: typeof player.assists === 'number' ? player.assists : 0,
-          damage: typeof player.damage === 'number' ? player.damage : 0,
-          hs_pct: typeof player.hs_pct === 'number' ? player.hs_pct : 0,
-        }))
+        raw_name: typeof player.raw_name === 'string' ? player.raw_name : '',
+        team: player.team === 'T' ? 'T' : 'CT',
+        kills: typeof player.kills === 'number' ? player.kills : 0,
+        deaths: typeof player.deaths === 'number' ? player.deaths : 0,
+        assists: typeof player.assists === 'number' ? player.assists : 0,
+        damage: typeof player.damage === 'number' ? player.damage : 0,
+        hs_pct: typeof player.hs_pct === 'number' ? player.hs_pct : 0,
+      }))
       : [],
   }
 }
@@ -112,7 +112,7 @@ Instrucciones importantes:
 
     const result = await response.json()
     if (!response.ok) {
-      throw new Error(result?.error?.message || 'Anthropic devolvió un error')
+      throw new Error(result?.error?.message || 'Anthropic devolvio un error')
     }
 
     const text = result?.content?.[0]?.text ?? ''
