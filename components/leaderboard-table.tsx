@@ -5,6 +5,7 @@ import type { PlayerStats } from '@/lib/mockData'
 import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
+import { KDaBadges } from '@/components/kda-badges'
 
 export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
   const router = useRouter()
@@ -59,7 +60,10 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
                     <span className="text-[15px] font-semibold leading-none text-foreground">
                       {s.player.name}
                     </span>
-                    <BadgePill>{s.player.badge}</BadgePill>
+                    <div className="flex items-center gap-1.5">
+                      <BadgePill>{s.player.badge}</BadgePill>
+                      <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
+                    </div>
                   </div>
                 </div>
               </td>

@@ -62,6 +62,8 @@ export type NelsonEntry = {
   trend: NelsonTrend
 }
 
+import { computeKDRecord } from '@/lib/utils'
+
 // ---- Derived helpers ----
 export type PlayerStats = {
   player: Player
@@ -76,6 +78,8 @@ export type PlayerStats = {
   kda: number
   mvps: number
   hsPct: number
+  positiveGames: number
+  negativeGames: number
 }
 
 type SupabasePlayerRecord = {
@@ -309,6 +313,8 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     ? sum(validHsEntries.map((e) => e.hsPct)) / validHsEntries.length 
     : 0
 
+  const kdRecord = computeKDRecord(entries)
+
   return {
     player,
     matches: entries.length,
@@ -322,6 +328,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     kda: Math.round(kda * 100) / 100,
     mvps,
     hsPct: Math.round(hsPct),
+    ...kdRecord,
   }
 }
 

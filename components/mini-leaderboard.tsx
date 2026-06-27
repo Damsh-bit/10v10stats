@@ -5,6 +5,7 @@ import type { PlayerStats } from '@/lib/mockData'
 import { PlayerAvatar } from '@/components/strike-ui'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
+import { KDaBadges } from '@/components/kda-badges'
 
 export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
   const router = useRouter()
@@ -64,6 +65,7 @@ export function MiniLeaderboard({ stats }: { stats: PlayerStats[] }) {
                       💀 {s.player.nelsons}
                     </span>
                   )}
+                  <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
                 </div>
                 <span className="font-mono text-[11px] text-muted-foreground">
                   {s.kills}/{s.deaths}/{s.assists} · <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span> · <span title="Average Damage per Match">{s.adm.toLocaleString()} ADM</span> · {s.wins}W-{s.losses}L ({s.wins + s.losses > 0 ? ((s.wins / (s.wins + s.losses)) * 100).toFixed(0) + '%' : '0%'} WR)

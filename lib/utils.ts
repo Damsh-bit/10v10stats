@@ -15,3 +15,14 @@ export function getTeamColorClass(teamName: string) {
   }
   return 'bg-primary/10 text-primary border-primary/20'
 }
+
+export function computeKDRecord(matches: { kills: number; deaths: number }[]) {
+  return matches.reduce(
+    (acc, m) => {
+      if (m.kills > m.deaths) acc.positiveGames++
+      else if (m.deaths > m.kills) acc.negativeGames++
+      return acc
+    },
+    { positiveGames: 0, negativeGames: 0 }
+  )
+}

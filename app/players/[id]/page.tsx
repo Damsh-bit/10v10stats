@@ -9,6 +9,7 @@ import {
 } from '@/components/player-highlights-grid'
 import { EditPlayerModal } from '@/components/edit-player-modal'
 import { PlayerMatchHistory } from '@/components/player-match-history'
+import { KDaBadges } from '@/components/kda-badges'
 
 export default async function PlayerProfile({
   params,
@@ -42,6 +43,8 @@ export default async function PlayerProfile({
         acc.wins += entry.won ? 1 : 0
         acc.losses += entry.won ? 0 : 1
         acc.mvps += entry.mvps || 0
+        if (entry.kills > entry.deaths) acc.positiveGames += 1
+        else if (entry.deaths > entry.kills) acc.negativeGames += 1
         return acc
       },
       {
@@ -53,6 +56,8 @@ export default async function PlayerProfile({
         assists: 0,
         damage: 0,
         mvps: 0,
+        positiveGames: 0,
+        negativeGames: 0,
       },
     )
 
@@ -108,6 +113,7 @@ export default async function PlayerProfile({
                   </span>
                 </div>
               )}
+              <KDaBadges positiveGames={playerStats.positiveGames} negativeGames={playerStats.negativeGames} size="md" />
             </div>
           </div>
         </div>
