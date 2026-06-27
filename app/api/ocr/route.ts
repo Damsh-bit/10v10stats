@@ -12,13 +12,10 @@ type OcrPlayer = {
   deaths: number
   assists: number
   damage: number
+  hs_pct: number
 }
 
 type OcrResponse = {
-  map: string
-  score_ct: number
-  score_t: number
-  winner_team: 'CT' | 'T'
   players: OcrPlayer[]
 }
 
@@ -27,10 +24,6 @@ function parseJson(text: string): OcrResponse {
   const parsed = JSON.parse(clean) as Partial<OcrResponse>
 
   return {
-    map: typeof parsed.map === 'string' ? parsed.map : '',
-    score_ct: typeof parsed.score_ct === 'number' ? parsed.score_ct : 0,
-    score_t: typeof parsed.score_t === 'number' ? parsed.score_t : 0,
-    winner_team: parsed.winner_team === 'T' ? 'T' : 'CT',
     players: Array.isArray(parsed.players)
       ? parsed.players.map((player) => ({
           raw_name: typeof player.raw_name === 'string' ? player.raw_name : '',
@@ -39,6 +32,7 @@ function parseJson(text: string): OcrResponse {
           deaths: typeof player.deaths === 'number' ? player.deaths : 0,
           assists: typeof player.assists === 'number' ? player.assists : 0,
           damage: typeof player.damage === 'number' ? player.damage : 0,
+          hs_pct: typeof player.hs_pct === 'number' ? player.hs_pct : 0,
         }))
       : [],
   }
@@ -59,20 +53,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No hay API key de Anthropic configurada' }, { status: 500 })
     }
 
-    const prompt = `Extrae esta información de la captura de la partida de CS2 y devuelve SOLO JSON válido con este esquema:
+    const prompt = `Analiza esta captura de pantalla del scoreboard de una partida de Counter-Strike 2 (CS2).
+
+Extrae ÚNICAMENTE las estadísticas de cada jugador visible en la imagen. Devuelve SOLO un JSON válido, sin texto adicional.
+
+Schema del JSON:
 {
-  "map": "string",
-  "score_ct": 0,
-  "score_t": 0,
-  "winner_team": "CT" | "T",
-  "players": [{"raw_name": "string", "team": "CT" | "T", "kills": 0, "deaths": 0, "assists": 0, "damage": 0}]
+  "players": [
+    {
+      "raw_name": "nombre exacto del jugador tal como aparece",
+      "team": "CT" o "T",
+      "kills": número,
+      "deaths": número,
+      "assists": número,
+      "damage": número (ADR o daño total),
+      "hs_pct": número (porcentaje de headshots, sin el símbolo %. Si dice 45% ponés 45)
+    }
+  ]
 }
 
-Instrucciones:
-- Usa el nombre del mapa si está visible.
-- Determina el ganador a partir del score.
-- Extrae la lista de jugadores visible en la imagen, hasta 10 jugadores. Si no está claro, usa texto plausible y vacío.
-- No agregues texto fuera del JSON.`
+Instrucciones importantes:
+- Extrae hasta 10 jugadores (5 por equipo).
+- El equipo CT suele aparecer arriba en el scoreboard. El equipo T abajo.
+- El KDA (kills/deaths/assists) suele estar en columnas separadas.
+- El HS% puede aparecer como "HS%" o un porcentaje con el símbolo %.
+- El daño puede aparecer como "ADR" (Average Damage per Round) o "DMG".
+- Si un valor no es legible, usa 0.
+- NO incluyas texto fuera del JSON.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -83,7 +90,7 @@ Instrucciones:
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
+        max_tokens: 1500,
         messages: [
           {
             role: 'user',

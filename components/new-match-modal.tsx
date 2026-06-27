@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Upload, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Loader2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useScreenshotParser } from '@/hooks/useScreenshotParser'
 
 type Team = 'CT' | 'T'
 
@@ -90,8 +89,8 @@ export function NewMatchModal() {
   const [adminPassword, setAdminPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
-  const [isAIFilled, setIsAIFilled] = useState(false)
-  const { loading: isParsing, error: parseError, parseScreenshot } = useScreenshotParser()
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [aiSuccess, setAiSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -146,7 +145,7 @@ export function NewMatchModal() {
     setScreenshotFile(null)
     setScreenshotUrl(null)
     setAdminPassword('')
-    setIsAIFilled(false)
+    setAiSuccess(null)
   }
 
   const handleClose = () => {
@@ -161,10 +160,10 @@ export function NewMatchModal() {
     setScreenshotFile(null)
     setScreenshotUrl(null)
     setAdminPassword('')
-    setIsAIFilled(false)
+    setAiSuccess(null)
   }
 
-  const handleScreenshotUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -176,49 +175,120 @@ export function NewMatchModal() {
     setScreenshotUrl(URL.createObjectURL(file))
     setError(null)
     setSuccessMessage(null)
-    setIsAIFilled(false)
+    setAiSuccess(null)
+  }
 
-    const parsedData = await parseScreenshot(file)
-    if (parsedData) {
-      setForm(prev => {
-        const newPlayers = [...prev.players]
-        
-        parsedData.team1.forEach((p, idx) => {
-          if (idx < 5) {
-            newPlayers[idx] = {
-              ...newPlayers[idx],
-              kills: p.kills !== -1 ? String(p.kills) : '',
-              deaths: p.deaths !== -1 ? String(p.deaths) : '',
-              assists: p.assists !== -1 ? String(p.assists) : '',
-              damage: p.damage !== -1 ? String(p.damage) : '',
-              hsPct: p.hs_percent !== -1 ? String(p.hs_percent) : '',
-            }
-          }
-        })
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        resolve(result.split(',')[1])
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
 
-        parsedData.team2.forEach((p, idx) => {
-          if (idx < 5) {
-            newPlayers[idx + 5] = {
-              ...newPlayers[idx + 5],
-              kills: p.kills !== -1 ? String(p.kills) : '',
-              deaths: p.deaths !== -1 ? String(p.deaths) : '',
-              assists: p.assists !== -1 ? String(p.assists) : '',
-              damage: p.damage !== -1 ? String(p.damage) : '',
-              hsPct: p.hs_percent !== -1 ? String(p.hs_percent) : '',
-            }
-          }
-        })
+  const fuzzyMatchPlayer = useCallback(
+    (rawName: string): string => {
+      if (!rawName || players.length === 0) return ''
+      const lower = rawName.toLowerCase().trim()
 
-        return {
-          ...prev,
-          score_ct: parsedData.match.score_team1 !== -1 ? String(parsedData.match.score_team1) : prev.score_ct,
-          score_t: parsedData.match.score_team2 !== -1 ? String(parsedData.match.score_team2) : prev.score_t,
-          total_rounds: parsedData.match.total_rounds !== -1 ? String(parsedData.match.total_rounds) : prev.total_rounds,
-          players: newPlayers,
-        }
+      const exact = players.find((p) => p.name.toLowerCase() === lower)
+      if (exact) return exact.id
+
+      const includes = players.find(
+        (p) => lower.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(lower)
+      )
+      if (includes) return includes.id
+
+      const startsWith = players.find(
+        (p) => lower.startsWith(p.name.toLowerCase().slice(0, 3)) || p.name.toLowerCase().startsWith(lower.slice(0, 3))
+      )
+      if (startsWith) return startsWith.id
+
+      return ''
+    },
+    [players]
+  )
+
+  const analyzeWithAI = async () => {
+    if (!screenshotFile) return
+
+    setIsAnalyzing(true)
+    setError(null)
+    setAiSuccess(null)
+
+    try {
+      const base64 = await fileToBase64(screenshotFile)
+      const mimeType = screenshotFile.type || 'image/png'
+
+      const response = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mimeType }),
       })
-      setIsAIFilled(true)
-      setTimeout(() => setStep(2), 600)
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al analizar la imagen')
+      }
+
+      const ocrPlayers = data.players as Array<{
+        raw_name: string
+        team: 'CT' | 'T'
+        kills: number
+        deaths: number
+        assists: number
+        damage: number
+        hs_pct: number
+      }>
+
+      if (!ocrPlayers || ocrPlayers.length === 0) {
+        throw new Error('No se detectaron jugadores en la imagen')
+      }
+
+      const ctPlayers = ocrPlayers.filter((p) => p.team === 'CT')
+      const tPlayers = ocrPlayers.filter((p) => p.team === 'T')
+      const assignedIds = new Set<string>()
+
+      setForm((prev) => {
+        const newPlayers = prev.players.map((row) => {
+          const teamPlayers = row.team === 'CT' ? ctPlayers : tPlayers
+          const teamIndex = row.team === 'CT' ? row.id : row.id - 5
+          const ocrPlayer = teamPlayers[teamIndex]
+
+          if (!ocrPlayer) return row
+
+          let matchedId = fuzzyMatchPlayer(ocrPlayer.raw_name)
+          if (matchedId && assignedIds.has(matchedId)) {
+            matchedId = ''
+          }
+          if (matchedId) {
+            assignedIds.add(matchedId)
+          }
+
+          return {
+            ...row,
+            player_id: matchedId || row.player_id,
+            kills: String(ocrPlayer.kills),
+            deaths: String(ocrPlayer.deaths),
+            assists: String(ocrPlayer.assists),
+            damage: String(ocrPlayer.damage),
+            hsPct: String(ocrPlayer.hs_pct),
+          }
+        })
+
+        return { ...prev, players: newPlayers }
+      })
+
+      const detected = ocrPlayers.length
+      setAiSuccess(`✅ Se detectaron ${detected} jugadores. Revisá los datos en el siguiente paso.`)
+      setTimeout(() => setStep(2), 1200)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo analizar la imagen')
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -228,6 +298,7 @@ export function NewMatchModal() {
     }
     setScreenshotFile(null)
     setScreenshotUrl(null)
+    setAiSuccess(null)
   }
 
   const updatePlayerRow = (rowId: number, field: keyof PlayerRow, value: string) => {
@@ -314,7 +385,7 @@ export function NewMatchModal() {
               <div>
                 <h3 className="font-semibold text-foreground">Subí una captura de la partida</h3>
                 <p className="text-sm text-muted-foreground">
-                  La captura es solo de referencia visual. Completarás los datos manualmente en el siguiente paso.
+                  Subí el scoreboard y la IA leerá las estadísticas automáticamente.
                 </p>
               </div>
             </div>
@@ -330,36 +401,46 @@ export function NewMatchModal() {
           </label>
 
           {screenshotUrl ? (
-            <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3 relative overflow-hidden">
+            <div className="space-y-3 rounded-xl border border-border bg-card/70 p-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-foreground">Vista previa</p>
                 <button
                   type="button"
                   onClick={handleRemoveScreenshot}
-                  disabled={isParsing}
-                  className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="relative">
-                <img src={screenshotUrl} alt="Captura de referencia" className="w-full rounded-lg object-contain" />
-                {isParsing && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                    <span className="text-sm font-medium text-foreground">Analizando captura con IA...</span>
-                  </div>
-                )}
-              </div>
-              {parseError && (
-                <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive relative">
-                  <div className="flex-1">
-                    <p className="font-semibold">Error al parsear captura</p>
-                    <p className="text-xs opacity-90">{parseError}</p>
-                    <p className="text-xs mt-1 text-muted-foreground">Puedes continuar y rellenar los datos manualmente.</p>
-                  </div>
+              <img src={screenshotUrl} alt="Captura de referencia" className="w-full rounded-lg object-contain" />
+
+              {!aiSuccess ? (
+                <button
+                  type="button"
+                  onClick={analyzeWithAI}
+                  disabled={isAnalyzing}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Analizando captura con IA…
+                    </>
+                  ) : (
+                    <>
+                      <Bot className="h-4 w-4" />
+                      Analizar con IA
+                    </>
+                  )}
+                </button>
+              ) : null}
+
+              {aiSuccess ? (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  {aiSuccess}
                 </div>
-              )}
+              ) : null}
             </div>
           ) : null}
 
@@ -375,7 +456,7 @@ export function NewMatchModal() {
             <div className="space-y-2 rounded-xl border border-border bg-card/70 p-3">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Captura de referencia</p>
-                {isAIFilled && (
+                {aiSuccess && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
                     <CheckCircle2 className="h-3 w-3" />
                     Autocompletado con IA
@@ -518,54 +599,23 @@ export function NewMatchModal() {
                   </div>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Kills</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.kills}
-                      onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.kills} onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Deaths</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.deaths}
-                      onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.deaths} onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Assists</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.assists}
-                      onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.assists} onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>HS%</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={row.hsPct}
-                      onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" max="100" value={row.hsPct} onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Damage</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.damage}
-                      onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.damage} onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                 </div>
               ))}
@@ -598,54 +648,23 @@ export function NewMatchModal() {
                   </div>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Kills</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.kills}
-                      onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.kills} onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Deaths</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.deaths}
-                      onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.deaths} onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Assists</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.assists}
-                      onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.assists} onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>HS%</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={row.hsPct}
-                      onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" max="100" value={row.hsPct} onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                   <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     <span>Damage</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.damage}
-                      onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
+                    <input type="number" min="0" value={row.damage} onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
                   </label>
                 </div>
               ))}
@@ -688,7 +707,7 @@ export function NewMatchModal() {
         ) : null}
       </div>
     )
-  }, [error, form, players, step, successMessage, teamAName, teamBName])
+  }, [error, form, players, step, successMessage, teamAName, teamBName, isAnalyzing, aiSuccess, screenshotUrl])
 
   return (
     <>
@@ -773,7 +792,7 @@ export function NewMatchModal() {
                         </Button>
                       ) : null}
                       {step < 3 ? (
-                        <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isParsing}>
+                        <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isAnalyzing}>
                           Siguiente
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
