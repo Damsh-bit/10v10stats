@@ -125,6 +125,21 @@ export default async function PlayerProfile({
                   </span>
                 </div>
               )}
+              {(() => {
+                const fullStats = allStats.find(s => s.player.id === id)
+                const currentStreak = fullStats?.currentStreak || 0
+                if (currentStreak >= 3) {
+                  return (
+                    <div className="flex items-center gap-1.5 rounded border border-orange-500/30 bg-[#101010] px-2.5 py-0.5 shadow-sm" title={`Racha de ${currentStreak} victorias`}>
+                      <span className="text-[11px] text-orange-500 opacity-90">🔥</span>
+                      <span className="text-[10px] font-medium uppercase tracking-widest text-orange-500">
+                        RACHA DE {currentStreak}
+                      </span>
+                    </div>
+                  )
+                }
+                return null
+              })()}
               {stats.nelsons > 0 && (
                 <div className="flex items-center gap-1.5 rounded border border-primary/30 bg-[#101010] px-2.5 py-0.5 shadow-sm">
                   <span className="text-[11px] text-primary opacity-90">💀</span>

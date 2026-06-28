@@ -82,6 +82,7 @@ export type PlayerStats = {
   positiveGames: number
   negativeGames: number
   trend?: 'up' | 'down' | 'same'
+  currentStreak: number
 }
 
 type SupabasePlayerRecord = {
@@ -317,6 +318,15 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
 
   const kdRecord = computeKDRecord(entries)
 
+  let currentStreak = 0
+  for (const entry of entries) {
+    if (entry.won) {
+      currentStreak++
+    } else {
+      break
+    }
+  }
+
   return {
     player,
     matches: entries.length,
@@ -330,6 +340,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     kda: Math.round(kda * 100) / 100,
     mvps,
     hsPct: Math.round(hsPct),
+    currentStreak,
     ...kdRecord,
   }
 }

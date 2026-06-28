@@ -65,6 +65,14 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                       👑 {s.mvps}
                     </span>
                   )}
+                  {s.currentStreak >= 3 && (
+                    <span 
+                      title={`Racha de ${s.currentStreak} victorias`}
+                      className="flex shrink-0 items-center gap-1 rounded border border-orange-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-orange-500 shadow-sm cursor-help"
+                    >
+                      🔥 {s.currentStreak} W
+                    </span>
+                  )}
                   {i === stats.length - 1 && (
                     <span 
                       title="Último lugar del ladder"
