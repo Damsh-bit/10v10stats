@@ -13,6 +13,7 @@ import { getNelsonData } from '@/lib/nelson'
 import { VideoEmbed } from '@/components/video-embed'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 import { MapWinrateSection } from '@/components/map-winrate-section'
+import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,15 @@ export default async function Page() {
 
   const bestKda = [...stats].sort((a, b) => b.kda - a.kda)[0] ?? null
   const playerRecords = getPlayerRecords(data, stats)
+  
+  let topFakadorId: string | null = null
+  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+  if (supabase) {
+    const { data: fakeData } = await supabase.from('fake_leaderboard').select('id').order('fake_count', { ascending: false }).limit(1)
+    if (fakeData && fakeData.length > 0) {
+      topFakadorId = fakeData[0].id
+    }
+  }
   
   let recordKills = { value: 0, playerName: 'Sin datos', matchId: '' }
   let recordDeaths = { value: 0, playerName: 'Sin datos', matchId: '' }
@@ -150,7 +160,7 @@ export default async function Page() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 flex flex-col gap-6">
             <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando leaderboard…</span></div>}>
-              <MiniLeaderboard stats={stats} records={playerRecords} />
+              <MiniLeaderboard stats={stats} records={playerRecords} topFakadorId={topFakadorId} />
             </Suspense>
 
             {/* Ladder de la partida más reciente */}
@@ -282,6 +292,7 @@ export default async function Page() {
             })()}
 
             <MapWinrateSection />
+            <FakeLeaderboard />
           </div>
 
           <div className="flex flex-col gap-6 lg:col-span-1">

@@ -9,7 +9,7 @@ import { KDaBadges } from '@/components/kda-badges'
 import type { PlayerRecordMap } from '@/lib/records'
 import { RecordBadge } from '@/components/record-badges'
 
-export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], records?: PlayerRecordMap }) {
+export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: PlayerStats[], records?: PlayerRecordMap, topFakadorId?: string | null }) {
   const router = useRouter()
 
   return (
@@ -82,6 +82,14 @@ export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], reco
                       className="flex shrink-0 items-center gap-1 rounded border border-primary/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-primary shadow-sm cursor-help"
                     >
                       💀 {s.player.nelsons}
+                    </span>
+                  )}
+                  {topFakadorId === s.player.id && (
+                    <span
+                      title="Top 1 Fakasos"
+                      className="flex shrink-0 items-center gap-1 rounded border border-purple-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-purple-400 shadow-sm cursor-help"
+                    >
+                      🎭 TOP FAKASO
                     </span>
                   )}
                   <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />

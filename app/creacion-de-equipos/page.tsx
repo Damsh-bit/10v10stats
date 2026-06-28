@@ -1,6 +1,5 @@
 import { getAllPlayerStats } from '@/lib/mockData'
 import { TeamGenerator } from '@/components/TeamGenerator/TeamGenerator'
-import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,8 +18,6 @@ export default async function TeamGeneratorPage() {
       </div>
 
       <TeamGenerator players={stats} />
-      
-      <FakeLeaderboard />
     </main>
   )
 }

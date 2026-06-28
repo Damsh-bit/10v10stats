@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
+import { X } from 'lucide-react'
 
 type FakeEntry = {
   id: string
@@ -14,7 +15,7 @@ export function FakeLeaderboard() {
   const [entries, setEntries] = useState<FakeEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [incrementing, setIncrementing] = useState<string | null>(null)
-  const [animatingId, setAnimatingId] = useState<string | null>(null)
+  const [selectedPlayer, setSelectedPlayer] = useState<FakeEntry | null>(null)
   
   const supabase = getSupabaseClient()
 
@@ -29,7 +30,7 @@ export function FakeLeaderboard() {
         .from('fake_leaderboard')
         .select('*')
         .order('fake_count', { ascending: false })
-        .order('player_name', { ascending: true }) // fallback sort
+        .order('player_name', { ascending: true })
       
       if (data) {
         setEntries(data)
@@ -76,11 +77,6 @@ export function FakeLeaderboard() {
   const handleIncrement = async (id: string, currentCount: number) => {
     if (!supabase || incrementing === id) return
 
-    // Visual feedback state
-    setAnimatingId(id)
-    setTimeout(() => setAnimatingId(null), 1000)
-
-    // Optimistic update
     setEntries((current) => {
       const newEntries = current.map((entry) =>
         entry.id === id ? { ...entry, fake_count: entry.fake_count + 1 } : entry
@@ -103,7 +99,6 @@ export function FakeLeaderboard() {
     setIncrementing(null)
 
     if (error) {
-      // Revert optimistic update on error
       setEntries((current) => {
         const newEntries = current.map((entry) =>
           entry.id === id ? { ...entry, fake_count: Math.max(0, entry.fake_count - 1) } : entry
@@ -119,22 +114,15 @@ export function FakeLeaderboard() {
     }
   }
 
-  const getBadgeColors = (count: number) => {
-    if (count <= 2) return 'bg-zinc-800 text-zinc-400'
-    if (count <= 7) return 'bg-yellow-900 text-yellow-300'
-    if (count <= 14) return 'bg-orange-900 text-orange-300'
-    return 'bg-red-900 text-red-300'
-  }
-
   if (loading) {
     return (
-      <div className="mt-12 space-y-4">
-        <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          🤡 Top Fakeados
+      <div className="mt-8 space-y-4">
+        <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.2em] text-foreground">
+          StatTrak™ Fakasos
         </h2>
-        <div className="animate-pulse flex flex-col gap-2">
+        <div className="animate-pulse flex flex-col gap-px bg-border/50 border border-border/50 rounded-lg overflow-hidden">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 bg-zinc-900 rounded-lg"></div>
+            <div key={i} className="h-10 bg-card"></div>
           ))}
         </div>
       </div>
@@ -142,63 +130,82 @@ export function FakeLeaderboard() {
   }
 
   if (entries.length === 0) {
-    return (
-      <div className="mt-12 space-y-4">
-        <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          🤡 Top Fakeados
-        </h2>
-        <p className="text-sm text-muted-foreground italic">No hay registros de fakeos aún.</p>
-      </div>
-    )
+    return null
   }
 
   return (
-    <div className="mt-12 space-y-4">
-      <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-        🤡 Top Fakeados
-      </h2>
-      <div className="flex flex-col gap-2">
-        {entries.map((entry, index) => {
-          const isTop = index === 0
-          const badgeColors = getBadgeColors(entry.fake_count)
-          const isAnimating = animatingId === entry.id
-
-          return (
-            <div 
-              key={entry.id}
-              className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                isTop 
-                  ? 'bg-zinc-900/80 border-yellow-600/50 shadow-[inset_2px_0_0_0_rgba(202,138,4,0.5)]' 
-                  : 'bg-zinc-950 border-border/50'
-              }`}
-            >
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-mono text-muted-foreground w-6">
-                  #{index + 1}
-                </span>
-                <span className="font-bold text-sm text-foreground truncate max-w-[120px] sm:max-w-xs">
-                  {entry.player_name}
-                </span>
-                <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${badgeColors}`}>
-                  🤡 {entry.fake_count}
-                </span>
-              </div>
-
-              <button
-                onClick={() => handleIncrement(entry.id, entry.fake_count)}
+    <>
+      <div className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.2em] text-foreground">
+            StatTrak™ Fakasos
+          </h2>
+        </div>
+        <div className="flex flex-col border border-border/50 rounded-lg overflow-hidden bg-card">
+          {entries.map((entry, index) => {
+            const isTop = index === 0
+            
+            return (
+              <button 
+                key={entry.id}
+                onClick={() => setSelectedPlayer(entry)}
                 disabled={incrementing === entry.id}
-                className={`text-xs px-3 py-1.5 rounded-md border transition-all duration-200 ${
-                  isAnimating
-                    ? 'bg-zinc-800 border-zinc-600 text-zinc-300'
-                    : 'bg-transparent border-border hover:bg-zinc-900 text-foreground'
-                } disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px] flex justify-center`}
+                className="flex items-center justify-between px-3 py-2.5 border-b border-border/50 last:border-0 hover:bg-white/[0.03] transition-colors text-left disabled:opacity-50"
               >
-                {isAnimating ? '🤡 +1' : '+ Fakear'}
+                <div className="flex items-center gap-3">
+                  <span className={`text-[11px] font-mono w-4 ${isTop ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                    {index + 1}.
+                  </span>
+                  <span className={`text-sm font-medium ${isTop ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                    {entry.player_name}
+                  </span>
+                </div>
+                <div className="font-mono text-[13px] font-semibold text-primary/80">
+                  {entry.fake_count.toLocaleString()}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {selectedPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border p-5 rounded-lg shadow-xl max-w-[320px] w-full animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Sumar Fakaso</h3>
+              <button 
+                onClick={() => setSelectedPlayer(null)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
-          )
-        })}
-      </div>
-    </div>
+            
+            <p className="text-[13px] text-muted-foreground mb-6">
+              ¿Confirmás que querés sumarle un fakaso a <strong className="text-foreground">{selectedPlayer.player_name}</strong>?
+            </p>
+            
+            <div className="flex gap-2 justify-end">
+              <button 
+                className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setSelectedPlayer(null)}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 font-bold uppercase tracking-wider transition-colors"
+                onClick={() => { 
+                  handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
+                  setSelectedPlayer(null)
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
