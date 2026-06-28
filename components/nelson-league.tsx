@@ -1,4 +1,4 @@
-import { ChevronUp, ChevronDown, Minus, Skull } from 'lucide-react'
+import { ChevronUp, ChevronDown, Equal, Skull } from 'lucide-react'
 import { type NelsonEntry } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
 
@@ -9,7 +9,7 @@ function TrendIcon({ trend }: { trend: NelsonEntry['trend'] }) {
     return (
       <ChevronDown className="h-3.5 w-3.5 text-destructive" aria-label="baja" />
     )
-  return <Minus className="h-3.5 w-3.5 text-muted-foreground" aria-label="igual" />
+  return <Equal className="h-3.5 w-3.5 text-muted-foreground" aria-label="igual" />
 }
 
 export function NelsonLeague({ entries }: { entries: NelsonEntry[] }) {
