@@ -45,7 +45,11 @@ export function MiniLeaderboard({ stats, records }: { stats: PlayerStats[], reco
                 >
                   {i + 1}
                 </span>
-                <div className="w-4" />
+                <div className="flex w-4 items-center justify-center">
+                  {s.trend === 'up' && <span className="text-green-500 text-[10px]" title="Subió de puesto">▲</span>}
+                  {s.trend === 'down' && <span className="text-red-500 text-[10px]" title="Bajó de puesto">▼</span>}
+                  {s.trend === 'same' && <span className="text-muted-foreground/30 text-[10px]" title="Mantuvo puesto">-</span>}
+                </div>
               </div>
               <PlayerAvatar player={s.player} size={32} />
               <div className="flex min-w-0 flex-1 flex-col">

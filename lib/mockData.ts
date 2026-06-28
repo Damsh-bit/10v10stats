@@ -81,6 +81,7 @@ export type PlayerStats = {
   hsPct: number
   positiveGames: number
   negativeGames: number
+  trend?: 'up' | 'down' | 'same'
 }
 
 type SupabasePlayerRecord = {
@@ -334,11 +335,35 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
 }
 
 function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
-  return data.players
+  const currentStats = data.players
     .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
     .map((p) => buildPlayerStatsForData(data, p.id))
     .filter((s): s is PlayerStats => s !== null)
     .sort((a, b) => b.kda - a.kda)
+
+  if (data.matches.length > 0) {
+    const prevData = { ...data, matches: data.matches.slice(1) }
+    const prevStats = data.players
+      .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
+      .map((p) => buildPlayerStatsForData(prevData, p.id))
+      .filter((s): s is PlayerStats => s !== null)
+      .sort((a, b) => b.kda - a.kda)
+
+    currentStats.forEach((stat, currentIndex) => {
+      const prevIndex = prevStats.findIndex(p => p.player.id === stat.player.id)
+      if (prevIndex === -1) {
+        stat.trend = 'same'
+      } else if (currentIndex < prevIndex) {
+        stat.trend = 'up'
+      } else if (currentIndex > prevIndex) {
+        stat.trend = 'down'
+      } else {
+        stat.trend = 'same'
+      }
+    })
+  }
+
+  return currentStats
 }
 
 export function getPlayerStatsSync(playerId: string): PlayerStats | null {
