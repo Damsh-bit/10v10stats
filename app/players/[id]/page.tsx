@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLiveData, getAllPlayerStats } from '@/lib/mockData'
 import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
+import { EnlargeableAvatar } from '@/components/enlargeable-avatar'
 import {
   PlayerHighlightsGrid,
   PlayerHighlightsSkeleton,
@@ -95,7 +96,7 @@ export default async function PlayerProfile({
       {/* Header */}
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <PlayerAvatar player={stats} size={80} />
+          <EnlargeableAvatar player={stats} size={80} />
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold leading-none text-foreground">
