@@ -41,6 +41,8 @@ export default async function MatchDetail({
             matchId={match.id}
             initialCtScore={match.ctScore}
             initialTScore={match.tScore}
+            initialMap={match.map}
+            initialDate={match.date}
             teamALabel={teamALabel}
             teamBLabel={teamBLabel}
             matchPlayers={match.players}

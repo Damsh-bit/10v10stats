@@ -20,6 +20,8 @@ type EditMatchProps = {
   matchId: string
   initialCtScore: number
   initialTScore: number
+  initialMap: string
+  initialDate: string
   teamALabel: string
   teamBLabel: string
   matchPlayers: any[]
@@ -30,6 +32,8 @@ export function EditMatchModal({
   matchId,
   initialCtScore,
   initialTScore,
+  initialMap,
+  initialDate,
   teamALabel,
   teamBLabel,
   matchPlayers,
@@ -45,6 +49,14 @@ export function EditMatchModal({
 
   const [scoreCt, setScoreCt] = useState(String(initialCtScore))
   const [scoreT, setScoreT] = useState(String(initialTScore))
+  const [map, setMap] = useState(initialMap)
+  const [date, setDate] = useState(() => {
+    try {
+      return new Date(initialDate).toISOString().slice(0, 16)
+    } catch {
+      return ''
+    }
+  })
 
   const [players, setPlayers] = useState<PlayerRow[]>(() => {
     return matchPlayers
@@ -120,6 +132,8 @@ export function EditMatchModal({
     try {
       const payload = {
         password,
+        map,
+        date: new Date(date).toISOString(),
         score_ct: Number(scoreCt),
         score_t: Number(scoreT),
         players: players.map((row) => ({
@@ -224,6 +238,32 @@ export function EditMatchModal({
                       min="0"
                       value={scoreT}
                       onChange={(e) => setScoreT(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    />
+                  </label>
+                </div>
+
+                {/* Meta */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2 text-sm">
+                    <span className="text-muted-foreground">Mapa</span>
+                    <select
+                      value={map}
+                      onChange={(e) => setMap(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    >
+                      <option value="">— Seleccionar mapa —</option>
+                      {['Mirage', 'Inferno', 'Overpass', 'Nuke', 'Vertigo', 'Ancient', 'Anubis', 'Dust 2', 'Train', 'Cache'].map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-2 text-sm">
+                    <span className="text-muted-foreground">Fecha</span>
+                    <input
+                      type="datetime-local"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
                     />
                   </label>

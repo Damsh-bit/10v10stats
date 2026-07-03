@@ -15,6 +15,8 @@ type EditMatchPayload = {
   password?: string
   score_ct: number
   score_t: number
+  map?: string
+  date?: string
   players: EditMatchPlayerPayload[]
 }
 
@@ -74,14 +76,18 @@ export async function PUT(
     })
 
     // 3. Actualizar la partida
+    const updateData: any = {
+      score_ct: payload.score_ct,
+      score_t: payload.score_t,
+      winner_team: winnerTeam,
+      mvp_id: mvpPlayerId || matchData.mvp_id,
+    }
+    if (payload.map) updateData.map = payload.map
+    if (payload.date) updateData.date = payload.date
+
     const { error: updateMatchError } = await supabase
       .from('matches')
-      .update({
-        score_ct: payload.score_ct,
-        score_t: payload.score_t,
-        winner_team: winnerTeam,
-        mvp_id: mvpPlayerId || matchData.mvp_id,
-      })
+      .update(updateData)
       .eq('id', matchId)
 
     if (updateMatchError) {
