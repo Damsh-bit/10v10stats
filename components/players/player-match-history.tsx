@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import type { Match, MatchPlayer } from '@/lib/mockData'
-import { formatDate } from '@/lib/mockData'
-import { ResultChip } from '@/components/strike-ui'
+import type { Match, MatchPlayer } from '@/types'
+
+import { formatDate } from '@/lib/api'
+import { ResultChip } from '@/components/shared/strike-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getTeamColorClass, cn } from '@/lib/utils'
 

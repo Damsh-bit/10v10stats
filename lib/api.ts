@@ -1,89 +1,11 @@
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
-export type Player = {
-  id: string
-  name: string
-  badge: string
-  avatarColor: string
-  photoUrl?: string
-  nelsons: number
-}
-
-export type MatchPlayer = {
-  playerId: string
-  team: string
-  kills: number
-  deaths: number
-  assists: number
-  damage: number
-  adr: number
-  hsPct: number
-  mvps: number
-  won: boolean
-}
-
-export type HighlightType = 'ACE' | 'QUAD_KILL' | 'TRIPLE_KILL' | 'CLUTCH' | 'ENTRY_FRAG' | 'KNIFE_KILL' | 'OTHER'
-
-export type Highlight = {
-  id: string
-  playerId: string
-  matchId?: string
-  type: HighlightType
-  description: string
-  round: number
-  clipUrl?: string
-}
-
-export type CSMap = string
-
-export type Match = {
-  id: string
-  map: CSMap
-  date: string
-  ctScore: number
-  tScore: number
-  durationMin: number
-  players: MatchPlayer[]
-  winnerTeam?: 'CT' | 'T'
-  totalRounds?: number
-  videoUrl?: string
-  fotoUrl?: string
-  notes?: string
-  teamAName?: string
-  teamBName?: string
-}
-
-export type NelsonTrend = 'up' | 'down' | 'same'
-
-export type NelsonEntry = {
-  rank: number
-  id: string
-  name: string
-  points: number
-  trend: NelsonTrend
-}
+import { Player, MatchPlayer, HighlightType, Highlight, CSMap, Match, NelsonTrend, NelsonEntry, PlayerStats, LiveData } from '@/types'
 
 import { computeKDRecord } from '@/lib/utils'
 
 // ---- Derived helpers ----
-export type PlayerStats = {
-  player: Player
-  matches: number
-  wins: number
-  losses: number
-  kills: number
-  deaths: number
-  assists: number
-  damage: number
-  adm: number
-  kda: number
-  mvps: number
-  hsPct: number
-  positiveGames: number
-  negativeGames: number
-  trend?: 'up' | 'down' | 'same'
-  currentStreak: number
-}
+
 
 type SupabasePlayerRecord = {
   id: string
@@ -130,12 +52,7 @@ type SupabaseHighlightRecord = {
   clip_url?: string | null
 }
 
-export type LiveData = {
-  players: Player[]
-  matches: Match[]
-  highlights: Highlight[]
-  nelsonLeague: NelsonEntry[]
-}
+
 
 const EMPTY_LIVE_DATA: LiveData = {
   players: [],
@@ -319,9 +236,18 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   const kdRecord = computeKDRecord(entries)
 
   let currentStreak = 0
+  let currentLossStreak = 0
   for (const entry of entries) {
     if (entry.won) {
       currentStreak++
+    } else {
+      break
+    }
+  }
+
+  for (const entry of entries) {
+    if (!entry.won) {
+      currentLossStreak++
     } else {
       break
     }
@@ -341,6 +267,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     mvps,
     hsPct: Math.round(hsPct),
     currentStreak,
+    currentLossStreak,
     ...kdRecord,
   }
 }

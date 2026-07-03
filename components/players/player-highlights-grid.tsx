@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
-import { highlightTypeColors, type HighlightType } from '@/lib/mockData'
-import { VideoEmbed } from '@/components/video-embed'
+import { type HighlightType } from '@/types'
+import { highlightTypeColors } from '@/lib/api'
+import { VideoEmbed } from '@/components/highlights/video-embed'
 import { Film } from 'lucide-react'
 
 type HighlightRow = {

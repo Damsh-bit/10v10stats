@@ -1,4 +1,5 @@
-import type { LiveData, PlayerStats } from '@/lib/mockData'
+import type { LiveData, PlayerStats } from '@/types'
+
 
 export type RecordType = 
   | 'most_wins' 

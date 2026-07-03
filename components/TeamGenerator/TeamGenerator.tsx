@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import type { PlayerStats } from '@/lib/mockData'
+import type { PlayerStats } from '@/types'
+
 import { computePlayerRating, balanceTeams, regenerateTeams, sumRating, type RatedPlayer } from '@/lib/teamBalancer'
 import { PlayerSelector } from './PlayerSelector'
 import { TeamResultCard } from './TeamResultCard'

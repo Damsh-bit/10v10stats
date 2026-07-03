@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
-import type { Player } from '@/lib/mockData'
+import type { Player } from '@/types'
+
 
 export function PlayerAvatar({
   player,

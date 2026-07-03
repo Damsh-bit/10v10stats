@@ -1,6 +1,7 @@
-import type { Highlight } from '@/lib/mockData'
-import { highlightTypeColors } from '@/lib/mockData'
-import { VideoEmbed } from '@/components/video-embed'
+import type { Highlight } from '@/types'
+
+import { highlightTypeColors } from '@/lib/api'
+import { VideoEmbed } from '@/components/highlights/video-embed'
 
 export function HighlightCard({
   highlight,

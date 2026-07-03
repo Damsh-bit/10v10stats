@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import type { Match } from '@/lib/mockData'
-import { ActivityCalendar } from '@/components/activity-calendar'
-import { MatchList } from '@/components/match-list'
+import type { Match } from '@/types'
+
+import { ActivityCalendar } from '@/components/stats/activity-calendar'
+import { MatchList } from '@/components/matches/match-list'
 
 type Props = {
   matches: Match[]

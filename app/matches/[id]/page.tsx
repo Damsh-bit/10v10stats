@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Video } from 'lucide-react'
-import { formatDate, getLiveData } from '@/lib/mockData'
-import { Scoreboard } from '@/components/scoreboard'
-import { HighlightCard } from '@/components/highlight-card'
-import { EditMatchModal } from '@/components/edit-match-modal'
+import { formatDate, getLiveData } from '@/lib/api'
+import { Scoreboard } from '@/components/matches/scoreboard'
+import { HighlightCard } from '@/components/highlights/highlight-card'
+import { EditMatchModal } from '@/components/matches/edit-match-modal'
 
 export const dynamic = 'force-dynamic'
 

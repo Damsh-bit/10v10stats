@@ -1,7 +1,7 @@
 'use client'
 
 import type { RatedPlayer } from '@/lib/teamBalancer'
-import { PlayerAvatar } from '@/components/strike-ui'
+import { PlayerAvatar } from '@/components/shared/strike-ui'
 
 export function TeamResultCard({
   teamName,

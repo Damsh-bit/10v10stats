@@ -1,4 +1,4 @@
-import { getAllPlayerStats } from '@/lib/mockData'
+import { getAllPlayerStats } from '@/lib/api'
 import { TeamGenerator } from '@/components/TeamGenerator/TeamGenerator'
 
 export const dynamic = 'force-dynamic'

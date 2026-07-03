@@ -1,18 +1,18 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getLiveData, getAllPlayerStats } from '@/lib/mockData'
-import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
-import { EnlargeableAvatar } from '@/components/enlargeable-avatar'
+import { getLiveData, getAllPlayerStats } from '@/lib/api'
+import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
+import { EnlargeableAvatar } from '@/components/players/enlargeable-avatar'
 import {
   PlayerHighlightsGrid,
   PlayerHighlightsSkeleton,
-} from '@/components/player-highlights-grid'
-import { EditPlayerModal } from '@/components/edit-player-modal'
-import { PlayerMatchHistory } from '@/components/player-match-history'
-import { KDaBadges } from '@/components/kda-badges'
+} from '@/components/players/player-highlights-grid'
+import { EditPlayerModal } from '@/components/players/edit-player-modal'
+import { PlayerMatchHistory } from '@/components/players/player-match-history'
+import { KDaBadges } from '@/components/players/kda-badges'
 import { getPlayerRecords } from '@/lib/records'
-import { RecordBadge } from '@/components/record-badges'
+import { RecordBadge } from '@/components/players/record-badges'
 
 export default async function PlayerProfile({
   params,

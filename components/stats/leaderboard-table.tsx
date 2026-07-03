@@ -1,11 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { PlayerStats } from '@/lib/mockData'
-import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
+import type { PlayerStats } from '@/types'
+
+import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
-import { KDaBadges } from '@/components/kda-badges'
+import { KDaBadges } from '@/components/players/kda-badges'
 
 export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
   const router = useRouter()

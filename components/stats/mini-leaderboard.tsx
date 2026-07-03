@@ -1,13 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { PlayerStats } from '@/lib/mockData'
-import { PlayerAvatar } from '@/components/strike-ui'
+import type { PlayerStats } from '@/types'
+import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
-import { KDaBadges } from '@/components/kda-badges'
+import { KDaBadges } from '@/components/players/kda-badges'
 import type { PlayerRecordMap } from '@/lib/records'
-import { RecordBadge } from '@/components/record-badges'
+import { RecordBadge } from '@/components/players/record-badges'
 
 export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: PlayerStats[], records?: PlayerRecordMap, topFakadorId?: string | null }) {
   const router = useRouter()
@@ -68,9 +68,17 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                   {s.currentStreak >= 3 && (
                     <span 
                       title={`Racha de ${s.currentStreak} victorias`}
-                      className="flex shrink-0 items-center gap-1 rounded border border-orange-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-orange-500 shadow-sm cursor-help"
+                      className="flex shrink-0 items-center gap-1 rounded border border-green-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-green-500 shadow-sm cursor-help"
                     >
                       🔥 {s.currentStreak} W
+                    </span>
+                  )}
+                  {s.currentLossStreak >= 3 && (
+                    <span 
+                      title={`Racha de ${s.currentLossStreak} derrotas`}
+                      className="flex shrink-0 items-center gap-1 rounded border border-cyan-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-cyan-500 shadow-sm cursor-help"
+                    >
+                      🧊 {s.currentLossStreak} L
                     </span>
                   )}
                   {i === stats.length - 1 && (

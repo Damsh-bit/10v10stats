@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { getAllPlayerStats, getLiveData } from '@/lib/mockData'
+import { getAllPlayerStats, getLiveData } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 

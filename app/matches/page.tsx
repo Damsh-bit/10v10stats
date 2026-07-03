@@ -1,6 +1,6 @@
-import { getLiveData } from '@/lib/mockData'
+import { getLiveData } from '@/lib/api'
 import { getMatchesByDate } from '@/lib/matches-calendar'
-import { MatchesPageContent } from '@/components/matches-page-content'
+import { MatchesPageContent } from '@/components/matches/matches-page-content'
 
 export const dynamic = 'force-dynamic'
 

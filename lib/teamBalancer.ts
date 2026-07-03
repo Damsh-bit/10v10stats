@@ -1,4 +1,5 @@
-import type { PlayerStats } from './mockData'
+import type { PlayerStats } from '@/types'
+
 
 export type RatedPlayer = PlayerStats & { rating: number }
 

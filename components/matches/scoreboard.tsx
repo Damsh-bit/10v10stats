@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import type { MatchPlayer, Player } from '@/lib/mockData'
-import { PlayerAvatar } from '@/components/strike-ui'
+import type { MatchPlayer, Player } from '@/types'
+
+import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { cn } from '@/lib/utils'
 
 export function Scoreboard({

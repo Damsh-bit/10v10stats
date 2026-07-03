@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import type { Match, CSMap } from '@/lib/mockData'
-import { formatDate } from '@/lib/mockData'
+import type { Match, CSMap } from '@/types'
+
+import { formatDate } from '@/lib/api'
 import { getTeamColorClass, cn } from '@/lib/utils'
 
 const mapColors: Record<CSMap, string> = {

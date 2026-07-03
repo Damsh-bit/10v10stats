@@ -1,7 +1,8 @@
 'use client'
 
-import type { PlayerStats } from '@/lib/mockData'
-import { PlayerAvatar, BadgePill } from '@/components/strike-ui'
+import type { PlayerStats } from '@/types'
+
+import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
 
 export function PlayerSelector({
   players,

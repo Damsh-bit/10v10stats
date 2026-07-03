@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { Match, CSMap } from '@/lib/mockData'
-import { formatDate } from '@/lib/mockData'
+import type { Match, CSMap } from '@/types'
+
+import { formatDate } from '@/lib/api'
 import { toDateKey } from '@/lib/matches-calendar'
 import { cn, getTeamColorClass } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'

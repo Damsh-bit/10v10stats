@@ -1,5 +1,6 @@
 import { ChevronUp, ChevronDown, Equal, Skull } from 'lucide-react'
-import { type NelsonEntry } from '@/lib/mockData'
+import { type NelsonEntry } from '@/types'
+
 import { cn } from '@/lib/utils'
 
 function TrendIcon({ trend }: { trend: NelsonEntry['trend'] }) {

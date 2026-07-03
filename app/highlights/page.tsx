@@ -1,6 +1,6 @@
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
-import { getLiveData } from '@/lib/mockData'
-import { HighlightsGrid } from '@/components/highlights-grid'
+import { getLiveData } from '@/lib/api'
+import { HighlightsGrid } from '@/components/highlights/highlights-grid'
 
 export const dynamic = 'force-dynamic'
 

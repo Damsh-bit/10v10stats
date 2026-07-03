@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { PlayerAvatar } from './strike-ui'
-import type { Player } from '@/lib/mockData'
+import { PlayerAvatar } from '@/components/shared/strike-ui'
+import type { Player } from '@/types'
+
 
 export function EnlargeableAvatar({ player, size = 80 }: { player: Player; size?: number }) {
   const [isOpen, setIsOpen] = useState(false)

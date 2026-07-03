@@ -2,8 +2,8 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Oswald } from 'next/font/google'
 import './globals.css'
-import { Navbar } from '@/components/navbar'
-import { RecommendationsWidget } from '@/components/recommendations-widget'
+import { Navbar } from '@/components/layout/navbar'
+import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })

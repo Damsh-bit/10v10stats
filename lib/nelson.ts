@@ -1,5 +1,6 @@
 import { getPlayersFromSupabase, getSupabaseClient, getSupabaseAdminClient } from '@/lib/supabase'
-import type { NelsonEntry, NelsonTrend } from '@/lib/mockData'
+import type { NelsonEntry, NelsonTrend } from '@/types'
+
 
 type NelsonPlayer = {
   id: string

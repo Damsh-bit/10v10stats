@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Film } from 'lucide-react'
-import { highlightTypeColors, type HighlightType } from '@/lib/mockData'
-import { VideoEmbedClient } from '@/components/video-embed-client'
+import { type HighlightType } from '@/types'
+import { highlightTypeColors } from '@/lib/api'
+import { VideoEmbedClient } from '@/components/highlights/video-embed-client'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type HighlightRow = {
