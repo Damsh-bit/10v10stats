@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Loader2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-type Team = 'CT' | 'T'
+type Team = 'CT' | 'T' | 'EMPATE'
 
 type PlayerOption = {
   id: string
@@ -121,7 +121,7 @@ export function NewMatchModal() {
     if (Number.isFinite(scoreCt) && Number.isFinite(scoreT)) {
       setForm((prev) => ({
         ...prev,
-        winner_team: scoreCt !== scoreT ? (scoreCt > scoreT ? 'CT' : 'T') : prev.winner_team,
+        winner_team: scoreCt === scoreT ? 'EMPATE' : (scoreCt > scoreT ? 'CT' : 'T'),
         total_rounds: form.score_ct !== '' && form.score_t !== '' ? String(scoreCt + scoreT) : '',
       }))
     }
@@ -333,7 +333,7 @@ export function NewMatchModal() {
         players: form.players.map((row) => ({
           player_id: row.player_id,
           team: row.team,
-          won: row.team === form.winner_team,
+          won: form.winner_team === 'EMPATE' ? null : row.team === form.winner_team,
           kills: Number(row.kills || 0),
           deaths: Number(row.deaths || 0),
           assists: Number(row.assists || 0),
@@ -537,6 +537,7 @@ export function NewMatchModal() {
             >
               <option value="CT">{teamAName}</option>
               <option value="T">{teamBName}</option>
+              <option value="EMPATE">Empate</option>
             </select>
           </label>
 
@@ -702,7 +703,7 @@ export function NewMatchModal() {
               <span className="font-semibold text-foreground">Score:</span> {teamAName} {form.score_ct} - {form.score_t} {teamBName}
             </p>
             <p>
-              <span className="font-semibold text-foreground">Ganador:</span> {form.winner_team === 'CT' ? teamAName : teamBName}
+              <span className="font-semibold text-foreground">Ganador:</span> {form.winner_team === 'EMPATE' ? 'Empate' : (form.winner_team === 'CT' ? teamAName : teamBName)}
             </p>
             <p>
               <span className="font-semibold text-foreground">Rondas:</span> {form.total_rounds || 'Sin info'}

@@ -33,7 +33,8 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
       if (mvpFilter === 'yes' && entry.mvps === 0) return false
       if (mvpFilter === 'no' && entry.mvps > 0) return false
       if (resultFilter === 'win' && !entry.won) return false
-      if (resultFilter === 'loss' && entry.won) return false
+      if (resultFilter === 'loss' && (entry.won || entry.draw)) return false
+      if (resultFilter === 'draw' && !entry.draw) return false
       return true
     })
   }, [matches, mapFilter, teamFilter, mvpFilter, resultFilter])
@@ -80,6 +81,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           >
             <option value="all">Resultados</option>
             <option value="win">Victorias</option>
+            <option value="draw">Empates</option>
             <option value="loss">Derrotas</option>
           </select>
 
@@ -109,7 +111,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <ResultChip won={entry.won} />
+                <ResultChip won={entry.won} draw={entry.draw} />
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                   <span className="text-[14px] font-medium text-foreground">
                     {match.map}

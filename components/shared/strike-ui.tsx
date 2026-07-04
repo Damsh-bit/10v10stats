@@ -42,17 +42,19 @@ export function BadgePill({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function ResultChip({ won }: { won: boolean }) {
+export function ResultChip({ won, draw }: { won: boolean; draw?: boolean }) {
   return (
     <span
       className={cn(
         'inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
-        won
-          ? 'bg-success/15 text-success'
-          : 'bg-destructive/15 text-destructive',
+        draw
+          ? 'bg-muted/40 text-muted-foreground'
+          : won
+            ? 'bg-success/15 text-success'
+            : 'bg-destructive/15 text-destructive',
       )}
     >
-      {won ? 'WIN' : 'LOSS'}
+      {draw ? 'DRAW' : won ? 'WIN' : 'LOSS'}
     </span>
   )
 }

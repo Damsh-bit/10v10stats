@@ -19,7 +19,7 @@ type SupabaseMatchRecord = {
   id: string
   played_at: string | null
   map: string | null
-  winner_team: 'CT' | 'T' | null
+  winner_team: string | null
   score_ct: number | null
   score_t: number | null
   total_rounds: number | null
