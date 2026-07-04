@@ -96,7 +96,7 @@ export default async function PlayerProfile({
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-8">
         <div className="flex items-center gap-4">
           <EnlargeableAvatar player={stats} size={80} />
           <div className="flex flex-col gap-2">
@@ -155,18 +155,18 @@ export default async function PlayerProfile({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
           {statCards.map((c) => (
             <div
               key={c.label}
-              className="flex flex-col gap-1 rounded-lg border border-border bg-card px-3 py-2.5"
+              className="flex flex-col gap-1.5 rounded-xl border border-border/40 bg-muted/20 p-4 transition-colors hover:bg-muted/40"
               title={'title' in c ? c.title : undefined}
             >
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 {c.label}
               </span>
               <span
-                className={`font-mono text-lg font-bold ${c.accent ? 'text-primary' : 'text-foreground'}`}
+                className={`font-mono text-xl font-bold tracking-tight ${c.accent ? 'text-primary' : 'text-foreground'}`}
               >
                 {c.value}
               </span>
