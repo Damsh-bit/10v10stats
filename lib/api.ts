@@ -145,6 +145,8 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
           })
         }
 
+        const isDraw = row.score_ct === row.score_t;
+
         return {
           id: normalizeString(row.id, 'sin-id'),
           map: normalizeMap(row.map),
@@ -169,7 +171,8 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
             adr: 0,
             hsPct: normalizeNumber(entry.hs_pct),
             mvps: entry.player_id === mvpId ? 1 : 0,
-            won: normalizeBoolean(entry.won),
+            won: isDraw ? false : normalizeBoolean(entry.won),
+            draw: isDraw,
           })),
         }
       })
@@ -223,7 +226,8 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   const assists = sum(entries.map((e) => e.assists))
   const damage = sum(entries.map((e) => e.damage))
   const wins = entries.filter((e) => e.won).length
-  const losses = entries.length - wins
+  const draws = entries.filter((e) => e.draw).length
+  const losses = entries.length - wins - draws
   const adm = entries.length > 0 ? Math.round(damage / entries.length) : 0
   const kda = deaths === 0 ? kills + assists : (kills + assists) / deaths
   const mvps = sum(entries.map((e) => e.mvps))
@@ -240,15 +244,15 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   for (const entry of entries) {
     if (entry.won) {
       currentStreak++
-    } else {
+    } else if (!entry.draw) {
       break
     }
   }
 
   for (const entry of entries) {
-    if (!entry.won) {
+    if (!entry.won && !entry.draw) {
       currentLossStreak++
-    } else {
+    } else if (!entry.draw) {
       break
     }
   }
@@ -257,6 +261,7 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
     player,
     matches: entries.length,
     wins,
+    draws,
     losses,
     kills,
     deaths,

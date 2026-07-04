@@ -30,10 +30,11 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
       </header>
       <ul className="flex flex-col">
         {matches.map((match) => {
+          const isDraw = match.ctScore === match.tScore;
           const isCtWinner = match.winnerTeam 
             ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName)
             : (match.ctScore > match.tScore)
-          const winnerLabel = isCtWinner
+          const winnerLabel = isDraw ? 'EMPATE' : isCtWinner
             ? (match.teamAName || 'CT')
             : (match.teamBName || 'T')
           return (
@@ -58,8 +59,8 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
                     {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
                   </span>
                 </div>
-                <span className={cn("rounded-sm border px-2 py-1 font-mono text-[11px] font-bold", getTeamColorClass(winnerLabel))}>
-                  {winnerLabel} WINS
+                <span className={cn("rounded-sm border px-2 py-1 font-mono text-[11px] font-bold", isDraw ? "text-muted-foreground border-muted-foreground/30 bg-muted/20" : getTeamColorClass(winnerLabel))}>
+                  {isDraw ? 'EMPATE' : `${winnerLabel} WINS`}
                 </span>
               </Link>
             </li>

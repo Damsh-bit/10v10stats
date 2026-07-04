@@ -18,6 +18,7 @@ export type MatchPlayer = {
   hsPct: number
   mvps: number
   won: boolean
+  draw: boolean
 }
 
 export type HighlightType = 'ACE' | 'QUAD_KILL' | 'TRIPLE_KILL' | 'CLUTCH' | 'ENTRY_FRAG' | 'KNIFE_KILL' | 'OTHER'
@@ -42,7 +43,7 @@ export type Match = {
   tScore: number
   durationMin: number
   players: MatchPlayer[]
-  winnerTeam?: 'CT' | 'T'
+  winnerTeam?: 'CT' | 'T' | 'EMPATE'
   totalRounds?: number
   videoUrl?: string
   fotoUrl?: string
@@ -65,6 +66,7 @@ export type PlayerStats = {
   player: Player
   matches: number
   wins: number
+  draws: number
   losses: number
   kills: number
   deaths: number

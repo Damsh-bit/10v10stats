@@ -160,13 +160,13 @@ export async function POST(request: Request) {
     }
 
     const playedAt = (payload.played_at ?? payload.date ?? payload.playedAt ?? '').trim() || new Date().toISOString()
-    const winnerTeamRaw = payload.winner_team ?? (payload.score_ct > payload.score_t ? 'CT' : 'T')
+    const winnerTeamRaw = payload.winner_team ?? (payload.score_ct === payload.score_t ? 'EMPATE' : (payload.score_ct > payload.score_t ? 'CT' : 'T'))
     const totalRounds = typeof payload.total_rounds === 'number' && Number.isFinite(payload.total_rounds) ? payload.total_rounds : null
     const videoUrl = typeof payload.video_url === 'string' ? payload.video_url.trim() || null : null
     const notes = typeof payload.notes === 'string' ? payload.notes.trim() || null : null
     const teamAName = typeof payload.team_a_name === 'string' && payload.team_a_name.trim() ? payload.team_a_name.trim() : 'Equipo A'
     const teamBName = typeof payload.team_b_name === 'string' && payload.team_b_name.trim() ? payload.team_b_name.trim() : 'Equipo B'
-    const winnerTeam = winnerTeamRaw === 'CT' ? teamAName : teamBName
+    const winnerTeam = winnerTeamRaw === 'EMPATE' ? 'EMPATE' : (winnerTeamRaw === 'CT' ? teamAName : teamBName)
 
     // 1. Calcular MVP de la partida
     let mvpPlayerId = ''
@@ -208,7 +208,7 @@ export async function POST(request: Request) {
       match_id: matchData.id,
       player_id: player.player_id,
       team: player.team === 'CT' ? teamAName : teamBName,
-      won: player.won,
+      won: winnerTeam === 'EMPATE' ? null : ((player.team === 'CT' ? teamAName : teamBName) === winnerTeam),
       kills: player.kills,
       deaths: player.deaths,
       assists: player.assists,

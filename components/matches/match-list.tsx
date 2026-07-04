@@ -88,10 +88,11 @@ export function MatchList({
       {/* Match cards */}
       <div className="flex flex-col gap-3">
         {paginated.map((match) => {
+          const isDraw = match.ctScore === match.tScore;
           const isCtWinner = match.winnerTeam
             ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName)
             : (match.ctScore > match.tScore)
-          const winnerLabel = isCtWinner
+          const winnerLabel = isDraw ? 'EMPATE' : isCtWinner
             ? (match.teamAName || 'CT')
             : (match.teamBName || 'T')
           return (
@@ -121,10 +122,10 @@ export function MatchList({
                   <span
                     className={cn(
                       'inline-flex items-center rounded border px-2 py-1 font-mono text-[11px] font-bold',
-                      getTeamColorClass(winnerLabel)
+                      isDraw ? 'text-muted-foreground border-muted-foreground/30 bg-muted/20' : getTeamColorClass(winnerLabel)
                     )}
                   >
-                    {winnerLabel} WINS
+                    {isDraw ? 'EMPATE' : `${winnerLabel} WINS`}
                   </span>
                   <Link
                     href={`/matches/${match.id}`}

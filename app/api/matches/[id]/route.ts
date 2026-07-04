@@ -60,7 +60,7 @@ export async function PUT(
     const teamBName = matchData.team_b_name || 'Equipo B'
     
     // Determinar nuevo equipo ganador
-    const winnerTeam = payload.score_ct > payload.score_t ? teamAName : teamBName
+    const winnerTeam = payload.score_ct === payload.score_t ? 'EMPATE' : (payload.score_ct > payload.score_t ? teamAName : teamBName)
 
     // 2. Calcular MVP de la partida
     let mvpPlayerId = ''
@@ -99,7 +99,7 @@ export async function PUT(
       // player.team vendrá como el nombre original ("Team A" o "CT", o el nombre de label si no tiene team_a_name)
       // Mantenemos el team que nos pasa el frontend porque allí armaremos bien el label
       const teamLabel = player.team === teamAName || player.team === 'CT' ? teamAName : teamBName
-      const won = teamLabel === winnerTeam
+      const won = winnerTeam === 'EMPATE' ? null : teamLabel === winnerTeam
 
       const { error: playerUpdateError } = await supabase
         .from('match_players')

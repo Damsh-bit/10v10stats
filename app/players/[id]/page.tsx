@@ -50,7 +50,8 @@ export default async function PlayerProfile({
         acc.assists += entry.assists
         acc.damage += entry.damage
         acc.wins += entry.won ? 1 : 0
-        acc.losses += entry.won ? 0 : 1
+        acc.draws += entry.draw ? 1 : 0
+        acc.losses += (!entry.won && !entry.draw) ? 1 : 0
         acc.mvps += entry.mvps || 0
         if (entry.kills > entry.deaths) acc.positiveGames += 1
         else if (entry.deaths > entry.kills) acc.negativeGames += 1
@@ -59,6 +60,7 @@ export default async function PlayerProfile({
       {
         matches: 0,
         wins: 0,
+        draws: 0,
         losses: 0,
         kills: 0,
         deaths: 0,
@@ -75,7 +77,7 @@ export default async function PlayerProfile({
   const winrate = playerStats.matches > 0 ? ((playerStats.wins / playerStats.matches) * 100).toFixed(1) + '%' : '0%'
   const statCards = [
     { label: 'Matches', value: `${playerStats.matches}` },
-    { label: 'W / L', value: `${playerStats.wins} / ${playerStats.losses}` },
+    { label: 'W / D / L', value: `${playerStats.wins} / ${playerStats.draws} / ${playerStats.losses}` },
     { label: 'Win %', value: winrate },
     { label: 'KDA', value: kda.toFixed(2), accent: true },
     { label: 'Kills', value: `${playerStats.kills}` },

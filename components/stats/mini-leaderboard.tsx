@@ -117,7 +117,7 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                   <span className="opacity-40">·</span>
                   <span title="Average Damage per Match">{s.adm.toLocaleString()} ADM</span>
                   <span className="opacity-40">·</span>
-                  <span title="Winrate">{s.wins}W-{s.losses}L ({s.wins + s.losses > 0 ? ((s.wins / (s.wins + s.losses)) * 100).toFixed(0) + '%' : '0%'} WR)</span>
+                  <span title="Winrate">{s.wins}W-{s.draws}D-{s.losses}L ({s.matches > 0 ? ((s.wins / s.matches) * 100).toFixed(0) + '%' : '0%'} WR)</span>
                 </div>
               </div>
               <div className="flex flex-col items-end shrink-0">
