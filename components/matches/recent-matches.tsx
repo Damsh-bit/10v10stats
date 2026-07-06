@@ -1,9 +1,12 @@
+"use client"
+
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { Match, CSMap } from '@/types'
 
 import { formatDate } from '@/lib/api'
 import { getTeamColorClass, cn } from '@/lib/utils'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 const mapColors: Record<CSMap, string> = {
   Mirage: '#c2853b',
@@ -53,7 +56,7 @@ export function RecentMatches({ matches }: { matches: Match[] }) {
                 />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-mono text-[15px] font-bold text-foreground">
-                    {match.ctScore}-{match.tScore}
+                    <AnimatedNumber value={match.ctScore} />-<AnimatedNumber value={match.tScore} direction="down" />
                   </span>
                   <span className="text-[11px] text-muted-foreground">
                     {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}

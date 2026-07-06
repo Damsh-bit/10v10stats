@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/api'
 import { ResultChip } from '@/components/shared/strike-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getTeamColorClass, cn } from '@/lib/utils'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 export type MatchEntry = {
   match: Match
@@ -130,14 +131,14 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
               </div>
 
               <div className="flex items-center gap-4 font-mono text-[12px] text-muted-foreground">
-                <div className="flex items-center gap-1 font-semibold tracking-wide">
-                  <span className="text-green-400">{entry.kills}</span>
+                  <div className="flex items-center gap-1 font-semibold tracking-wide">
+                  <span className="text-green-400"><AnimatedNumber value={entry.kills} /></span>
                   <span className="text-muted-foreground/40">/</span>
-                  <span className="text-primary">{entry.deaths}</span>
+                  <span className="text-primary"><AnimatedNumber value={entry.deaths} direction="down" /></span>
                   <span className="text-muted-foreground/40">/</span>
-                  <span className="text-blue-400">{entry.assists}</span>
+                  <span className="text-blue-400"><AnimatedNumber value={entry.assists} /></span>
                 </div>
-                <span className="hidden sm:inline">{entry.damage} dmg</span>
+                <span className="hidden sm:inline"><AnimatedNumber value={entry.damage} /> dmg</span>
                 <span className="w-20 text-right">{formatDate(match.date)}</span>
               </div>
             </Link>

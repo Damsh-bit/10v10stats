@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { getSupabaseClient } from '@/lib/supabase'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 // ─── Team identifier configuration ───────────────────────────────────────────
 // The team name matching is case-insensitive and uses substring matching.
@@ -204,10 +205,10 @@ function TeamRadarCard({
                       className="px-3 py-1.5 text-right font-mono font-bold"
                       style={{ color: row.winrate >= 50 ? color : '#6b7280' }}
                     >
-                      {s?.played ? `${row.winrate}%` : '—'}
+                      {s?.played ? <AnimatedNumber value={row.winrate} decimals={0} suffix="%" /> : '—'}
                     </td>
                     <td className="px-3 py-1.5 text-right font-mono text-muted-foreground">
-                      {s?.played ? `${s.won}W ${losses}L` : 'Sin partidas'}
+                      {s?.played ? (<><AnimatedNumber value={s.won} />W <AnimatedNumber value={losses} direction="down" />L</>) : 'Sin partidas'}
                     </td>
                   </tr>
                 )

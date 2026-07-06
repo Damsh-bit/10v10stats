@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Swords, Users, Crosshair, Flame, Skull, ExternalLink } from 'lucide-react'
+import AnimatedNumber from '@/components/ui/animated-number'
 import type { LucideIcon } from 'lucide-react'
 
 type Stat = {
@@ -31,7 +32,7 @@ export function DashboardStats({ stats, forceCols }: { stats: Stat[], forceCols?
               <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
             </div>
             <div className="mt-2 font-mono text-2xl font-bold text-foreground">
-              {s.value}
+              <AnimatedNumber value={s.value} className="font-mono text-2xl font-bold text-foreground" />
             </div>
             <div className="mt-0.5 flex items-center justify-between">
               <div className="text-[11px] text-muted-foreground">

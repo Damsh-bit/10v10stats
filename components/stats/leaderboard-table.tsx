@@ -7,6 +7,7 @@ import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
 import { KDaBadges } from '@/components/players/kda-badges'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
   const router = useRouter()
@@ -69,17 +70,17 @@ export function LeaderboardTable({ stats }: { stats: PlayerStats[] }) {
                   </div>
                 </div>
               </td>
-              <Td className="text-center text-success">{s.wins}</Td>
-              <Td className="text-center text-muted-foreground">{s.draws}</Td>
-              <Td className="text-center text-destructive">{s.losses}</Td>
+              <Td className="text-center text-success"><AnimatedNumber value={s.wins} /></Td>
+              <Td className="text-center text-muted-foreground"><AnimatedNumber value={s.draws} /></Td>
+              <Td className="text-center text-destructive"><AnimatedNumber value={s.losses} /></Td>
               <Td className="text-center">
-                {s.matches > 0 ? ((s.wins / s.matches) * 100).toFixed(0) + '%' : '0%'}
+                {s.matches > 0 ? <AnimatedNumber value={(s.wins / s.matches) * 100} decimals={0} suffix="%" /> : '0%'}
               </Td>
-              <Td className="text-right">{s.kills}</Td>
-              <Td className="text-right">{s.deaths}</Td>
-              <Td className="text-right">{s.assists}</Td>
-              <Td className="text-right">{s.damage.toLocaleString()}</Td>
-              <Td className="text-right">{s.adm.toLocaleString()}</Td>
+              <Td className="text-right"><AnimatedNumber value={s.kills} /></Td>
+              <Td className="text-right"><AnimatedNumber value={s.deaths} /></Td>
+              <Td className="text-right"><AnimatedNumber value={s.assists} /></Td>
+              <Td className="text-right"><AnimatedNumber value={s.damage} /></Td>
+              <Td className="text-right"><AnimatedNumber value={s.adm} /></Td>
               <td className="px-3 py-3 text-right">
                 <span
                   className={cn(

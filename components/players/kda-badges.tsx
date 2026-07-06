@@ -1,4 +1,5 @@
 import React from 'react'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 export function KDaBadges({
   positiveGames,
@@ -22,7 +23,7 @@ export function KDaBadges({
           <span
             className={`rounded-full border border-green-600/50 bg-green-900/40 font-semibold text-green-400 ${textClass}`}
           >
-            ▲ {positiveGames}
+            ▲ <AnimatedNumber value={positiveGames} />
           </span>
           <div className="pointer-events-none absolute -top-8 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
             Salió positivo en {positiveGames} partidas (kills &gt; deaths)
@@ -34,7 +35,7 @@ export function KDaBadges({
           <span
             className={`rounded-full border border-red-600/50 bg-red-900/40 font-semibold text-red-400 ${textClass}`}
           >
-            ▼ {negativeGames}
+            ▼ <AnimatedNumber value={negativeGames} />
           </span>
           <div className="pointer-events-none absolute -top-8 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
             Salió negativo en {negativeGames} partidas (deaths &gt; kills)

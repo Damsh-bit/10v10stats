@@ -3,6 +3,7 @@ import type { MatchPlayer, Player } from '@/types'
 
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { cn } from '@/lib/utils'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 export function Scoreboard({
   team,
@@ -37,7 +38,7 @@ export function Scoreboard({
             isWinner ? 'text-primary' : 'text-muted-foreground',
           )}
         >
-          {score}
+          <AnimatedNumber value={score} className="font-mono text-lg font-bold" />
         </span>
       </div>
       <table className="w-full border-collapse text-left">
@@ -82,11 +83,11 @@ export function Scoreboard({
                     </span>
                   </Link>
                 </td>
-                <Cell>{kills}</Cell>
-                <Cell>{deaths}</Cell>
-                <Cell>{assists}</Cell>
-                <Cell className="text-yellow-500/80">{hsPct}%</Cell>
-                <Cell>{damage}</Cell>
+                <Cell><AnimatedNumber value={kills} /></Cell>
+                <Cell><AnimatedNumber value={deaths} direction="down" /></Cell>
+                <Cell><AnimatedNumber value={assists} /></Cell>
+                <Cell className="text-yellow-500/80"><AnimatedNumber value={hsPct} decimals={0} suffix="%" /></Cell>
+                <Cell><AnimatedNumber value={damage} /></Cell>
               </tr>
             )
           })}

@@ -8,6 +8,7 @@ import { Star } from 'lucide-react'
 import { KDaBadges } from '@/components/players/kda-badges'
 import type { PlayerRecordMap } from '@/lib/records'
 import { RecordBadge } from '@/components/players/record-badges'
+import AnimatedNumber from '@/components/ui/animated-number'
 
 export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: PlayerStats[], records?: PlayerRecordMap, topFakadorId?: string | null }) {
   const router = useRouter()
@@ -62,7 +63,7 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                       title="Total de MVPs"
                       className="flex shrink-0 items-center gap-1 rounded border border-[#d4af37]/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-[#d4af37] shadow-sm cursor-help"
                     >
-                      👑 {s.mvps}
+                      👑 <AnimatedNumber value={s.mvps} />
                     </span>
                   )}
                   {s.currentStreak >= 3 && (
@@ -70,7 +71,7 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                       title={`Racha de ${s.currentStreak} victorias`}
                       className="flex shrink-0 items-center gap-1 rounded border border-green-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-green-500 shadow-sm cursor-help"
                     >
-                      🔥 {s.currentStreak} W
+                      🔥 <AnimatedNumber value={s.currentStreak} /> W
                     </span>
                   )}
                   {s.currentLossStreak >= 3 && (
@@ -78,7 +79,7 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                       title={`Racha de ${s.currentLossStreak} derrotas`}
                       className="flex shrink-0 items-center gap-1 rounded border border-cyan-500/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-cyan-500 shadow-sm cursor-help"
                     >
-                      🧊 {s.currentLossStreak} L
+                      🧊 <AnimatedNumber value={s.currentLossStreak} /> L
                     </span>
                   )}
                   {i === stats.length - 1 && (
@@ -97,7 +98,7 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                       title="Total de Nelsons"
                       className="flex shrink-0 items-center gap-1 rounded border border-primary/30 bg-[#101010] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest text-primary shadow-sm cursor-help"
                     >
-                      💀 {s.player.nelsons}
+                      💀 <AnimatedNumber value={s.player.nelsons} />
                     </span>
                   )}
                   {topFakadorId === s.player.id && (
@@ -111,13 +112,13 @@ export function MiniLeaderboard({ stats, records, topFakadorId }: { stats: Playe
                   <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-1.5 sm:gap-x-2 gap-y-0.5 font-mono text-[10px] sm:text-[11px] text-muted-foreground">
-                  <span title="Kills/Deaths/Assists">{s.kills}/{s.deaths}/{s.assists}</span>
+                  <span title="Kills/Deaths/Assists"><AnimatedNumber value={s.kills} />/<AnimatedNumber value={s.deaths} />/<AnimatedNumber value={s.assists} /></span>
                   <span className="opacity-40">·</span>
-                  <span className="text-yellow-500/80" title="% de Headshots">{s.hsPct}% HS</span>
+                  <span className="text-yellow-500/80" title="% de Headshots"><AnimatedNumber value={s.hsPct} decimals={0} suffix="%" /> HS</span>
                   <span className="opacity-40">·</span>
-                  <span title="Average Damage per Match">{s.adm.toLocaleString()} ADM</span>
+                  <span title="Average Damage per Match"><AnimatedNumber value={s.adm} suffix=" ADM" /></span>
                   <span className="opacity-40">·</span>
-                  <span title="Winrate">{s.wins}W-{s.draws}D-{s.losses}L ({s.matches > 0 ? ((s.wins / s.matches) * 100).toFixed(0) + '%' : '0%'} WR)</span>
+                  <span title="Winrate"><AnimatedNumber value={s.wins} />W-<AnimatedNumber value={s.draws} />D-<AnimatedNumber value={s.losses} />L ({s.matches > 0 ? <AnimatedNumber value={(s.wins / s.matches) * 100} decimals={0} suffix="%" /> : '0%'} WR)</span>
                 </div>
               </div>
               <div className="flex flex-col items-end shrink-0">
