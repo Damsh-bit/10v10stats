@@ -41,7 +41,11 @@ function getSupabaseConfig() {
   }
 }
 
+let supabaseClientInstance: ReturnType<typeof createClient> | null = null;
+
 export function getSupabaseClient() {
+  if (supabaseClientInstance) return supabaseClientInstance;
+
   const config = getSupabaseConfig()
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
 
@@ -49,12 +53,18 @@ export function getSupabaseClient() {
     return null
   }
 
-  return createClient(config.url, supabaseAnonKey.trim(), {
+  supabaseClientInstance = createClient(config.url, supabaseAnonKey.trim(), {
     auth: { persistSession: false },
   })
+  
+  return supabaseClientInstance;
 }
 
+let supabaseAdminClientInstance: ReturnType<typeof createClient> | null = null;
+
 export function getSupabaseAdminClient() {
+  if (supabaseAdminClientInstance) return supabaseAdminClientInstance;
+
   const config = getSupabaseConfig()
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -62,9 +72,11 @@ export function getSupabaseAdminClient() {
     return null
   }
 
-  return createClient(config.url, serviceRoleKey.trim(), {
+  supabaseAdminClientInstance = createClient(config.url, serviceRoleKey.trim(), {
     auth: { persistSession: false },
   })
+  
+  return supabaseAdminClientInstance;
 }
 
 export async function getPlayersFromSupabase(): Promise<SupabasePlayerRecord[]> {
