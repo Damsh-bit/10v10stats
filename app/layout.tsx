@@ -5,6 +5,7 @@ import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import pkg from '../package.json'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -47,12 +48,15 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <Navbar />
         <div className="flex-1">{children}</div>
-        <footer className="border-t border-border bg-background py-8 text-center text-sm text-muted-foreground">
+        <footer className="border-t border-border bg-background py-8 flex flex-col items-center justify-center text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-1.5">
             Desarrollado con <span className="text-rose-500">❤️</span> por
             <span className="font-heading font-bold uppercase tracking-widest text-primary">
               Papi y Tutu
             </span>
+          </p>
+          <p className="mt-2 text-[10px] opacity-40 font-mono tracking-widest" title="Versión de la aplicación">
+            v{pkg.version}
           </p>
         </footer>
         <RecommendationsWidget />
