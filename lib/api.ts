@@ -2,6 +2,7 @@ import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 import { Player, MatchPlayer, HighlightType, Highlight, CSMap, Match, NelsonTrend, NelsonEntry, PlayerStats, LiveData } from '@/types'
 
+import { addDaysUTC, getTodayUTC } from '@/lib/matches-calendar'
 import { computeKDRecord } from '@/lib/utils'
 
 // ---- Derived helpers ----
@@ -277,6 +278,14 @@ function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats 
   }
 }
 
+function filterMatchesSince(matches: Match[], days: number): Match[] {
+  const cutoff = addDaysUTC(getTodayUTC(), -days)
+  return matches.filter((m) => {
+    const d = new Date(m.date)
+    return !Number.isNaN(d.getTime()) && d >= cutoff
+  })
+}
+
 function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
   const currentStats = data.players
     .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
@@ -322,9 +331,28 @@ export function getAllPlayerStatsSync(): PlayerStats[] {
   return buildAllPlayerStatsForData(EMPTY_LIVE_DATA)
 }
 
-export async function getAllPlayerStats(): Promise<PlayerStats[]> {
+export function getPlayerStatsForData(
+  data: LiveData,
+  options?: { sinceDays?: number; minMatches?: number },
+): PlayerStats[] {
+  const filteredData = options?.sinceDays
+    ? { ...data, matches: filterMatchesSince(data.matches, options.sinceDays) }
+    : data
+
+  const stats = buildAllPlayerStatsForData(filteredData)
+
+  if (options?.minMatches) {
+    return stats.filter((s) => s.matches >= options.minMatches!)
+  }
+
+  return stats
+}
+
+export async function getAllPlayerStats(
+  options?: { sinceDays?: number; minMatches?: number },
+): Promise<PlayerStats[]> {
   const data = await getLiveData()
-  return buildAllPlayerStatsForData(data)
+  return getPlayerStatsForData(data, options)
 }
 
 export async function getPlayerHighlights(playerId: string): Promise<Highlight[]> {
