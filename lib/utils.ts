@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+import type { Match, MatchPlayer } from '@/types'
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -14,6 +16,14 @@ export function getTeamColorClass(teamName: string) {
     return 'bg-blue-500/15 text-blue-400 border-blue-500/20'
   }
   return 'bg-primary/10 text-primary border-primary/20'
+}
+
+export function getPlayerMatchScore(match: Match, entry: MatchPlayer) {
+  const teamALabel = match.teamAName || 'CT'
+  const isTeamA = entry.team === teamALabel || entry.team === 'CT'
+  return isTeamA
+    ? { playerScore: match.ctScore, opponentScore: match.tScore }
+    : { playerScore: match.tScore, opponentScore: match.ctScore }
 }
 
 export function computeKDRecord(matches: { kills: number; deaths: number }[]) {

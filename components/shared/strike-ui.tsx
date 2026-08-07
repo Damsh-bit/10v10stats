@@ -42,11 +42,35 @@ export function BadgePill({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function ResultChip({ won, draw }: { won: boolean; draw?: boolean }) {
+export function ResultChip({
+  won,
+  draw,
+  playerScore,
+  opponentScore,
+}: {
+  won: boolean
+  draw?: boolean
+  playerScore?: number
+  opponentScore?: number
+}) {
+  const hasScore = playerScore !== undefined && opponentScore !== undefined
+  const label = hasScore
+    ? draw
+      ? 'Empate'
+      : won
+        ? 'Victoria'
+        : 'Derrota'
+    : draw
+      ? 'DRAW'
+      : won
+        ? 'WIN'
+        : 'LOSS'
+  const scoreSuffix = hasScore ? ` ${playerScore}-${opponentScore}` : ''
+
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
+        'inline-flex shrink-0 items-center whitespace-nowrap rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
         draw
           ? 'bg-muted/40 text-muted-foreground'
           : won
@@ -54,7 +78,7 @@ export function ResultChip({ won, draw }: { won: boolean; draw?: boolean }) {
             : 'bg-destructive/15 text-destructive',
       )}
     >
-      {draw ? 'DRAW' : won ? 'WIN' : 'LOSS'}
+      {label}{scoreSuffix}
     </span>
   )
 }

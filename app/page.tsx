@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { getLiveData, getPlayerStatsForData, formatDate } from '@/lib/api'
+import { getLiveData, getPlayerStatsForData, countMatchesSince, formatDate } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
 import { MiniLeaderboard } from '@/components/stats/mini-leaderboard'
 import { NelsonLeague } from '@/components/stats/nelson-league'
@@ -33,6 +33,7 @@ export default async function Page() {
   const data = await getLiveData()
   const stats = getPlayerStatsForData(data)
   const statsMonthly = getPlayerStatsForData(data, { sinceDays: 30, minMatches: 1 })
+  const monthlyMatchCount = countMatchesSince(data.matches, 30)
   const nelsonData = await getNelsonData()
 
   const totalKills = data.matches.reduce(
@@ -161,7 +162,7 @@ export default async function Page() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 flex flex-col gap-6">
             <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando leaderboard…</span></div>}>
-              <MiniLeaderboard statsHistorical={stats} statsMonthly={statsMonthly} records={playerRecords} topFakadorId={topFakadorId} />
+              <MiniLeaderboard statsHistorical={stats} statsMonthly={statsMonthly} monthlyMatchCount={monthlyMatchCount} records={playerRecords} topFakadorId={topFakadorId} />
             </Suspense>
 
             {/* Ladder de la partida más reciente */}

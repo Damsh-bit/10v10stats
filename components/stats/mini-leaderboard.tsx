@@ -16,11 +16,13 @@ type LadderView = 'historical' | 'monthly'
 export function MiniLeaderboard({
   statsHistorical,
   statsMonthly,
+  monthlyMatchCount,
   records,
   topFakadorId,
 }: {
   statsHistorical: PlayerStats[]
   statsMonthly: PlayerStats[]
+  monthlyMatchCount: number
   records?: PlayerRecordMap
   topFakadorId?: string | null
 }) {
@@ -61,6 +63,9 @@ export function MiniLeaderboard({
               )}
             >
               30 días
+              <span className="ml-1.5 font-normal normal-case tracking-normal opacity-80">
+                ({monthlyMatchCount} {monthlyMatchCount === 1 ? 'partida' : 'partidas'})
+              </span>
             </button>
           </div>
         </div>

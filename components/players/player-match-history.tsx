@@ -7,7 +7,7 @@ import type { Match, MatchPlayer } from '@/types'
 import { formatDate } from '@/lib/api'
 import { ResultChip } from '@/components/shared/strike-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getTeamColorClass, cn } from '@/lib/utils'
+import { getTeamColorClass, getPlayerMatchScore, cn } from '@/lib/utils'
 import AnimatedNumber from '@/components/ui/animated-number'
 
 export type MatchEntry = {
@@ -104,7 +104,10 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
             {matches.length === 0 ? 'Sin partidas registradas.' : 'No hay partidas que coincidan con los filtros.'}
           </p>
         ) : (
-          pageMatches.map(({ match, entry }, i) => (
+          pageMatches.map(({ match, entry }, i) => {
+            const { playerScore, opponentScore } = getPlayerMatchScore(match, entry)
+
+            return (
             <Link
               key={match.id}
               href={`/matches/${match.id}`}
@@ -112,7 +115,12 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                 }`}
             >
               <div className="flex items-center gap-3">
-                <ResultChip won={entry.won} draw={entry.draw} />
+                <ResultChip
+                  won={entry.won}
+                  draw={entry.draw}
+                  playerScore={playerScore}
+                  opponentScore={opponentScore}
+                />
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                   <span className="text-[14px] font-medium text-foreground">
                     {match.map}
@@ -142,7 +150,8 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                 <span className="w-20 text-right">{formatDate(match.date)}</span>
               </div>
             </Link>
-          ))
+            )
+          })
         )}
       </div>
 

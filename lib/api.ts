@@ -286,6 +286,10 @@ function filterMatchesSince(matches: Match[], days: number): Match[] {
   })
 }
 
+export function countMatchesSince(matches: Match[], days: number): number {
+  return filterMatchesSince(matches, days).length
+}
+
 function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
   const currentStats = data.players
     .filter((p) => p.name.toLowerCase() !== 'sergio vergara')

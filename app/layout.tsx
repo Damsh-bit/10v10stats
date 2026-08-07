@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Oswald } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
+import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import pkg from '../package.json'
 
@@ -47,6 +48,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <Navbar />
+        <CuriositiesBanner />
         <div className="flex-1">{children}</div>
         <footer className="border-t border-border bg-background py-8 flex flex-col items-center justify-center text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-1.5">
