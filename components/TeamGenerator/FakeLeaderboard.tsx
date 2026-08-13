@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { X } from 'lucide-react'
 
+const ADMIN_PASSWORD = 'alzhannah2026'
+
 type FakeEntry = {
   id: string
   player_name: string
@@ -16,6 +18,8 @@ export function FakeLeaderboard() {
   const [loading, setLoading] = useState(true)
   const [incrementing, setIncrementing] = useState<string | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<FakeEntry | null>(null)
+  const [password, setPassword] = useState('')
+  const [passwordError, setPasswordError] = useState(false)
   
   const supabase = getSupabaseClient()
 
@@ -148,7 +152,7 @@ export function FakeLeaderboard() {
             return (
               <button 
                 key={entry.id}
-                onClick={() => setSelectedPlayer(entry)}
+                onClick={() => { setSelectedPlayer(entry); setPassword(''); setPasswordError(false) }}
                 disabled={incrementing === entry.id}
                 className="flex items-center justify-between px-3 py-2.5 border-b border-border/50 last:border-0 hover:bg-white/[0.03] transition-colors text-left disabled:opacity-50"
               >
@@ -175,29 +179,69 @@ export function FakeLeaderboard() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Sumar Fakaso</h3>
               <button 
-                onClick={() => setSelectedPlayer(null)}
+                onClick={() => { setSelectedPlayer(null); setPassword(''); setPasswordError(false) }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             
-            <p className="text-[13px] text-muted-foreground mb-6">
+            <p className="text-[13px] text-muted-foreground mb-4">
               ¿Confirmás que querés sumarle un fakaso a <strong className="text-foreground">{selectedPlayer.player_name}</strong>?
             </p>
+
+            <div className="mb-4">
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Clave
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setPasswordError(false) }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (password !== ADMIN_PASSWORD) {
+                      setPasswordError(true)
+                    } else {
+                      handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
+                      setSelectedPlayer(null)
+                      setPassword('')
+                      setPasswordError(false)
+                    }
+                  }
+                }}
+                placeholder="••••••••••••"
+                autoFocus
+                className={`w-full rounded border px-3 py-1.5 text-sm bg-background text-foreground placeholder:text-muted-foreground/40 outline-none transition-colors ${
+                  passwordError
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-border focus:border-primary'
+                }`}
+              />
+              {passwordError && (
+                <p className="mt-1.5 text-[11px] text-red-500">Clave incorrecta.</p>
+              )}
+            </div>
             
             <div className="flex gap-2 justify-end">
               <button 
                 className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setSelectedPlayer(null)}
+                onClick={() => { setSelectedPlayer(null); setPassword(''); setPasswordError(false) }}
               >
                 Cancelar
               </button>
               <button 
-                className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 font-bold uppercase tracking-wider transition-colors"
-                onClick={() => { 
+                className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!password}
+                onClick={() => {
+                  if (password !== ADMIN_PASSWORD) {
+                    setPasswordError(true)
+                    return
+                  }
                   handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
                   setSelectedPlayer(null)
+                  setPassword('')
+                  setPasswordError(false)
                 }}
               >
                 Confirmar
