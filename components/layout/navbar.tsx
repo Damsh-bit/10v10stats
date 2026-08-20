@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Trophy } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Dashboard' },
@@ -54,6 +54,14 @@ export function Navbar() {
               </Link>
             )
           })}
+          <Link
+            href="/final-del-mundo"
+            onClick={() => setIsOpen(false)}
+            className="btn-gold-glow ml-1 flex cursor-pointer items-center gap-1.5 rounded-full border border-yellow-300/60 bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-black transition-transform hover:scale-105"
+          >
+            <Trophy className="h-3.5 w-3.5" />
+            Super Final del Mundo
+          </Link>
         </nav>
 
         {/* Mobile Toggle */}
@@ -69,6 +77,14 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden border-t border-border bg-background">
           <nav className="flex flex-col p-4 gap-2">
+            <Link
+              href="/final-del-mundo"
+              onClick={() => setIsOpen(false)}
+              className="btn-gold-glow mb-1 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-yellow-300/60 bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 px-4 py-3 text-[13px] font-extrabold uppercase tracking-wider text-black"
+            >
+              <Trophy className="h-4 w-4" />
+              Super Final del Mundo
+            </Link>
             {links.map((link) => {
               const active =
                 link.href === '/'

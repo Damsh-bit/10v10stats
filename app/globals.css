@@ -86,3 +86,69 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+@keyframes gold-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px 1px rgba(250, 204, 21, 0.55),
+      0 0 20px 4px rgba(250, 204, 21, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 4px rgba(250, 204, 21, 0.9),
+      0 0 34px 10px rgba(250, 204, 21, 0.45);
+  }
+}
+
+.btn-gold-glow {
+  animation: gold-glow-pulse 2.1s ease-in-out infinite;
+}
+
+@keyframes gold-text-glow {
+  0%,
+  100% {
+    text-shadow:
+      0 0 12px rgba(250, 204, 21, 0.6),
+      0 0 28px rgba(250, 204, 21, 0.3);
+  }
+  50% {
+    text-shadow:
+      0 0 20px rgba(250, 204, 21, 0.9),
+      0 0 46px rgba(250, 204, 21, 0.5);
+  }
+}
+
+.text-gold-glow {
+  animation: gold-text-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.55s ease-out forwards;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pop-in {
+  animation: pop-in 0.15s ease-out;
+}
