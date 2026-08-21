@@ -215,13 +215,14 @@ export async function getLiveData(): Promise<LiveData> {
   return liveData ?? EMPTY_LIVE_DATA
 }
 
-function buildPlayerStatsForData(data: LiveData, playerId: string): PlayerStats | null {
+function buildPlayerStatsForData(data: LiveData, playerId: string, lastN?: number): PlayerStats | null {
   const player = data.players.find((p) => p.id === playerId)
   if (!player) return null
 
-  const entries = data.matches.flatMap((m) =>
+  const allEntries = data.matches.flatMap((m) =>
     m.players.filter((mp) => mp.playerId === playerId),
   )
+  const entries = lastN ? allEntries.slice(0, lastN) : allEntries
   const kills = sum(entries.map((e) => e.kills))
   const deaths = sum(entries.map((e) => e.deaths))
   const assists = sum(entries.map((e) => e.assists))
@@ -290,10 +291,10 @@ export function countMatchesSince(matches: Match[], days: number): number {
   return filterMatchesSince(matches, days).length
 }
 
-function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
+function buildAllPlayerStatsForData(data: LiveData, lastNPerPlayer?: number): PlayerStats[] {
   const currentStats = data.players
     .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
-    .map((p) => buildPlayerStatsForData(data, p.id))
+    .map((p) => buildPlayerStatsForData(data, p.id, lastNPerPlayer))
     .filter((s): s is PlayerStats => s !== null)
     .sort((a, b) => b.kda - a.kda)
 
@@ -301,7 +302,7 @@ function buildAllPlayerStatsForData(data: LiveData): PlayerStats[] {
     const prevData = { ...data, matches: data.matches.slice(1) }
     const prevStats = data.players
       .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
-      .map((p) => buildPlayerStatsForData(prevData, p.id))
+      .map((p) => buildPlayerStatsForData(prevData, p.id, lastNPerPlayer))
       .filter((s): s is PlayerStats => s !== null)
       .sort((a, b) => b.kda - a.kda)
 
@@ -337,13 +338,17 @@ export function getAllPlayerStatsSync(): PlayerStats[] {
 
 export function getPlayerStatsForData(
   data: LiveData,
-  options?: { sinceDays?: number; minMatches?: number },
+  options?: { sinceDays?: number; minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
 ): PlayerStats[] {
-  const filteredData = options?.sinceDays
-    ? { ...data, matches: filterMatchesSince(data.matches, options.sinceDays) }
-    : data
+  let filteredData = data;
+  if (options?.sinceDays) {
+    filteredData = { ...filteredData, matches: filterMatchesSince(filteredData.matches, options.sinceDays) }
+  }
+  if (options?.lastNMatches) {
+    filteredData = { ...filteredData, matches: filteredData.matches.slice(0, options.lastNMatches) }
+  }
 
-  const stats = buildAllPlayerStatsForData(filteredData)
+  const stats = buildAllPlayerStatsForData(filteredData, options?.lastNMatchesPerPlayer)
 
   if (options?.minMatches) {
     return stats.filter((s) => s.matches >= options.minMatches!)
@@ -353,7 +358,7 @@ export function getPlayerStatsForData(
 }
 
 export async function getAllPlayerStats(
-  options?: { sinceDays?: number; minMatches?: number },
+  options?: { sinceDays?: number; minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
 ): Promise<PlayerStats[]> {
   const data = await getLiveData()
   return getPlayerStatsForData(data, options)

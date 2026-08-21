@@ -6,7 +6,7 @@ import type { PlayerStats } from '@/types'
 import { computePlayerRating, balanceTeams, regenerateTeams, sumRating, type RatedPlayer } from '@/lib/teamBalancer'
 import { PlayerSelector } from './PlayerSelector'
 import { TeamResultCard } from './TeamResultCard'
-import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
+import { Copy, RefreshCw, Users, Map as MapIcon, History } from 'lucide-react'
 
 const MAP_POOL = ['Mirage', 'Inferno', 'Nuke', 'Overpass', 'Vertigo', 'Ancient', 'Anubis', 'Dust II']
 
@@ -25,7 +25,7 @@ function getMapImageUrl(mapName: string) {
   return file ? `/maps/${file}` : null
 }
 
-export function TeamGenerator({ players }: { players: PlayerStats[] }) {
+export function TeamGenerator({ players, recentPlayers }: { players: PlayerStats[], recentPlayers?: PlayerStats[] }) {
   // Sort players alphabetically for the selector
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => a.player.name.localeCompare(b.player.name))
@@ -38,6 +38,7 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
   const [teams, setTeams] = useState<[RatedPlayer[], RatedPlayer[]] | null>(null)
   const [recommendedMap, setRecommendedMap] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
+  const [useRecentStats, setUseRecentStats] = useState(false)
 
   const togglePlayer = (id: string) => {
     setSelectedIds(prev => 
@@ -45,10 +46,16 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
     )
   }
 
+  const getSelectedStats = (ids: string[]) => {
+    const statsSource = useRecentStats && recentPlayers ? recentPlayers : players
+    return ids.map(id => {
+      return statsSource.find(p => p.player.id === id) || players.find(p => p.player.id === id)!
+    }).filter(Boolean)
+  }
+
   const handleGenerate = () => {
     if (selectedIds.length !== 10) return
-    const selectedStats = players.filter(p => selectedIds.includes(p.player.id))
-    const rated = computePlayerRating(selectedStats)
+    const rated = computePlayerRating(getSelectedStats(selectedIds))
     setTeams(balanceTeams(rated))
     setRecommendedMap(MAP_POOL[Math.floor(Math.random() * MAP_POOL.length)])
     setIsCopied(false)
@@ -56,11 +63,22 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
 
   const handleRegenerate = () => {
     if (selectedIds.length !== 10) return
-    const selectedStats = players.filter(p => selectedIds.includes(p.player.id))
-    const rated = computePlayerRating(selectedStats)
+    const rated = computePlayerRating(getSelectedStats(selectedIds))
     setTeams(regenerateTeams(rated))
     setRecommendedMap(MAP_POOL[Math.floor(Math.random() * MAP_POOL.length)])
     setIsCopied(false)
+  }
+
+  const handleRerollPlayer = (playerId: string) => {
+    const unselectedIds = sortedPlayers.map(p => p.player.id).filter(id => !selectedIds.includes(id))
+    if (unselectedIds.length === 0) return
+
+    const randomNewId = unselectedIds[Math.floor(Math.random() * unselectedIds.length)]
+    const newSelectedIds = selectedIds.map(id => id === playerId ? randomNewId : id)
+    
+    setSelectedIds(newSelectedIds)
+    const rated = computePlayerRating(getSelectedStats(newSelectedIds))
+    setTeams(balanceTeams(rated))
   }
 
   const handleCopy = () => {
@@ -82,6 +100,32 @@ export function TeamGenerator({ players }: { players: PlayerStats[] }) {
         selectedIds={selectedIds} 
         onToggle={togglePlayer} 
       />
+
+      {recentPlayers && (
+        <div className="flex justify-center">
+          <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={() => setUseRecentStats(false)}
+              className={`rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                !useRecentStats ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Historial completo
+            </button>
+            <button
+              type="button"
+              onClick={() => setUseRecentStats(true)}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                useRecentStats ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <History className="h-3.5 w-3.5" />
+              Últimas 20
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-center">
         <button

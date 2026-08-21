@@ -2,13 +2,16 @@
 
 import type { RatedPlayer } from '@/lib/teamBalancer'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
+import { Dices } from 'lucide-react'
 
 export function TeamResultCard({
   teamName,
   players,
+  onRerollPlayer,
 }: {
   teamName: string
   players: RatedPlayer[]
+  onRerollPlayer?: (playerId: string) => void
 }) {
   const totalRating = players.reduce((sum, p) => sum + p.rating, 0)
   const avgRating = totalRating / (players.length || 1)
@@ -42,11 +45,22 @@ export function TeamResultCard({
                   </span>
                 </div>
               </div>
-              <div className="text-right flex flex-col">
-                <span className="font-mono text-[15px] font-bold text-primary">
-                  {p.rating.toFixed(1)}
-                </span>
-                <span className="text-[9px] uppercase tracking-wider text-muted-foreground">pts</span>
+              <div className="flex items-center gap-3">
+                <div className="text-right flex flex-col">
+                  <span className="font-mono text-[15px] font-bold text-primary">
+                    {p.rating.toFixed(1)}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground">pts</span>
+                </div>
+                {onRerollPlayer && (
+                  <button
+                    onClick={() => onRerollPlayer(p.player.id)}
+                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+                    title="Cambiar jugador por otro al azar"
+                  >
+                    <Dices className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           )
