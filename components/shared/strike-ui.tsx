@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import type { Player } from '@/types'
 
@@ -12,7 +13,7 @@ export function PlayerAvatar({
   const initials = (player.name || '??').slice(0, 2).toUpperCase()
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-mono font-bold text-background"
+      className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-mono font-bold text-background relative"
       style={{
         width: size,
         height: size,
@@ -22,9 +23,11 @@ export function PlayerAvatar({
       aria-hidden="true"
     >
       {player.photoUrl ? (
-        <img
+        <Image
           src={player.photoUrl}
           alt={player.name}
+          width={size}
+          height={size}
           className="h-full w-full object-cover"
         />
       ) : (

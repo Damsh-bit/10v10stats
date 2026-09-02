@@ -1,7 +1,7 @@
 import { FinalMundialHero } from '@/components/final-mundial/final-mundial-hero'
 import { ExpectationsWall } from '@/components/final-mundial/expectations-wall'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export const metadata = {
   title: 'Super Final del Mundo — 10v10 Stats',

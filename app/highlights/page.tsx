@@ -2,7 +2,7 @@ import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 import { getLiveData } from '@/lib/api'
 import { HighlightsGrid } from '@/components/highlights/highlights-grid'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 function resolveClipUrl(clipUrl: string | null | undefined): string | null {
   if (!clipUrl) return null

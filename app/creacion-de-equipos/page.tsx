@@ -1,7 +1,7 @@
 import { getAllPlayerStats } from '@/lib/api'
 import { TeamGenerator } from '@/components/TeamGenerator/TeamGenerator'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function TeamGeneratorPage() {
   const stats = await getAllPlayerStats()

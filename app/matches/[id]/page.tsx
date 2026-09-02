@@ -6,7 +6,7 @@ import { Scoreboard } from '@/components/matches/scoreboard'
 import { HighlightCard } from '@/components/highlights/highlight-card'
 import { EditMatchModal } from '@/components/matches/edit-match-modal'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function MatchDetail({
   params,

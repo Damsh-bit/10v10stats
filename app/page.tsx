@@ -15,7 +15,7 @@ import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 import { MapWinrateSection } from '@/components/stats/map-winrate-section'
 import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 function resolveClipUrl(clipUrl: string | null | undefined): string | null {
   if (!clipUrl) return null

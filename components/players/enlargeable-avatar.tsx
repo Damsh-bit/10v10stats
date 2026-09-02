@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { X } from 'lucide-react'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import type { Player } from '@/types'
@@ -33,10 +34,12 @@ export function EnlargeableAvatar({ player, size = 80 }: { player: Player; size?
             </button>
             
             {player.photoUrl ? (
-              <img
+              <Image
                 src={player.photoUrl}
                 alt={player.name}
-                className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl border border-white/10"
+                width={800}
+                height={800}
+                className="max-h-[85vh] max-w-[90vw] w-auto h-auto rounded-xl object-contain shadow-2xl border border-white/10"
               />
             ) : (
               <div 

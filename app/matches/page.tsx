@@ -2,7 +2,7 @@ import { getLiveData } from '@/lib/api'
 import { getMatchesByDate } from '@/lib/matches-calendar'
 import { MatchesPageContent } from '@/components/matches/matches-page-content'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function MatchesPage() {
   const [data, matchesByDate] = await Promise.all([getLiveData(), getMatchesByDate()])
