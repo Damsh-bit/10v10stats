@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Video } from 'lucide-react'
 import { formatDate, getLiveData } from '@/lib/api'
 import { Scoreboard } from '@/components/matches/scoreboard'
-import { HighlightCard } from '@/components/highlights/highlight-card'
 import { EditMatchModal } from '@/components/matches/edit-match-modal'
 
 export const revalidate = 60
@@ -24,7 +22,6 @@ export default async function MatchDetail({
   const ctPlayers = match.players.filter((p) => p.team === teamALabel || p.team === 'CT')
   const tPlayers = match.players.filter((p) => p.team === teamBLabel || p.team === 'T')
   const ctWins = match.winnerTeam ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName) : (match.ctScore > match.tScore)
-  const matchHighlights = data.highlights.filter((h) => h.matchId === id)
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -48,17 +45,6 @@ export default async function MatchDetail({
             matchPlayers={match.players}
             allPlayers={data.players}
           />
-          {match.videoUrl && (
-            <a
-              href={match.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-md bg-primary/15 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-white"
-            >
-              <Video className="h-4 w-4" />
-              Ir al video
-            </a>
-          )}
         </div>
       </div>
 
@@ -130,29 +116,6 @@ export default async function MatchDetail({
           players={data.players}
         />
       </div>
-
-      {/* Highlights */}
-      <section className="mt-8">
-        <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Highlights of this match
-        </h2>
-        {matchHighlights.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {matchHighlights.map((h) => (
-              <HighlightCard
-                key={h.id}
-                highlight={h}
-                className="w-96 shrink-0"
-                matchLabel={match.map}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-dashed border-border bg-card px-3 py-6 text-center text-[13px] text-muted-foreground">
-            No highlights recorded for this match.
-          </div>
-        )}
-      </section>
     </main>
   )
 }

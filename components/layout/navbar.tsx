@@ -10,7 +10,6 @@ const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/matches', label: 'Partidas' },
   { href: '/creacion-de-equipos', label: 'Equipos' },
-  { href: '/highlights', label: 'Highlights' },
   { href: '/estadisticas', label: 'Estadísticas' },
 ]
 

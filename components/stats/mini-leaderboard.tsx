@@ -62,7 +62,7 @@ export function MiniLeaderboard({
                   : 'text-muted-foreground hover:bg-muted/80',
               )}
             >
-              30 días
+              Últimas 30
               <span className="ml-1.5 font-normal normal-case tracking-normal opacity-80">
                 ({monthlyMatchCount} {monthlyMatchCount === 1 ? 'partida' : 'partidas'})
               </span>
@@ -71,12 +71,12 @@ export function MiniLeaderboard({
         </div>
         <span className="text-[11px] text-muted-foreground">
           {stats.length} jugadores · por KDA
-          {!isHistorical && ' · últimos 30 días'}
+          {!isHistorical && ' · últimas 30 partidas'}
         </span>
       </header>
       {stats.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-          No hay partidas en los últimos 30 días.
+          No hay partidas registradas todavía.
         </p>
       ) : (
         <ol className="flex flex-col">

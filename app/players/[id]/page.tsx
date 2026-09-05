@@ -1,13 +1,8 @@
-import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLiveData, getAllPlayerStats } from '@/lib/api'
 import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
 import { EnlargeableAvatar } from '@/components/players/enlargeable-avatar'
-import {
-  PlayerHighlightsGrid,
-  PlayerHighlightsSkeleton,
-} from '@/components/players/player-highlights-grid'
 import { EditPlayerModal } from '@/components/players/edit-player-modal'
 import { PlayerMatchHistory } from '@/components/players/player-match-history'
 import { KDaBadges } from '@/components/players/kda-badges'
@@ -175,24 +170,12 @@ export default async function PlayerProfile({
         </div>
       </div>
 
-      {/* Two columns: Match history (left) + Highlights (right) */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        {/* Match history */}
+      <div className="mt-8">
         <section>
           <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
             Match History
           </h2>
           <PlayerMatchHistory matches={playerMatches} />
-        </section>
-
-        {/* Highlights — streams with Suspense skeleton */}
-        <section>
-          <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Highlights
-          </h2>
-          <Suspense fallback={<PlayerHighlightsSkeleton />}>
-            <PlayerHighlightsGrid playerId={id} />
-          </Suspense>
         </section>
       </div>
     </main>

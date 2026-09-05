@@ -21,18 +21,6 @@ export type MatchPlayer = {
   draw: boolean
 }
 
-export type HighlightType = 'ACE' | 'QUAD_KILL' | 'TRIPLE_KILL' | 'CLUTCH' | 'ENTRY_FRAG' | 'KNIFE_KILL' | 'OTHER'
-
-export type Highlight = {
-  id: string
-  playerId: string
-  matchId?: string
-  type: HighlightType
-  description: string
-  round: number
-  clipUrl?: string
-}
-
 export type CSMap = string
 
 export type Match = {
@@ -45,7 +33,6 @@ export type Match = {
   players: MatchPlayer[]
   winnerTeam?: 'CT' | 'T' | 'EMPATE'
   totalRounds?: number
-  videoUrl?: string
   fotoUrl?: string
   notes?: string
   teamAName?: string
@@ -86,6 +73,5 @@ export type PlayerStats = {
 export type LiveData = {
   players: Player[]
   matches: Match[]
-  highlights: Highlight[]
   nelsonLeague: NelsonEntry[]
 }

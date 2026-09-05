@@ -1,39 +1,26 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { getLiveData, getPlayerStatsForData, countMatchesSince, formatDate } from '@/lib/api'
+import { getLiveData, getPlayerStatsForData, formatDate } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
 import { MiniLeaderboard } from '@/components/stats/mini-leaderboard'
 import { NelsonLeague } from '@/components/stats/nelson-league'
 import { RecentMatches } from '@/components/matches/recent-matches'
 import { DashboardStats, dashboardIcons } from '@/components/stats/dashboard-stats'
-import { NewHighlightModal } from '@/components/highlights/new-highlight-modal'
 import { NewMatchModal } from '@/components/matches/new-match-modal'
 import { NelsonVotePanel } from '@/components/stats/nelson-vote-panel'
 import { getNelsonData } from '@/lib/nelson'
-import { VideoEmbed } from '@/components/highlights/video-embed'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 import { MapWinrateSection } from '@/components/stats/map-winrate-section'
 import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 
 export const revalidate = 60
 
-function resolveClipUrl(clipUrl: string | null | undefined): string | null {
-  if (!clipUrl) return null
-  const trimmed = clipUrl.trim()
-  if (!trimmed) return null
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
-
-  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
-  if (!supabase) return null
-  const { data } = supabase.storage.from('highlights').getPublicUrl(trimmed)
-  return data.publicUrl
-}
-
 export default async function Page() {
   const data = await getLiveData()
   const stats = getPlayerStatsForData(data)
-  const statsMonthly = getPlayerStatsForData(data, { sinceDays: 30, minMatches: 1 })
-  const monthlyMatchCount = countMatchesSince(data.matches, 30)
+  const RECENT_MATCH_COUNT = 30
+  const statsMonthly = getPlayerStatsForData(data, { lastNMatches: RECENT_MATCH_COUNT, minMatches: 1 })
+  const monthlyMatchCount = Math.min(RECENT_MATCH_COUNT, data.matches.length)
   const nelsonData = await getNelsonData()
 
   const totalKills = data.matches.reduce(
@@ -74,11 +61,6 @@ export default async function Page() {
   })
 
   const hasMinDamage = Number.isFinite(recordMinDamage.value)
-
-  const latestHighlight = data.highlights[0]
-  const latestHighlightPlayer = latestHighlight
-    ? data.players.find((p) => p.id === latestHighlight.playerId)?.name || 'Jugador'
-    : null
 
   const overview = [
     {
@@ -153,7 +135,6 @@ export default async function Page() {
           </div>
           <div className="flex flex-wrap gap-2">
             <NewMatchModal />
-            <NewHighlightModal />
           </div>
         </div>
 
@@ -301,26 +282,6 @@ export default async function Page() {
             <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando resumen…</span></div>}>
               <DashboardStats stats={overview} forceCols={2} />
             </Suspense>
-
-            {latestHighlight && resolveClipUrl(latestHighlight.clipUrl) && (
-              <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-heading text-[13px] font-bold uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
-                    <span className="text-[#950c42]">▶</span> Highlight Reciente
-                  </h2>
-                  <span className="rounded bg-[#950c42]/10 px-2 py-0.5 font-mono text-[11px] font-bold text-[#950c42]">
-                    {latestHighlight.type.replace(/_/g, ' ')}
-                  </span>
-                </div>
-                <div className="overflow-hidden rounded-md border border-border/60">
-                  <VideoEmbed url={resolveClipUrl(latestHighlight.clipUrl)!} title={latestHighlight.description || 'Highlight'} />
-                </div>
-                <div className="text-[13px] font-medium text-foreground">
-                  Por <Link href={`/players/${latestHighlight.playerId}`} className="font-semibold text-primary hover:underline transition-colors">{latestHighlightPlayer}</Link>
-                  {latestHighlight.description ? <p className="mt-1 text-[12px] text-muted-foreground font-normal">{latestHighlight.description}</p> : null}
-                </div>
-              </section>
-            )}
 
             <Suspense fallback={<div className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card px-4 py-8 text-sm text-muted-foreground"><img src="/Sticker loader.png" alt="loader" className="h-10 w-10 opacity-60 animate-pulse" /><span>Cargando Nelson…</span></div>}>
               <NelsonLeague entries={nelsonData.league} />

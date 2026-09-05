@@ -22,7 +22,7 @@ const oswald = Oswald({
 export const metadata: Metadata = {
   title: '10v10 STATS — CS2 Match Tracker',
   description:
-    '10v10 STATS — track your CS2 10v10 match stats, leaderboards, the Nelson League and player highlights.',
+    '10v10 STATS — track your CS2 10v10 match stats, leaderboards and the Nelson League.',
   generator: 'v0.app',
   icons: {
     icon: '/logo.png',

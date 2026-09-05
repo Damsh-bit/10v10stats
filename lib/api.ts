@@ -1,8 +1,7 @@
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
-import { Player, MatchPlayer, HighlightType, Highlight, CSMap, Match, NelsonTrend, NelsonEntry, PlayerStats, LiveData } from '@/types'
+import { Player, MatchPlayer, CSMap, Match, NelsonTrend, NelsonEntry, PlayerStats, LiveData } from '@/types'
 
-import { addDaysUTC, getTodayUTC } from '@/lib/matches-calendar'
 import { computeKDRecord } from '@/lib/utils'
 
 // ---- Derived helpers ----
@@ -24,7 +23,6 @@ type SupabaseMatchRecord = {
   score_ct: number | null
   score_t: number | null
   total_rounds: number | null
-  video_url?: string | null
   foto_url?: string | null
   notes?: string | null
   team_a_name?: string | null
@@ -44,21 +42,9 @@ type SupabaseMatchPlayerRecord = {
   hs_pct: number | null
 }
 
-type SupabaseHighlightRecord = {
-  id: string
-  player_id: string
-  type: string | null
-  description: string | null
-  round_number: number | null
-  clip_url?: string | null
-}
-
-
-
 const EMPTY_LIVE_DATA: LiveData = {
   players: [],
   matches: [],
-  highlights: [],
   nelsonLeague: [],
 }
 
@@ -110,7 +96,7 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
     let matches: Match[] = []
     const { data: matchRows, error: matchesError } = await supabase
       .from('matches')
-      .select('id, map, played_at, score_ct, score_t, total_rounds, winner_team, video_url, foto_url, notes, team_a_name, team_b_name, mvp_id')
+      .select('id, map, played_at, score_ct, score_t, total_rounds, winner_team, foto_url, notes, team_a_name, team_b_name, mvp_id')
       .order('played_at', { ascending: false })
 
     if (!matchesError && matchRows) {
@@ -157,7 +143,6 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
           durationMin: normalizeNumber(row.total_rounds),
           winnerTeam: row.winner_team ?? undefined,
           totalRounds: normalizeNumber(row.total_rounds),
-          videoUrl: row.video_url ?? undefined,
           fotoUrl: row.foto_url ?? undefined,
           notes: row.notes ?? undefined,
           teamAName: row.team_a_name ?? undefined,
@@ -179,30 +164,11 @@ async function getSupabaseLiveData(): Promise<LiveData | null> {
       })
     }
 
-    let highlights: Highlight[] = []
-    const { data: highlightRows, error: highlightsError } = await supabase
-      .from('highlights')
-      .select('id, player_id, type, description, round_number, clip_url')
-      .order('created_at', { ascending: false })
-
-    if (!highlightsError && highlightRows) {
-      highlights = (highlightRows as SupabaseHighlightRecord[]).map((row) => ({
-        id: normalizeString(row.id, 'sin-id'),
-        playerId: normalizeString(row.player_id, 'sin-player'),
-        matchId: undefined,
-        type: (row.type as HighlightType | null) ?? 'OTHER',
-        description: normalizeString(row.description),
-        round: normalizeNumber(row.round_number),
-        clipUrl: row.clip_url ?? undefined,
-      }))
-    }
-
     const nelsonLeague: NelsonEntry[] = []
 
     return {
       players,
       matches,
-      highlights,
       nelsonLeague,
     }
   } catch {
@@ -279,18 +245,6 @@ function buildPlayerStatsForData(data: LiveData, playerId: string, lastN?: numbe
   }
 }
 
-function filterMatchesSince(matches: Match[], days: number): Match[] {
-  const cutoff = addDaysUTC(getTodayUTC(), -days)
-  return matches.filter((m) => {
-    const d = new Date(m.date)
-    return !Number.isNaN(d.getTime()) && d >= cutoff
-  })
-}
-
-export function countMatchesSince(matches: Match[], days: number): number {
-  return filterMatchesSince(matches, days).length
-}
-
 function buildAllPlayerStatsForData(data: LiveData, lastNPerPlayer?: number): PlayerStats[] {
   const currentStats = data.players
     .filter((p) => p.name.toLowerCase() !== 'sergio vergara')
@@ -338,12 +292,9 @@ export function getAllPlayerStatsSync(): PlayerStats[] {
 
 export function getPlayerStatsForData(
   data: LiveData,
-  options?: { sinceDays?: number; minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
+  options?: { minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
 ): PlayerStats[] {
   let filteredData = data;
-  if (options?.sinceDays) {
-    filteredData = { ...filteredData, matches: filterMatchesSince(filteredData.matches, options.sinceDays) }
-  }
   if (options?.lastNMatches) {
     filteredData = { ...filteredData, matches: filteredData.matches.slice(0, options.lastNMatches) }
   }
@@ -358,20 +309,10 @@ export function getPlayerStatsForData(
 }
 
 export async function getAllPlayerStats(
-  options?: { sinceDays?: number; minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
+  options?: { minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
 ): Promise<PlayerStats[]> {
   const data = await getLiveData()
   return getPlayerStatsForData(data, options)
-}
-
-export async function getPlayerHighlights(playerId: string): Promise<Highlight[]> {
-  const data = await getLiveData();
-  return data.highlights.filter((h) => h.playerId === playerId);
-}
-
-export async function getMatchHighlights(matchId: string): Promise<Highlight[]> {
-  const data = await getLiveData();
-  return data.highlights.filter((h) => h.matchId === matchId);
 }
 
 // Returns matches for a specific player.
@@ -401,16 +342,6 @@ export const leaderHighlights = {
 function topBySync(key: 'kills' | 'kda' | 'damage') {
   const stats = getAllPlayerStatsSync()
   return [...stats].sort((a, b) => (b[key] as number) - (a[key] as number))[0]
-}
-
-export const highlightTypeColors: Record<HighlightType, string> = {
-  ACE: '#ff4500',
-  QUAD_KILL: '#3b82f6',
-  TRIPLE_KILL: '#22c55e',
-  CLUTCH: '#a855f7',
-  ENTRY_FRAG: '#eab308',
-  KNIFE_KILL: '#f97316',
-  OTHER: '#64748b',
 }
 
 function sum(arr: number[]) {
