@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import type { Match, MatchPlayer } from '@/types'
 
-import { formatDate } from '@/lib/api'
+import { formatDate } from '@/lib/format'
 import { ResultChip } from '@/components/shared/strike-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getTeamColorClass, getPlayerMatchScore, cn } from '@/lib/utils'
@@ -98,7 +98,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
       )}
 
       {/* Match list */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         {pageMatches.length === 0 ? (
           <p className="px-4 py-6 text-center text-[13px] text-muted-foreground">
             {matches.length === 0 ? 'Sin partidas registradas.' : 'No hay partidas que coincidan con los filtros.'}
@@ -142,7 +142,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                   <div className="flex items-center gap-1 font-semibold tracking-wide">
                   <span className="text-green-400"><AnimatedNumber value={entry.kills} /></span>
                   <span className="text-muted-foreground/40">/</span>
-                  <span className="text-primary"><AnimatedNumber value={entry.deaths} direction="down" /></span>
+                  <span className="text-brand"><AnimatedNumber value={entry.deaths} direction="down" /></span>
                   <span className="text-muted-foreground/40">/</span>
                   <span className="text-blue-400"><AnimatedNumber value={entry.assists} /></span>
                 </div>
@@ -208,7 +208,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                   aria-label={`Ir a página ${i + 1}`}
                   aria-current={i === page ? 'page' : undefined}
                   className={`flex h-7 min-w-[28px] items-center justify-center rounded border px-2 text-[12px] font-medium transition-colors ${i === page
-                      ? 'border-primary bg-primary/15 text-primary'
+                      ? 'border-primary bg-primary/15 text-brand'
                       : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
                 >

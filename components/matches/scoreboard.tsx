@@ -24,7 +24,7 @@ export function Scoreboard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border border-border bg-card',
+        'overflow-hidden rounded-xl border border-border bg-card',
         isWinner && 'border-l-2 border-l-primary',
       )}
     >
@@ -35,7 +35,7 @@ export function Scoreboard({
         <span
           className={cn(
             'font-mono text-lg font-bold',
-            isWinner ? 'text-primary' : 'text-muted-foreground',
+            isWinner ? 'text-brand' : 'text-muted-foreground',
           )}
         >
           <AnimatedNumber value={score} className="font-mono text-lg font-bold" />
@@ -72,7 +72,7 @@ export function Scoreboard({
                 <td className="px-3 py-2.5">
                   <Link
                     href={`/players/${e.playerId}`}
-                    className="flex items-center gap-2 transition-colors hover:text-primary"
+                    className="flex items-center gap-2 transition-colors hover:text-brand"
                   >
                     <PlayerAvatar player={player} size={26} />
                     <span className="text-[14px] font-medium text-foreground flex items-center gap-1.5">

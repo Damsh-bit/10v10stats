@@ -3,6 +3,7 @@
 import type { RatedPlayer } from '@/lib/teamBalancer'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { Dices } from 'lucide-react'
+import { motion } from 'motion/react'
 
 export function TeamResultCard({
   teamName,
@@ -17,7 +18,7 @@ export function TeamResultCard({
   const avgRating = totalRating / (players.length || 1)
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg shadow-black/20">
       <div className="bg-muted px-4 py-3 border-b border-border text-center">
         <h3 className="font-heading text-lg font-bold uppercase tracking-widest text-foreground">
           {teamName}
@@ -28,8 +29,12 @@ export function TeamResultCard({
         {players.map((p, i) => {
           const wr = p.matches > 0 ? ((p.wins / p.matches) * 100).toFixed(0) : 0
           return (
-            <div
+            <motion.div
               key={p.player.id}
+              layout
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.05 }}
               className={`flex items-center justify-between px-4 py-3 ${
                 i > 0 ? 'border-t border-border/50' : ''
               } hover:bg-white/[0.02] transition-colors`}
@@ -47,7 +52,7 @@ export function TeamResultCard({
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right flex flex-col">
-                  <span className="font-mono text-[15px] font-bold text-primary">
+                  <span className="font-mono text-[15px] font-bold text-brand">
                     {p.rating.toFixed(1)}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider text-muted-foreground">pts</span>
@@ -55,14 +60,14 @@ export function TeamResultCard({
                 {onRerollPlayer && (
                   <button
                     onClick={() => onRerollPlayer(p.player.id)}
-                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+                    className="p-1.5 text-muted-foreground hover:text-brand hover:bg-primary/10 rounded-full transition-colors"
                     title="Cambiar jugador por otro al azar"
                   >
                     <Dices className="h-4 w-4" />
                   </button>
                 )}
               </div>
-            </div>
+            </motion.div>
           )
         })}
       </div>

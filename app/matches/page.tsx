@@ -1,24 +1,41 @@
-import { getLiveData } from '@/lib/api'
-import { getMatchesByDate } from '@/lib/matches-calendar'
+import { Suspense } from 'react'
+import { getLeagueData } from '@/lib/api'
 import { MatchesPageContent } from '@/components/matches/matches-page-content'
+import { Reveal } from '@/components/motion/reveal'
 
 export const revalidate = 60
 
 export default async function MatchesPage() {
-  const [data, matchesByDate] = await Promise.all([getLiveData(), getMatchesByDate()])
-  const sorted = [...data.matches].sort((a, b) => b.date.localeCompare(a.date))
+  const league = await getLeagueData()
+  const seasonMatches = league.matches.filter((m) => m.seasonId === league.currentSeason.id).length
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Partidas
-        </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {data.matches.length} custom matches played. Filter by map below.
-        </p>
+    <main className="cs-grid min-h-screen">
+      <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
+        <Reveal immediate className="mb-6">
+          <span className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">10v10 Stats</span>
+          <h1 className="font-heading text-3xl font-bold uppercase tracking-wide text-foreground">Partidas</h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            {seasonMatches} {seasonMatches === 1 ? 'partida' : 'partidas'} en la {league.currentSeason.name} ·{' '}
+            {league.matches.length} en total. Filtrá por temporada, mapa o fecha.
+          </p>
+        </Reveal>
+        <Suspense
+          fallback={
+            <div className="flex flex-col gap-3" aria-hidden="true">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-24 animate-pulse rounded-xl border border-border bg-card" />
+              ))}
+            </div>
+          }
+        >
+          <MatchesPageContent
+            matches={league.matches}
+            seasons={league.seasons}
+            currentSeasonId={league.currentSeason.id}
+          />
+        </Suspense>
       </div>
-      <MatchesPageContent matches={sorted} matchesByDate={matchesByDate} />
     </main>
   )
 }

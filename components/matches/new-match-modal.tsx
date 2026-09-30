@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Loader2, Upload, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Loader2, Plus, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type Team = 'CT' | 'T' | 'EMPATE'
 
@@ -73,7 +75,14 @@ function createInitialFormState(): FormState {
   }
 }
 
-export function NewMatchModal() {
+export function NewMatchModal({
+  triggerLabel = 'Nueva partida',
+  triggerClassName,
+}: {
+  triggerLabel?: string
+  triggerClassName?: string
+} = {}) {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState(1)
   const [players, setPlayers] = useState<PlayerOption[]>([])
@@ -149,6 +158,10 @@ export function NewMatchModal() {
   const handleClose = () => {
     if (screenshotUrl) {
       URL.revokeObjectURL(screenshotUrl)
+    }
+    // Si se guardó una partida, se refresca para ver el ladder actualizado.
+    if (successMessage) {
+      router.refresh()
     }
     setIsOpen(false)
     setStep(1)
@@ -376,7 +389,7 @@ export function NewMatchModal() {
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card/70 p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-brand">
                 <Upload className="h-5 w-5" />
               </div>
               <div>
@@ -389,7 +402,7 @@ export function NewMatchModal() {
           </div>
 
           <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background/70 px-6 py-10 text-center transition hover:border-primary hover:bg-primary/5">
-            <Upload className="mb-3 h-8 w-8 text-primary" />
+            <Upload className="mb-3 h-8 w-8 text-brand" />
             <span className="text-sm font-semibold text-foreground">Haz click o arrastra una imagen</span>
             <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               PNG, JPG o WEBP
@@ -416,7 +429,7 @@ export function NewMatchModal() {
                   type="button"
                   onClick={analyzeWithAI}
                   disabled={isAnalyzing}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-semibold text-brand transition hover:bg-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isAnalyzing ? (
                     <>
@@ -452,7 +465,7 @@ export function NewMatchModal() {
           {screenshotUrl ? (
             <div className="space-y-2 rounded-xl border border-border bg-card/70 p-3">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Captura de referencia</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand">Captura de referencia</p>
                 {aiSuccess && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
                     <CheckCircle2 className="h-3 w-3" />
@@ -565,7 +578,7 @@ export function NewMatchModal() {
               <select
                 value={form.team_a_name}
                 onChange={(event) => setForm((prev) => ({ ...prev, team_a_name: event.target.value }))}
-                className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-primary outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <option value="Equipo Papi">EQUIPO PAPI</option>
                 <option value="Equipo Viejo">EQUIPO VIEJO</option>
@@ -621,7 +634,7 @@ export function NewMatchModal() {
               <select
                 value={form.team_b_name}
                 onChange={(event) => setForm((prev) => ({ ...prev, team_b_name: event.target.value }))}
-                className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-primary outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <option value="Equipo Papi">EQUIPO PAPI</option>
                 <option value="Equipo Viejo">EQUIPO VIEJO</option>
@@ -680,7 +693,7 @@ export function NewMatchModal() {
     return (
       <div className="space-y-4">
         <div className="rounded-xl border border-border bg-card/70 p-4">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Resumen</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">Resumen</h3>
           <div className="mt-3 space-y-2 text-sm text-muted-foreground">
             <p>
               <span className="font-semibold text-foreground">Mapa:</span> {form.map || 'Sin info'}
@@ -712,17 +725,18 @@ export function NewMatchModal() {
 
   return (
     <>
-      <Button variant="default" onClick={handleOpen}>
-        Nueva partida
+      <Button variant="default" onClick={handleOpen} className={cn('gap-1.5', triggerClassName)}>
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        {triggerLabel}
       </Button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:p-4">
           <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center">
-            <div className="relative flex min-h-screen flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl sm:min-h-[80vh] sm:rounded-2xl sm:border sm:border-border">
+            <div className="relative flex min-h-screen flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 sm:min-h-[80vh] sm:rounded-2xl sm:border sm:border-border">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">Nueva partida</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Nueva partida</p>
                   <h2 className="text-xl font-semibold text-foreground">Registrar match de CS2</h2>
                 </div>
                 <button onClick={handleClose} className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">

@@ -13,17 +13,29 @@ export const RECORD_BADGE_CONFIG: Record<RecordType, { label: string; icon: Reac
   min_damage: { label: 'MENOR DAÑO', icon: ShieldQuestion, colorClass: 'text-slate-400 border-slate-400/30 bg-slate-400/10' },
 }
 
-export function RecordBadge({ type }: { type: RecordType }) {
+export function RecordBadge({ type, compact = false }: { type: RecordType; compact?: boolean }) {
   const config = RECORD_BADGE_CONFIG[type]
   if (!config) return null
   const Icon = config.icon
+
+  if (compact) {
+    return (
+      <span
+        title={config.label}
+        aria-label={config.label}
+        className={`flex h-[18px] w-[18px] shrink-0 cursor-help items-center justify-center rounded border ${config.colorClass}`}
+      >
+        <Icon className="h-3 w-3" aria-hidden="true" />
+      </span>
+    )
+  }
 
   return (
     <span
       title={config.label}
       className={`flex shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-widest shadow-sm cursor-help ${config.colorClass}`}
     >
-      <Icon className="h-3 w-3" /> {config.label}
+      <Icon className="h-3 w-3" aria-hidden="true" /> {config.label}
     </span>
   )
 }

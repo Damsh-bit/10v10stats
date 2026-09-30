@@ -226,13 +226,13 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
   }
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4">
+    <section className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">Nelson Vote</p>
+          <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Nelson Vote</p>
           <h3 className="text-base font-semibold text-foreground">Votación de la fecha</h3>
         </div>
-        <div className="rounded-full bg-primary/10 p-2 text-primary">
+        <div className="rounded-full bg-primary/10 p-2 text-brand">
           <Vote className="h-4 w-4" />
         </div>
       </div>
@@ -252,7 +252,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
 
         {voteState.winnerName ? (
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-primary">
+            <div className="flex items-center gap-2 text-brand">
               <Crown className="h-4 w-4" />
               <span>Último ganador: {voteState.winnerName}</span>
             </div>
@@ -369,7 +369,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
       {authError && (showFinishPrompt || showStartPrompt) && <p className="mt-2 text-xs text-destructive">{authError}</p>}
 
       {message ? (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
           <CheckCircle2 className="h-4 w-4" />
           <span>{message}</span>
         </div>
@@ -443,7 +443,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
               💩
             </div>
             <div className="rounded-xl border border-border bg-card/90 px-8 py-6 shadow-2xl backdrop-blur-md">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">El nuevo Nelson es:</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-brand">El nuevo Nelson es:</h2>
               <p className="mt-2 text-4xl font-bold text-foreground drop-shadow-md">
                 {winnerPopup.name}
               </p>

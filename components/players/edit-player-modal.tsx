@@ -61,7 +61,7 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-brand transition-colors hover:bg-primary hover:text-white"
         title="Editar jugador"
       >
         <Pencil className="h-3.5 w-3.5" />
@@ -70,7 +70,7 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg">
         <button
           onClick={() => setIsOpen(false)}
@@ -123,7 +123,7 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
                     setPhotoUrl('')
                   }
                 }}
-                className="w-full text-foreground file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+                className="w-full text-foreground file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand hover:file:bg-primary/20"
               />
             </div>
             <div className="space-y-2 text-sm">

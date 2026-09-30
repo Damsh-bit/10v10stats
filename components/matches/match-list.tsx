@@ -4,10 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { Match, CSMap } from '@/types'
 
-import { formatDate } from '@/lib/api'
+import { formatDate, mapImageUrl } from '@/lib/format'
 import { toDateKey } from '@/lib/matches-calendar'
 import { cn, getTeamColorClass } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { motion } from 'motion/react'
 
 const mapColors: Record<CSMap, string> = {
   Mirage: '#c2853b',
@@ -69,7 +70,7 @@ export function MatchList({
           ))}
         </div>
 
-        {dates.length > 0 && (
+        {dates.length > 1 && (
           <select
             className="bg-card border border-border text-foreground text-[13px] rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/50 cursor-pointer w-full sm:w-auto"
             value={dateFilter}
@@ -87,7 +88,7 @@ export function MatchList({
 
       {/* Match cards */}
       <div className="flex flex-col gap-3">
-        {paginated.map((match) => {
+        {paginated.map((match, index) => {
           const isDraw = match.ctScore === match.tScore;
           const isCtWinner = match.winnerTeam
             ? (match.winnerTeam === 'CT' || match.winnerTeam === match.teamAName)
@@ -96,14 +97,17 @@ export function MatchList({
             ? (match.teamAName || 'CT')
             : (match.teamBName || 'T')
           return (
-            <div
+            <motion.div
               key={match.id}
-              className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/50 sm:flex-row"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.3), ease: [0.22, 1, 0.36, 1] }}
+              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/60 sm:flex-row"
             >
               <div
                 className="h-24 w-full shrink-0 bg-cover bg-center sm:h-auto sm:w-40"
                 style={{
-                  backgroundImage: `url('/maps/${match.map.toLowerCase().replace(/\s+/g, '')}.webp')`,
+                  backgroundImage: `url('${mapImageUrl(match.map)}')`,
                   backgroundColor: mapColors[match.map] ?? '#1e293b',
                 }}
               />
@@ -135,13 +139,15 @@ export function MatchList({
                   </Link>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )
         })}
 
         {paginated.length === 0 && (
-          <p className="py-10 text-center text-[13px] text-muted-foreground">
-            No se encontraron partidas con los filtros seleccionados.
+          <p className="rounded-xl border border-dashed border-border py-10 text-center text-[13px] text-muted-foreground">
+            {matches.length === 0
+              ? 'Todavía no hay partidas en esta temporada.'
+              : 'No se encontraron partidas con los filtros seleccionados.'}
           </p>
         )}
       </div>
@@ -198,7 +204,7 @@ export function MatchList({
                   className={cn(
                     'flex h-7 min-w-[28px] items-center justify-center rounded border px-2 text-[12px] font-medium transition-colors',
                     i === currentPage
-                      ? 'border-primary bg-primary/15 text-primary'
+                      ? 'border-primary bg-primary/15 text-brand'
                       : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground',
                   )}
                 >
@@ -238,7 +244,7 @@ function FilterButton({
       className={cn(
         'rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors',
         active
-          ? 'border-primary bg-primary/15 text-primary'
+          ? 'border-primary bg-primary/15 text-brand'
           : 'border-border text-muted-foreground hover:text-foreground',
       )}
     >

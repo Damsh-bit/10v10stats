@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 const TABULADOR_BUCKET = process.env.SUPABASE_TABULADOR_BUCKET ?? 'tabulador'
@@ -83,6 +84,8 @@ export async function PATCH(
     if (error) {
       throw error
     }
+
+    revalidatePath('/', 'layout')
 
     return NextResponse.json({ success: true, photoUrl })
   } catch (err) {

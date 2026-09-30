@@ -1,5 +1,6 @@
 import type { LiveData, Match, Player, PlayerStats } from '@/types'
 import { getPlayerStatsForData } from '@/lib/api'
+import { isExcludedPlayer } from '@/lib/utils'
 
 export type InsightCategory =
   | 'day_performance'
@@ -22,6 +23,8 @@ export type Insight = {
   text: string
   highlightedText: string
   icon: string
+  /** Temporada de la que sale el dato, cuando no es la activa. */
+  scope?: string
 }
 
 const DAY_NAMES = [
@@ -34,11 +37,8 @@ const DAY_NAMES = [
   'los sábados',
 ]
 
-const EXCLUDED_PLAYER_NAMES = ['sergio vergara']
-
 function isExcluded(player?: Player) {
-  if (!player) return true
-  return EXCLUDED_PLAYER_NAMES.includes(player.name.toLowerCase())
+  return isExcludedPlayer(player)
 }
 
 export function generateInsights(data: LiveData): Insight[] {
@@ -103,7 +103,7 @@ export function generateInsights(data: LiveData): Insight[] {
         title: 'Día Favorito',
         icon: '📅',
         text: `El jugador ${player.name} rinde mejor ${dayName}: acumula un ${pct}% de victorias (${bestDayWins}V-${bestDayTotal - bestDayWins}D).`,
-        highlightedText: `El jugador <strong class="text-primary font-semibold">${player.name}</strong> rinde mejor <span class="text-emerald-400 font-semibold">${dayName}</span>: acumula un <span class="text-amber-400 font-bold">${pct}%</span> de victorias (${bestDayWins}V-${bestDayTotal - bestDayWins}D).`,
+        highlightedText: `El jugador <strong class="text-brand font-semibold">${player.name}</strong> rinde mejor <span class="text-emerald-400 font-semibold">${dayName}</span>: acumula un <span class="text-amber-400 font-bold">${pct}%</span> de victorias (${bestDayWins}V-${bestDayTotal - bestDayWins}D).`,
       })
     }
   })
@@ -156,7 +156,7 @@ export function generateInsights(data: LiveData): Insight[] {
         title: 'Especialista de Mapa',
         icon: '🗺️',
         text: `${player.name} domina en ${bestMap} con un winrate del ${pct}% (${mapWins}V-${mapTotal - mapWins}D) y K/D de ${mapKd}.`,
-        highlightedText: `<strong class="text-primary font-semibold">${player.name}</strong> domina en <span class="text-sky-400 font-semibold">${bestMap}</span> con un winrate del <span class="text-amber-400 font-bold">${pct}%</span> (${mapWins}V-${mapTotal - mapWins}D) y K/D de <span class="text-emerald-400 font-bold">${mapKd}</span>.`,
+        highlightedText: `<strong class="text-brand font-semibold">${player.name}</strong> domina en <span class="text-sky-400 font-semibold">${bestMap}</span> con un winrate del <span class="text-amber-400 font-bold">${pct}%</span> (${mapWins}V-${mapTotal - mapWins}D) y K/D de <span class="text-emerald-400 font-bold">${mapKd}</span>.`,
       })
     }
   })
@@ -201,7 +201,7 @@ export function generateInsights(data: LiveData): Insight[] {
       title: 'Dupla Letal',
       icon: '🤝',
       text: `${d.p1.name} y ${d.p2.name} son una dupla temible: jugando juntos ganan el ${pct}% de las partidas (${d.togetherWins}V-${d.togetherTotal - d.togetherWins}D).`,
-      highlightedText: `<strong class="text-primary font-semibold">${d.p1.name}</strong> y <strong class="text-primary font-semibold">${d.p2.name}</strong> son una dupla temible: jugando juntos ganan el <span class="text-amber-400 font-bold">${pct}%</span> de las partidas (${d.togetherWins}V-${d.togetherTotal - d.togetherWins}D).`,
+      highlightedText: `<strong class="text-brand font-semibold">${d.p1.name}</strong> y <strong class="text-brand font-semibold">${d.p2.name}</strong> son una dupla temible: jugando juntos ganan el <span class="text-amber-400 font-bold">${pct}%</span> de las partidas (${d.togetherWins}V-${d.togetherTotal - d.togetherWins}D).`,
     })
   })
 
@@ -244,7 +244,7 @@ export function generateInsights(data: LiveData): Insight[] {
         title: 'Némesis Directo',
         icon: '⚔️',
         text: `El rival más difícil de ${r.p2.name} es ${r.p1.name}: en enfrentamientos directos, ${r.p1.name} se ha llevado el ${pct}% de las victorias (${r.p1Wins}V-${r.total - r.p1Wins}D).`,
-        highlightedText: `El rival más difícil de <strong class="text-rose-400 font-semibold">${r.p2.name}</strong> es <strong class="text-primary font-semibold">${r.p1.name}</strong>: en duelos directos, ${r.p1.name} ganó el <span class="text-amber-400 font-bold">${pct}%</span> (${r.p1Wins}V-${r.total - r.p1Wins}D).`,
+        highlightedText: `El rival más difícil de <strong class="text-rose-400 font-semibold">${r.p2.name}</strong> es <strong class="text-brand font-semibold">${r.p1.name}</strong>: en duelos directos, ${r.p1.name} ganó el <span class="text-amber-400 font-bold">${pct}%</span> (${r.p1Wins}V-${r.total - r.p1Wins}D).`,
       })
     })
 
@@ -257,7 +257,7 @@ export function generateInsights(data: LiveData): Insight[] {
         title: 'En Racha 🔥',
         icon: '🔥',
         text: `¡${s.player.name} está encendido! Registra una racha activa de ${s.currentStreak} victorias consecutivas.`,
-        highlightedText: `¡<strong class="text-primary font-semibold">${s.player.name}</strong> está encendido! Registra una racha activa de <span class="text-amber-400 font-bold">${s.currentStreak} victorias</span> consecutivas.`,
+        highlightedText: `¡<strong class="text-brand font-semibold">${s.player.name}</strong> está encendido! Registra una racha activa de <span class="text-amber-400 font-bold">${s.currentStreak} victorias</span> consecutivas.`,
       })
     }
   })
@@ -271,7 +271,7 @@ export function generateInsights(data: LiveData): Insight[] {
       title: 'Cirujano de Headshots',
       icon: '🎯',
       text: `${topHs.player.name} es el francotirador de la liga con un ${topHs.hsPct}% de bajas por tiros a la cabeza.`,
-      highlightedText: `<strong class="text-primary font-semibold">${topHs.player.name}</strong> es el cirujano de los disparos con un <span class="text-amber-400 font-bold">${topHs.hsPct}%</span> de precisión en headshots.`,
+      highlightedText: `<strong class="text-brand font-semibold">${topHs.player.name}</strong> es el cirujano de los disparos con un <span class="text-amber-400 font-bold">${topHs.hsPct}%</span> de precisión en headshots.`,
     })
   }
 
@@ -284,7 +284,7 @@ export function generateInsights(data: LiveData): Insight[] {
       title: 'Máquina de Daño',
       icon: '💥',
       text: `${topDamage.player.name} lidera la tabla de daño promedio con ${topDamage.adm} ADM por ronda.`,
-      highlightedText: `<strong class="text-primary font-semibold">${topDamage.player.name}</strong> lidera en potencia de fuego promediando <span class="text-amber-400 font-bold">${topDamage.adm} ADM</span> por ronda.`,
+      highlightedText: `<strong class="text-brand font-semibold">${topDamage.player.name}</strong> lidera en potencia de fuego promediando <span class="text-amber-400 font-bold">${topDamage.adm} ADM</span> por ronda.`,
     })
   }
 
@@ -297,7 +297,7 @@ export function generateInsights(data: LiveData): Insight[] {
       title: 'Impacto Global',
       icon: '👑',
       text: `${topKda.player.name} ostenta el mejor K/D global del torneo con un ratio de ${topKda.kda}.`,
-      highlightedText: `<strong class="text-primary font-semibold">${topKda.player.name}</strong> ostenta el mejor K/D global del torneo con un ratio de <span class="text-emerald-400 font-bold">${topKda.kda}</span>.`,
+      highlightedText: `<strong class="text-brand font-semibold">${topKda.player.name}</strong> ostenta el mejor K/D global del torneo con un ratio de <span class="text-emerald-400 font-bold">${topKda.kda}</span>.`,
     })
   }
 
@@ -310,7 +310,7 @@ export function generateInsights(data: LiveData): Insight[] {
       title: 'Rey Nelson 🦩',
       icon: '🦩',
       text: `${topNelsonPlayer.name} lidera la tabla del pánico con ${topNelsonPlayer.nelsons} Nelsons acumulados.`,
-      highlightedText: `<strong class="text-primary font-semibold">${topNelsonPlayer.name}</strong> encabeza la Liga Nelson con <span class="text-rose-400 font-bold">${topNelsonPlayer.nelsons} Nelsons</span> acumulados.`,
+      highlightedText: `<strong class="text-brand font-semibold">${topNelsonPlayer.name}</strong> encabeza la Liga Nelson con <span class="text-rose-400 font-bold">${topNelsonPlayer.nelsons} Nelsons</span> acumulados.`,
     })
   }
 

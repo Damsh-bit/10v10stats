@@ -33,7 +33,8 @@ export function PlayerSelector({
             <button
               key={p.player.id}
               onClick={() => onToggle(p.player.id)}
-              className={`flex items-center gap-3 rounded-lg border p-2.5 transition-all ${
+              aria-pressed={isSelected}
+              className={`flex items-center gap-3 rounded-lg border p-2.5 transition-all active:scale-[0.97] ${
                 isSelected
                   ? 'border-primary/50 bg-primary/10 shadow-[0_0_10px_rgba(149,12,66,0.1)]'
                   : 'border-border/50 bg-background/50 opacity-60 hover:opacity-100 hover:border-border'

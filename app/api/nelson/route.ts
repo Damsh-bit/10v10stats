@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { finishNelsonVote, getNelsonData, startNelsonVote, voteForNelson } from '@/lib/nelson'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
 
     if (body.action === 'finish') {
       const result = await finishNelsonVote(body.password ?? '')
+      revalidatePath('/', 'layout')
       return NextResponse.json(result)
     }
 

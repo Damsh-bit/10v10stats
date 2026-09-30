@@ -1,4 +1,5 @@
 import type { LiveData, PlayerStats } from '@/types'
+import { isExcludedPlayer } from '@/lib/utils'
 
 
 export type RecordType = 
@@ -44,8 +45,7 @@ export function getPlayerRecords(data: LiveData, stats: PlayerStats[]): PlayerRe
   let maxDamage = -1, minDamage = Infinity
 
   // Find the absolute min/max values
-  const excludedPlayerNames = ['sergio vergara']
-  const excludedPlayerIds = data.players.filter(p => excludedPlayerNames.includes(p.name.toLowerCase())).map(p => p.id)
+  const excludedPlayerIds = data.players.filter((p) => isExcludedPlayer(p)).map((p) => p.id)
 
   data.matches.forEach(m => {
     m.players.forEach(p => {

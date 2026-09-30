@@ -1,10 +1,14 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import Link from 'next/link'
 import { Geist, Geist_Mono, Oswald } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
+import { SeasonBanner } from '@/components/season/season-banner'
+import { MotionProvider } from '@/components/motion/motion-provider'
+import { getCurrentSeason, getPreviousSeason, getSeasons } from '@/lib/seasons'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import pkg from '../package.json'
 
@@ -20,9 +24,9 @@ const oswald = Oswald({
 })
 
 export const metadata: Metadata = {
-  title: '10v10 STATS — CS2 Match Tracker',
+  title: '10v10 STATS — Season 2',
   description:
-    '10v10 STATS — track your CS2 10v10 match stats, leaderboards and the Nelson League.',
+    '10v10 STATS — ladder, récords y estadísticas de las partidas 10v10 de CS2. Arrancó la Season 2.',
   generator: 'v0.app',
   icons: {
     icon: '/logo.png',
@@ -36,32 +40,48 @@ export const viewport: Viewport = {
   themeColor: '#01385f',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const seasons = await getSeasons()
+  const currentSeason = getCurrentSeason(seasons)
+  const previousSeason = getPreviousSeason(seasons, currentSeason)
+
   return (
     <html
-      lang="en"
+      lang="es"
       className={`dark ${geistSans.variable} ${geistMono.variable} ${oswald.variable} bg-background`}
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <Navbar />
-        <CuriositiesBanner />
-        <div className="flex-1">{children}</div>
-        <footer className="border-t border-border bg-background py-8 flex flex-col items-center justify-center text-sm text-muted-foreground">
-          <p className="flex items-center justify-center gap-1.5">
-            Desarrollado con <span className="text-rose-500">❤️</span> por
-            <span className="font-heading font-bold uppercase tracking-widest text-primary">
-              Papi y Tutu
-            </span>
-          </p>
-          <p className="mt-2 text-[10px] opacity-40 font-mono tracking-widest" title="Versión de la aplicación">
-            v{pkg.version}
-          </p>
-        </footer>
-        <RecommendationsWidget />
+        <MotionProvider>
+          <SeasonBanner
+            seasonSlug={currentSeason.slug}
+            seasonNumber={currentSeason.id}
+            previousSeasonSlug={previousSeason?.slug ?? null}
+            previousSeasonName={previousSeason?.name ?? null}
+          />
+          <Navbar seasonNumber={currentSeason.id} />
+          <CuriositiesBanner />
+          <div className="flex-1">{children}</div>
+          <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background py-8 text-sm text-muted-foreground">
+            <p className="flex items-center justify-center gap-1.5">
+              Desarrollado con <span className="text-rose-500">❤️</span> por
+              <span className="font-heading font-bold uppercase tracking-widest text-brand">
+                Papi y Tutu
+              </span>
+            </p>
+            <p className="flex items-center gap-2 font-mono text-[10px] tracking-widest opacity-50">
+              <Link href="/temporadas" className="transition-colors hover:text-foreground">
+                {currentSeason.name.toUpperCase()}
+              </Link>
+              <span aria-hidden="true">·</span>
+              <span title="Versión de la aplicación">v{pkg.version}</span>
+            </p>
+          </footer>
+          <RecommendationsWidget />
+        </MotionProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
         <SpeedInsights />
       </body>

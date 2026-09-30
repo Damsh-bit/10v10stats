@@ -5,6 +5,7 @@ export type Player = {
   avatarColor: string
   photoUrl?: string
   nelsons: number
+  fakes?: number
 }
 
 export type MatchPlayer = {
@@ -25,6 +26,7 @@ export type CSMap = string
 
 export type Match = {
   id: string
+  seasonId: number
   map: CSMap
   date: string
   ctScore: number
@@ -65,7 +67,7 @@ export type PlayerStats = {
   hsPct: number
   positiveGames: number
   negativeGames: number
-  trend?: 'up' | 'down' | 'same'
+  trend?: 'up' | 'down' | 'same' | 'new'
   currentStreak: number
   currentLossStreak: number
 }

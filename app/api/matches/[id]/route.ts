@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getSupabaseAdminClient } from '@/lib/supabase'
 
 type EditMatchPlayerPayload = {
@@ -83,7 +84,7 @@ export async function PUT(
       mvp_id: mvpPlayerId || matchData.mvp_id,
     }
     if (payload.map) updateData.map = payload.map
-    if (payload.date) updateData.date = payload.date
+    if (payload.date) updateData.played_at = payload.date
 
     const { error: updateMatchError } = await supabase
       .from('matches')
@@ -135,6 +136,8 @@ export async function PUT(
         await supabase.from('players').update({ mvps: (newMvpData.mvps || 0) + 1 }).eq('id', mvpPlayerId)
       }
     }
+
+    revalidatePath('/', 'layout')
 
     return NextResponse.json({ success: true })
   } catch (error) {

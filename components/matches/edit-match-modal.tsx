@@ -133,7 +133,8 @@ export function EditMatchModal({
       const payload = {
         password,
         map,
-        date: new Date(date).toISOString(),
+        // El input muestra la hora en UTC (así se guardan las partidas): se reinterpreta igual.
+        date: date ? new Date(`${date}:00Z`).toISOString() : undefined,
         score_ct: Number(scoreCt),
         score_t: Number(scoreT),
         players: players.map((row) => ({
@@ -177,12 +178,12 @@ export function EditMatchModal({
       </Button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:p-4">
           <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col justify-center py-10">
             <div className="relative flex flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl sm:rounded-2xl sm:border sm:border-border">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">Edición</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Edición</p>
                   <h2 className="text-xl font-semibold text-foreground">Editar Datos de Partida</h2>
                 </div>
                 <button
@@ -196,7 +197,7 @@ export function EditMatchModal({
               {!isAuthenticated ? (
                 <div className="mt-6 flex flex-col items-center py-6 text-center">
                   <div className="mb-4 rounded-full bg-primary/10 p-3">
-                    <Lock className="h-6 w-6 text-primary" />
+                    <Lock className="h-6 w-6 text-brand" />
                   </div>
                   <h3 className="mb-2 text-lg font-semibold text-foreground">Acceso Restringido</h3>
                   <p className="mb-6 text-sm text-muted-foreground">
@@ -277,7 +278,7 @@ export function EditMatchModal({
                       <select
                         value={teamALabel}
                         onChange={(e) => handleGroupTeamChange(teamALabel, e.target.value)}
-                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-primary outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
                       >
                         <option value={teamALabel}>{teamALabel}</option>
                         <option value={teamBLabel}>{teamBLabel}</option>
@@ -371,7 +372,7 @@ export function EditMatchModal({
                       <select
                         value={teamBLabel}
                         onChange={(e) => handleGroupTeamChange(teamBLabel, e.target.value)}
-                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-primary outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
                       >
                         <option value={teamALabel}>{teamALabel}</option>
                         <option value={teamBLabel}>{teamBLabel}</option>

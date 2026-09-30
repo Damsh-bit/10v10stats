@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import {
   Radar,
   RadarChart,
@@ -9,8 +9,9 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import { getSupabaseClient } from '@/lib/supabase'
 import AnimatedNumber from '@/components/ui/animated-number'
+import { Reveal } from '@/components/motion/reveal'
+import type { MapWinrateRow } from '@/lib/season-stats'
 
 // ─── Team identifier configuration ───────────────────────────────────────────
 // The team name matching is case-insensitive and uses substring matching.
@@ -30,12 +31,7 @@ const TEAM_VIEJO_COLOR = '#a78bfa'  // violet-400
 type MapStat = { map: string; won: number; played: number; winrate: number }
 type TeamStats = Record<string, MapStat>
 
-type MatchRow = {
-  map: string | null
-  team_a_name: string | null
-  team_b_name: string | null
-  winner_team: string | null
-}
+type MatchRow = MapWinrateRow
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function matchesTeam(name: string | null | undefined, keyword: string): boolean {
@@ -49,8 +45,8 @@ function buildTeamStats(rows: MatchRow[], keyword: string): TeamStats {
   for (const row of rows) {
     if (!row.map) continue
 
-    const isTeamA = matchesTeam(row.team_a_name, keyword)
-    const isTeamB = matchesTeam(row.team_b_name, keyword)
+    const isTeamA = matchesTeam(row.teamAName, keyword)
+    const isTeamB = matchesTeam(row.teamBName, keyword)
 
     if (!isTeamA && !isTeamB) continue
 
@@ -63,7 +59,7 @@ function buildTeamStats(rows: MatchRow[], keyword: string): TeamStats {
 
     // winner_team is 'CT' for team_a, 'T' for team_b (or custom team name)
     // We compare winner_team against both the keyword and the positional CT/T values.
-    const winnerRaw = row.winner_team?.toLowerCase().trim() ?? ''
+    const winnerRaw = row.winnerTeam?.toLowerCase().trim() ?? ''
     const isCtWinner = winnerRaw === 'ct'
     const isTWinner = winnerRaw === 't'
     const winnerMatchesPapi = winnerRaw.includes(keyword)
@@ -130,7 +126,7 @@ function TeamRadarCard({
   const sorted = [...chartData].sort((a, b) => b.winrate - a.winrate)
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div className="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Card title */}
       <h3
         className="font-heading text-sm font-bold uppercase tracking-[0.2em]"
@@ -222,88 +218,22 @@ function TeamRadarCard({
 }
 
 // ─── Main section ─────────────────────────────────────────────────────────────
-export function MapWinrateSection() {
-  const [papiStats, setPapiStats] = useState<TeamStats>({})
-  const [viejoStats, setViejoStats] = useState<TeamStats>({})
-  const [maps, setMaps] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
+export function MapWinrateSection({ rows }: { rows: MapWinrateRow[] }) {
+  const { papiStats, viejoStats, maps } = useMemo(() => {
+    const papi = buildTeamStats(rows, TEAM_PAPI_KEYWORD)
+    const viejo = buildTeamStats(rows, TEAM_VIEJO_KEYWORD)
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const supabase = getSupabaseClient()
-        if (!supabase) {
-          setLoading(false)
-          return
-        }
-
-        const { data, error } = await supabase
-          .from('matches')
-          .select('map, team_a_name, team_b_name, winner_team')
-
-        if (error || !data) {
-          setLoading(false)
-          return
-        }
-
-        const rows = data as MatchRow[]
-
-        const papi = buildTeamStats(rows, TEAM_PAPI_KEYWORD)
-        const viejo = buildTeamStats(rows, TEAM_VIEJO_KEYWORD)
-
-        // Collect all unique maps that appear in either team's stats,
-        // sorted alphabetically so both charts share the same axis order.
-        const allMaps = Array.from(
-          new Set([...Object.keys(papi), ...Object.keys(viejo)])
-        ).sort()
-
-        // Ensure both teams have an entry for every map (winrate = 0 if not played)
-        for (const map of allMaps) {
-          if (!papi[map]) papi[map] = { map, won: 0, played: 0, winrate: 0 }
-          if (!viejo[map]) viejo[map] = { map, won: 0, played: 0, winrate: 0 }
-        }
-
-        setPapiStats(papi)
-        setViejoStats(viejo)
-        setMaps(allMaps)
-      } catch {
-        // Silently fail — section just won't render data
-      } finally {
-        setLoading(false)
-      }
+    // Mismo orden de ejes en ambos radares; winrate 0 si un equipo no jugó el mapa.
+    const allMaps = Array.from(new Set([...Object.keys(papi), ...Object.keys(viejo)])).sort()
+    for (const map of allMaps) {
+      if (!papi[map]) papi[map] = { map, won: 0, played: 0, winrate: 0 }
+      if (!viejo[map]) viejo[map] = { map, won: 0, played: 0, winrate: 0 }
     }
 
-    fetchData()
-  }, [])
+    return { papiStats: papi, viejoStats: viejo, maps: allMaps }
+  }, [rows])
 
-  if (loading) {
-    return (
-      <section>
-        <div className="mb-2">
-          <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-foreground">
-            ▶ Winrate por mapa
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {[1, 2].map((n) => (
-            <div
-              key={n}
-              className="flex h-[380px] items-center justify-center rounded-lg border border-border bg-card"
-            >
-              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-                <img
-                  src="/Sticker loader.png"
-                  alt="loader"
-                  className="h-10 w-10 animate-pulse opacity-60"
-                />
-                <span>Cargando…</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    )
-  }
+  if (maps.length === 0) return null
 
   return (
     <section>
@@ -311,26 +241,18 @@ export function MapWinrateSection() {
         <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-foreground">
           ▶ Winrate por mapa
         </h2>
-        {maps.length > 0 && (
-          <span className="rounded bg-card border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-            {maps.length} mapas
-          </span>
-        )}
+        <span className="rounded border border-border bg-card px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+          {maps.length} mapas
+        </span>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <TeamRadarCard
-          title="Equipo Papi"
-          color={TEAM_PAPI_COLOR}
-          maps={maps}
-          stats={papiStats}
-        />
-        <TeamRadarCard
-          title="Equipo Viejo"
-          color={TEAM_VIEJO_COLOR}
-          maps={maps}
-          stats={viejoStats}
-        />
+        <Reveal>
+          <TeamRadarCard title="Equipo Papi" color={TEAM_PAPI_COLOR} maps={maps} stats={papiStats} />
+        </Reveal>
+        <Reveal delay={0.1}>
+          <TeamRadarCard title="Equipo Viejo" color={TEAM_VIEJO_COLOR} maps={maps} stats={viejoStats} />
+        </Reveal>
       </div>
     </section>
   )

@@ -1,5 +1,3 @@
-import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
-
 const MS_DAY = 86400000
 
 export function toDateKey(iso: string | Date): string {
@@ -104,25 +102,4 @@ export function formatCalendarFilterLabel(dateKey: string): string {
     day: 'numeric',
     timeZone: 'UTC',
   })
-}
-
-export async function getMatchesByDate(): Promise<Record<string, number>> {
-  const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
-  if (!supabase) return {}
-
-  const { data } = await supabase
-    .from('matches')
-    .select('played_at')
-    .order('played_at', { ascending: true })
-
-  const matchesByDate: Record<string, number> = {}
-
-  for (const row of data ?? []) {
-    if (!row.played_at) continue
-    const dateKey = toDateKey(row.played_at)
-    if (!dateKey) continue
-    matchesByDate[dateKey] = (matchesByDate[dateKey] ?? 0) + 1
-  }
-
-  return matchesByDate
 }

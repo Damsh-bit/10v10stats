@@ -1,4 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+
+// Sin tipos generados de la base: las filas se tipan como `any` en vez de `never`.
+type LooseClient = SupabaseClient<any>
 
 export type SupabasePlayerRecord = {
   id: string
@@ -41,7 +44,7 @@ function getSupabaseConfig() {
   }
 }
 
-let supabaseClientInstance: ReturnType<typeof createClient> | null = null;
+let supabaseClientInstance: LooseClient | null = null;
 
 export function getSupabaseClient() {
   if (supabaseClientInstance) return supabaseClientInstance;
@@ -53,14 +56,14 @@ export function getSupabaseClient() {
     return null
   }
 
-  supabaseClientInstance = createClient(config.url, supabaseAnonKey.trim(), {
+  supabaseClientInstance = createClient<any>(config.url, supabaseAnonKey.trim(), {
     auth: { persistSession: false },
   })
   
   return supabaseClientInstance;
 }
 
-let supabaseAdminClientInstance: ReturnType<typeof createClient> | null = null;
+let supabaseAdminClientInstance: LooseClient | null = null;
 
 export function getSupabaseAdminClient() {
   if (supabaseAdminClientInstance) return supabaseAdminClientInstance;
@@ -72,7 +75,7 @@ export function getSupabaseAdminClient() {
     return null
   }
 
-  supabaseAdminClientInstance = createClient(config.url, serviceRoleKey.trim(), {
+  supabaseAdminClientInstance = createClient<any>(config.url, serviceRoleKey.trim(), {
     auth: { persistSession: false },
   })
   

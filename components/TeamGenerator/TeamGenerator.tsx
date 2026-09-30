@@ -6,7 +6,8 @@ import type { PlayerStats } from '@/types'
 import { computePlayerRating, balanceTeams, regenerateTeams, sumRating, type RatedPlayer } from '@/lib/teamBalancer'
 import { PlayerSelector } from './PlayerSelector'
 import { TeamResultCard } from './TeamResultCard'
-import { Copy, RefreshCw, Users, Map as MapIcon, History } from 'lucide-react'
+import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
+import { SeasonTabs } from '@/components/season/season-tabs'
 
 const MAP_POOL = ['Mirage', 'Inferno', 'Nuke', 'Overpass', 'Vertigo', 'Ancient', 'Anubis', 'Dust II']
 
@@ -25,7 +26,14 @@ function getMapImageUrl(mapName: string) {
   return file ? `/maps/${file}` : null
 }
 
-export function TeamGenerator({ players, recentPlayers }: { players: PlayerStats[], recentPlayers?: PlayerStats[] }) {
+export type RatingSource = {
+  key: string
+  label: string
+  hint?: string
+  stats: PlayerStats[]
+}
+
+export function TeamGenerator({ players, sources }: { players: PlayerStats[]; sources: RatingSource[] }) {
   // Sort players alphabetically for the selector
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => a.player.name.localeCompare(b.player.name))
@@ -38,7 +46,7 @@ export function TeamGenerator({ players, recentPlayers }: { players: PlayerStats
   const [teams, setTeams] = useState<[RatedPlayer[], RatedPlayer[]] | null>(null)
   const [recommendedMap, setRecommendedMap] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
-  const [useRecentStats, setUseRecentStats] = useState(false)
+  const [sourceKey, setSourceKey] = useState(sources[0]?.key ?? '')
 
   const togglePlayer = (id: string) => {
     setSelectedIds(prev => 
@@ -47,7 +55,7 @@ export function TeamGenerator({ players, recentPlayers }: { players: PlayerStats
   }
 
   const getSelectedStats = (ids: string[]) => {
-    const statsSource = useRecentStats && recentPlayers ? recentPlayers : players
+    const statsSource = sources.find((source) => source.key === sourceKey)?.stats ?? players
     return ids.map(id => {
       return statsSource.find(p => p.player.id === id) || players.find(p => p.player.id === id)!
     }).filter(Boolean)
@@ -101,29 +109,19 @@ export function TeamGenerator({ players, recentPlayers }: { players: PlayerStats
         onToggle={togglePlayer} 
       />
 
-      {recentPlayers && (
-        <div className="flex justify-center">
-          <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
-            <button
-              type="button"
-              onClick={() => setUseRecentStats(false)}
-              className={`rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-colors ${
-                !useRecentStats ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Historial completo
-            </button>
-            <button
-              type="button"
-              onClick={() => setUseRecentStats(true)}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-colors ${
-                useRecentStats ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <History className="h-3.5 w-3.5" />
-              Últimas 20
-            </button>
-          </div>
+      {sources.length > 1 && (
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Balancear según</span>
+          <SeasonTabs
+            options={sources.map((source) => ({ value: source.key, label: source.label, hint: source.hint }))}
+            value={sourceKey}
+            onChange={(key) => {
+              setSourceKey(key)
+              setTeams(null)
+            }}
+            layoutId="team-source-tab"
+            ariaLabel="Estadísticas para balancear"
+          />
         </div>
       )}
 
@@ -170,7 +168,7 @@ export function TeamGenerator({ players, recentPlayers }: { players: PlayerStats
                   <MapIcon className="h-4 w-4" />
                   Mapa recomendado
                 </span>
-                <span className="font-heading text-3xl font-black uppercase tracking-widest text-primary drop-shadow-md">
+                <span className="font-heading text-3xl font-black uppercase tracking-widest text-brand drop-shadow-md">
                   {recommendedMap}
                 </span>
               </div>
