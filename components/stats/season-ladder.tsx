@@ -17,9 +17,7 @@ type Props = {
   seasonName: string
   ranked: PlayerStats[]
   recent?: { stats: PlayerStats[]; matchCount: number } | null
-  placement?: PlayerStats[]
   unplayed?: Player[]
-  placementMatches: number
   records?: PlayerRecordMap
   topFakadorId?: string | null
   /** Tabla final de una temporada cerrada: sin toggles ni llamados a jugar. */
@@ -37,9 +35,7 @@ export function SeasonLadder({
   seasonName,
   ranked,
   recent,
-  placement = [],
   unplayed = [],
-  placementMatches,
   records,
   topFakadorId,
   archived = false,
@@ -63,7 +59,6 @@ export function SeasonLadder({
             </h2>
             <span className="text-[11px] text-muted-foreground">
               {seasonName} · por KDA
-              {placementMatches > 1 && !showingRecent && ` · mínimo ${placementMatches} partidas`}
               {showingRecent && ` · últimas ${recent.matchCount} partidas`}
             </span>
           </div>
@@ -104,12 +99,7 @@ export function SeasonLadder({
       </header>
 
       {stats.length === 0 ? (
-        <EmptyLadder
-          archived={archived}
-          placementMatches={placementMatches}
-          hasPlacement={placement.length > 0}
-          action={emptyAction}
-        />
+        <EmptyLadder archived={archived} action={emptyAction} />
       ) : (
         <LayoutGroup>
           <ol className="flex flex-col">
@@ -128,38 +118,6 @@ export function SeasonLadder({
             </AnimatePresence>
           </ol>
         </LayoutGroup>
-      )}
-
-      {placement.length > 0 && !showingRecent && (
-        <div className="border-t border-border bg-black/10 px-4 py-3">
-          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" aria-hidden="true" />
-            En clasificación
-          </p>
-          <ul className="flex flex-wrap gap-2">
-            {placement.map((s) => (
-              <li key={s.player.id}>
-                <Link
-                  href={`/players/${s.player.id}`}
-                  className="flex items-center gap-2 rounded-full border border-border bg-background/60 py-1 pl-1 pr-3 transition-colors hover:border-amber-400/50"
-                  title={`${s.matches} de ${placementMatches} partidas de clasificación`}
-                >
-                  <PlayerAvatar player={s.player} size={22} />
-                  <span className="text-[12px] font-medium text-foreground">{s.player.name}</span>
-                  <span className="flex items-center gap-0.5" aria-hidden="true">
-                    {Array.from({ length: placementMatches }, (_, idx) => (
-                      <span
-                        key={idx}
-                        className={cn('h-1.5 w-3 rounded-full', idx < s.matches ? 'bg-amber-400' : 'bg-muted')}
-                      />
-                    ))}
-                  </span>
-                  <span className="sr-only">{s.matches} de {placementMatches} partidas</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
       )}
 
       {unplayed.length > 0 && !archived && !showingRecent && (
@@ -344,17 +302,7 @@ function Chip({ children, className, title }: { children: React.ReactNode; class
   )
 }
 
-function EmptyLadder({
-  archived,
-  placementMatches,
-  hasPlacement,
-  action,
-}: {
-  archived: boolean
-  placementMatches: number
-  hasPlacement: boolean
-  action?: React.ReactNode
-}) {
+function EmptyLadder({ archived, action }: { archived: boolean; action?: React.ReactNode }) {
   if (archived) {
     return <p className="px-4 py-10 text-center text-sm text-muted-foreground">No hay partidas registradas en esta temporada.</p>
   }
@@ -370,13 +318,10 @@ function EmptyLadder({
       >
         <Trophy className="h-7 w-7" />
       </motion.span>
-      <h3 className="relative font-heading text-xl font-bold uppercase tracking-wide text-foreground">
-        {hasPlacement ? 'El #1 todavía está vacante' : 'La tabla arranca de cero'}
-      </h3>
+      <h3 className="relative font-heading text-xl font-bold uppercase tracking-wide text-foreground">La tabla arranca de cero</h3>
       <p className="relative max-w-md text-[13px] leading-relaxed text-muted-foreground">
-        {hasPlacement
-          ? `Nadie completó las ${placementMatches} partidas de clasificación. El primero en hacerlo estrena el ladder.`
-          : `Nadie tiene puntos todavía. Jugá ${placementMatches} partidas para entrar al ranking y pelear el primer puesto de la temporada.`}
+        Nadie tiene puntos todavía. Cada partida suma desde la primera: la próxima que se cargue define al primer líder
+        de la temporada.
       </p>
       {action && <div className="relative mt-1">{action}</div>}
     </div>

@@ -44,23 +44,20 @@ export function Scoreboard({
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            <th className="px-3 py-2 font-medium">Player</th>
-            <th className="px-2 py-2 text-right font-medium">K</th>
-            <th className="px-2 py-2 text-right font-medium">D</th>
-            <th className="px-2 py-2 text-right font-medium">A</th>
-            <th className="px-2 py-2 text-right font-medium">HS%</th>
-            <th className="px-2 py-2 text-right font-medium">Dmg</th>
+            <th className="px-2 py-2 font-medium sm:px-3">Jugador</th>
+            <th className="px-1.5 py-2 text-right font-medium sm:px-2">K</th>
+            <th className="px-1.5 py-2 text-right font-medium sm:px-2">D</th>
+            <th className="px-1.5 py-2 text-right font-medium sm:px-2">A</th>
+            <th className="px-1.5 py-2 text-right font-medium sm:px-2">HS%</th>
+            <th className="px-1.5 py-2 pr-2 text-right font-medium sm:px-2 sm:pr-3">Dmg</th>
           </tr>
         </thead>
         <tbody>
           {sorted.map((e) => {
-            const player = players.find((p) => p.id === e.playerId) ?? {
-              id: e.playerId,
-              name: 'Sin info',
-              badge: 'Sin info',
-              avatarColor: '#64748b',
-              nelsons: 0,
-            }
+            const fallback = { id: e.playerId, name: 'Sin info', badge: 'Sin info', avatarColor: '#64748b', nelsons: 0 }
+            const player = e.guest
+              ? { ...fallback, name: 'Invitado' }
+              : players.find((p) => p.id === e.playerId) ?? fallback
             const kills = e.kills ?? 0
             const deaths = e.deaths ?? 0
             const assists = e.assists ?? 0
@@ -69,19 +66,23 @@ export function Scoreboard({
             
             return (
               <tr key={e.playerId} className="border-t border-border">
-                <td className="px-3 py-2.5">
-                  <Link
-                    href={`/players/${e.playerId}`}
-                    className="flex items-center gap-2 transition-colors hover:text-brand"
-                  >
-                    <PlayerAvatar player={player} size={26} />
-                    <span className="text-[14px] font-medium text-foreground flex items-center gap-1.5">
-                      {player.name}
-                      {e.mvps > 0 && (
-                        <span title="Match MVP" className="text-yellow-500 text-[12px]">👑</span>
-                      )}
-                    </span>
-                  </Link>
+                <td className="w-full max-w-0 px-2 py-2 sm:px-3 sm:py-2.5">
+                  {e.guest ? (
+                    <div className="flex min-w-0 items-center gap-2 text-muted-foreground" title="Participación de invitado: no suma estadísticas">
+                      <PlayerAvatar player={player} size={24} />
+                      <span className="truncate text-[13px] italic sm:text-[14px]">{player.name}</span>
+                    </div>
+                  ) : (
+                    <Link href={`/players/${e.playerId}`} className="flex min-w-0 items-center gap-2 transition-colors hover:text-brand">
+                      <PlayerAvatar player={player} size={24} />
+                      <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-foreground sm:text-[14px]">
+                        <span className="truncate">{player.name}</span>
+                        {e.mvps > 0 && (
+                          <span title="MVP de la partida" className="shrink-0 text-[12px] text-yellow-500">👑</span>
+                        )}
+                      </span>
+                    </Link>
+                  )}
                 </td>
                 <Cell><AnimatedNumber value={kills} /></Cell>
                 <Cell><AnimatedNumber value={deaths} direction="down" /></Cell>
@@ -107,7 +108,7 @@ function Cell({
   return (
     <td
       className={cn(
-        'px-2 py-2.5 text-right font-mono text-[13px] text-foreground',
+        'px-1.5 py-2 text-right font-mono text-[12px] text-foreground last:pr-2 sm:px-2 sm:py-2.5 sm:text-[13px] sm:last:pr-3',
         className,
       )}
     >

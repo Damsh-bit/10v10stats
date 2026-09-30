@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Loader2, X, CheckCircle2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 
 type PlayerRow = {
   player_id: string
@@ -171,6 +172,7 @@ export function EditMatchModal({
     }
   }
 
+  useBodyScrollLock(isOpen)
   return (
     <>
       <Button variant="secondary" onClick={handleOpen} className="flex items-center gap-1.5 h-8 text-[12px] uppercase font-semibold">
@@ -178,313 +180,327 @@ export function EditMatchModal({
       </Button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:p-4">
-          <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col justify-center py-10">
-            <div className="relative flex flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl sm:rounded-2xl sm:border sm:border-border">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Edición</p>
-                  <h2 className="text-xl font-semibold text-foreground">Editar Datos de Partida</h2>
-                </div>
-                <button
-                  onClick={handleClose}
-                  className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {!isAuthenticated ? (
-                <div className="mt-6 flex flex-col items-center py-6 text-center">
-                  <div className="mb-4 rounded-full bg-primary/10 p-3">
-                    <Lock className="h-6 w-6 text-brand" />
+        <Portal>
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:p-4">
+            <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col justify-center py-10">
+              <div className="relative flex flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl sm:rounded-2xl sm:border sm:border-border">
+                <div className="flex items-center justify-between border-b border-border pb-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Edición</p>
+                    <h2 className="text-xl font-semibold text-foreground">Editar Datos de Partida</h2>
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold text-foreground">Acceso Restringido</h3>
-                  <p className="mb-6 text-sm text-muted-foreground">
-                    Ingresa la clave de administrador para editar la partida.
-                  </p>
-                  <form onSubmit={handleAuth} className="w-full max-w-sm space-y-4">
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Clave de administrador"
-                      className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                      autoFocus
-                    />
-                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                    <Button type="submit" className="w-full">
-                      Autenticar
-                    </Button>
-                  </form>
+                  <button
+                    onClick={handleClose}
+                    className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-              ) : (
-                <div className="mt-6 space-y-6">
-                  {/* Scores */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Score {teamALabel}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={scoreCt}
-                      onChange={(e) => setScoreCt(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
-                  </label>
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Score {teamBLabel}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={scoreT}
-                      onChange={(e) => setScoreT(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
-                  </label>
-                </div>
-
-                {/* Meta */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Mapa</span>
-                    <select
-                      value={map}
-                      onChange={(e) => setMap(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    >
-                      <option value="">— Seleccionar mapa —</option>
-                      {['Mirage', 'Inferno', 'Overpass', 'Nuke', 'Vertigo', 'Ancient', 'Anubis', 'Dust 2', 'Train', 'Cache'].map(m => (
-                        <option key={m} value={m}>{m}</option>
+  
+                {!isAuthenticated ? (
+                  <div className="mt-6 flex flex-col items-center py-6 text-center">
+                    <div className="mb-4 rounded-full bg-primary/10 p-3">
+                      <Lock className="h-6 w-6 text-brand" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">Acceso Restringido</h3>
+                    <p className="mb-6 text-sm text-muted-foreground">
+                      Ingresa la clave de administrador para editar la partida.
+                    </p>
+                    <form onSubmit={handleAuth} className="w-full max-w-sm space-y-4">
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Clave de administrador"
+                        className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                        autoFocus
+                      />
+                      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                      <Button type="submit" className="w-full">
+                        Autenticar
+                      </Button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-6">
+                    {/* Scores */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2 text-sm">
+                      <span className="text-muted-foreground">Score {teamALabel}</span>
+                      <input
+                        type="number"
+                              inputMode="numeric"
+                        min="0"
+                        value={scoreCt}
+                        onChange={(e) => setScoreCt(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                      />
+                    </label>
+                    <label className="space-y-2 text-sm">
+                      <span className="text-muted-foreground">Score {teamBLabel}</span>
+                      <input
+                        type="number"
+                              inputMode="numeric"
+                        min="0"
+                        value={scoreT}
+                        onChange={(e) => setScoreT(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                      />
+                    </label>
+                  </div>
+  
+                  {/* Meta */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2 text-sm">
+                      <span className="text-muted-foreground">Mapa</span>
+                      <select
+                        value={map}
+                        onChange={(e) => setMap(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                      >
+                        <option value="">— Seleccionar mapa —</option>
+                        {['Mirage', 'Inferno', 'Overpass', 'Nuke', 'Vertigo', 'Ancient', 'Anubis', 'Dust 2', 'Train', 'Cache'].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-2 text-sm">
+                      <span className="text-muted-foreground">Fecha</span>
+                      <input
+                        type="datetime-local"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                      />
+                    </label>
+                  </div>
+  
+                  {/* Players */}
+                  <div className="space-y-6">
+                    {/* Team A */}
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-border bg-card/60 p-4">
+                        <select
+                          value={teamALabel}
+                          onChange={(e) => handleGroupTeamChange(teamALabel, e.target.value)}
+                          className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          <option value={teamALabel}>{teamALabel}</option>
+                          <option value={teamBLabel}>{teamBLabel}</option>
+                        </select>
+                      </div>
+                      {players
+                        .filter((row) => row.team === teamALabel || row.team === 'CT')
+                        .map((row) => (
+                        <div
+                          key={row.player_id}
+                          className="grid grid-cols-5 gap-1.5 rounded-xl border border-border bg-background/70 p-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)_repeat(5,minmax(0,0.5fr))] sm:gap-2 sm:p-3"
+                        >
+                          <div className="col-span-3 min-w-0 space-y-1 sm:col-span-1">
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Jugador</label>
+                            <div className="w-full truncate rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                              {row.name}
+                            </div>
+                          </div>
+                          <div className="col-span-2 min-w-0 space-y-1 sm:col-span-1">
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Equipo</label>
+                            <select
+                              value={row.team}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'team', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                            >
+                              <option value={teamALabel}>{teamALabel}</option>
+                              <option value={teamBLabel}>{teamBLabel}</option>
+                              {row.team !== teamALabel && row.team !== teamBLabel && (
+                                 <option value={row.team}>{row.team}</option>
+                              )}
+                            </select>
+                          </div>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>K</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.kills}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'kills', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>D</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.deaths}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'deaths', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>A</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.assists}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'assists', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>HS%</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              max="100"
+                              value={row.hsPct}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'hsPct', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>DMG</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.damage}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'damage', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                        </div>
                       ))}
-                    </select>
-                  </label>
-                  <label className="space-y-2 text-sm">
-                    <span className="text-muted-foreground">Fecha</span>
-                    <input
-                      type="datetime-local"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                    />
-                  </label>
-                </div>
-
-                {/* Players */}
-                <div className="space-y-6">
-                  {/* Team A */}
-                  <div className="space-y-3">
-                    <div className="rounded-xl border border-border bg-card/60 p-4">
-                      <select
-                        value={teamALabel}
-                        onChange={(e) => handleGroupTeamChange(teamALabel, e.target.value)}
-                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        <option value={teamALabel}>{teamALabel}</option>
-                        <option value={teamBLabel}>{teamBLabel}</option>
-                      </select>
                     </div>
-                    {players
-                      .filter((row) => row.team === teamALabel || row.team === 'CT')
-                      .map((row) => (
-                      <div
-                        key={row.player_id}
-                        className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 sm:grid-cols-[1fr_0.6fr_0.5fr_0.5fr_0.5fr_0.5fr_0.5fr]"
-                      >
-                        <div className="space-y-1">
-                          <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Jugador</label>
-                          <div className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                            {row.name}
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Equipo</label>
-                          <select
-                            value={row.team}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'team', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          >
-                            <option value={teamALabel}>{teamALabel}</option>
-                            <option value={teamBLabel}>{teamBLabel}</option>
-                            {row.team !== teamALabel && row.team !== teamBLabel && (
-                               <option value={row.team}>{row.team}</option>
-                            )}
-                          </select>
-                        </div>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Kills</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.kills}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'kills', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Deaths</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.deaths}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'deaths', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Assists</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.assists}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'assists', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>HS%</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={row.hsPct}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'hsPct', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Damage</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.damage}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'damage', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
+  
+                    {/* Team B */}
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-border bg-card/60 p-4">
+                        <select
+                          value={teamBLabel}
+                          onChange={(e) => handleGroupTeamChange(teamBLabel, e.target.value)}
+                          className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          <option value={teamALabel}>{teamALabel}</option>
+                          <option value={teamBLabel}>{teamBLabel}</option>
+                        </select>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Team B */}
-                  <div className="space-y-3">
-                    <div className="rounded-xl border border-border bg-card/60 p-4">
-                      <select
-                        value={teamBLabel}
-                        onChange={(e) => handleGroupTeamChange(teamBLabel, e.target.value)}
-                        className="bg-transparent text-sm font-semibold uppercase tracking-[0.2em] text-brand outline-none focus:ring-0 cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        <option value={teamALabel}>{teamALabel}</option>
-                        <option value={teamBLabel}>{teamBLabel}</option>
-                      </select>
-                    </div>
-                    {players
-                      .filter((row) => row.team !== teamALabel && row.team !== 'CT')
-                      .map((row) => (
-                      <div
-                        key={row.player_id}
-                        className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 sm:grid-cols-[1fr_0.6fr_0.5fr_0.5fr_0.5fr_0.5fr_0.5fr]"
-                      >
-                        <div className="space-y-1">
-                          <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Jugador</label>
-                          <div className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                            {row.name}
+                      {players
+                        .filter((row) => row.team !== teamALabel && row.team !== 'CT')
+                        .map((row) => (
+                        <div
+                          key={row.player_id}
+                          className="grid grid-cols-5 gap-1.5 rounded-xl border border-border bg-background/70 p-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)_repeat(5,minmax(0,0.5fr))] sm:gap-2 sm:p-3"
+                        >
+                          <div className="col-span-3 min-w-0 space-y-1 sm:col-span-1">
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Jugador</label>
+                            <div className="w-full truncate rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                              {row.name}
+                            </div>
                           </div>
+                          <div className="col-span-2 min-w-0 space-y-1 sm:col-span-1">
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Equipo</label>
+                            <select
+                              value={row.team}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'team', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                            >
+                              <option value={teamALabel}>{teamALabel}</option>
+                              <option value={teamBLabel}>{teamBLabel}</option>
+                              {row.team !== teamALabel && row.team !== teamBLabel && (
+                                 <option value={row.team}>{row.team}</option>
+                              )}
+                            </select>
+                          </div>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>K</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.kills}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'kills', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>D</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.deaths}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'deaths', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>A</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.assists}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'assists', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>HS%</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              max="100"
+                              value={row.hsPct}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'hsPct', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
+                          <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>DMG</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              value={row.damage}
+                              onChange={(e) => updatePlayerRow(row.player_id, 'damage', e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3"
+                            />
+                          </label>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Equipo</label>
-                          <select
-                            value={row.team}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'team', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          >
-                            <option value={teamALabel}>{teamALabel}</option>
-                            <option value={teamBLabel}>{teamBLabel}</option>
-                            {row.team !== teamALabel && row.team !== teamBLabel && (
-                               <option value={row.team}>{row.team}</option>
-                            )}
-                          </select>
-                        </div>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Kills</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.kills}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'kills', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Deaths</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.deaths}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'deaths', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Assists</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.assists}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'assists', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>HS%</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={row.hsPct}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'hsPct', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>Damage</span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.damage}
-                            onChange={(e) => updatePlayerRow(row.player_id, 'damage', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                          />
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-border">
-                  {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                  {success ? (
-                    <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {success}
+                      ))}
                     </div>
-                  ) : null}
-
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={handleClose}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleSubmit} disabled={isSubmitting}>
-                      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Guardar cambios
-                    </Button>
                   </div>
-                </div>
-                </div>
-              )}
+  
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                    {success ? (
+                      <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+                        <CheckCircle2 className="h-4 w-4" />
+                        {success}
+                      </div>
+                    ) : null}
+  
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" onClick={handleClose}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleSubmit} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Guardar cambios
+                      </Button>
+                    </div>
+                  </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       ) : null}
     </>
   )

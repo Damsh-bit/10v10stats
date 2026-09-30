@@ -33,13 +33,7 @@ export function SeasonPodium({ top, compact = false }: { top: PlayerStats[]; com
             role="listitem"
             className="group flex min-w-0 flex-col items-center"
           >
-            <motion.div
-              className="relative flex flex-col items-center"
-              initial={{ opacity: 0, y: -24, scale: 0.9 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 260, damping: 18, delay: place.delay + 0.25 }}
-            >
+            <div className="podium-drop relative flex flex-col items-center" style={{ animationDelay: `${place.delay + 0.25}s` }}>
               {isFirst && (
                 <motion.span
                   className="absolute -top-5 text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.7)]"
@@ -64,21 +58,18 @@ export function SeasonPodium({ top, compact = false }: { top: PlayerStats[]; com
                   {stats.wins}W · {winrate}% WR
                 </span>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
+            <div
               className={cn(
-                'mt-2 flex w-full origin-bottom items-start justify-center rounded-t-md border border-b-0 bg-gradient-to-b pt-1.5',
+                'podium-grow mt-2 flex w-full origin-bottom items-start justify-center rounded-t-md border border-b-0 bg-gradient-to-b pt-1.5',
                 compact ? place.compactHeight : place.height,
                 place.block,
               )}
-              initial={{ scaleY: 0 }}
-              whileInView={{ scaleY: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: place.delay }}
+              style={{ animationDelay: `${place.delay}s` }}
             >
               <span className={cn('font-heading text-xl font-black sm:text-2xl', place.text)}>{place.rank}</span>
-            </motion.div>
+            </div>
           </Link>
         )
       })}

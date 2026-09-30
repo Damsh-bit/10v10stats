@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import type { Match, MatchPlayer } from '@/types'
 
-import { formatDate } from '@/lib/format'
+import { formatDate, formatShortDate } from '@/lib/format'
 import { ResultChip } from '@/components/shared/strike-ui'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getTeamColorClass, getPlayerMatchScore, cn } from '@/lib/utils'
@@ -52,11 +52,11 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
     <div className="flex flex-col gap-3">
       {/* Filters */}
       {matches.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mb-1">
+        <div className="mb-1 flex flex-wrap items-center gap-1.5">
           <select
             value={mapFilter}
             onChange={(e) => setMapFilter(e.target.value)}
-            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none sm:px-3 sm:text-[12px]"
           >
             <option value="all">Mapas</option>
             {uniqueMaps.map((m) => (
@@ -67,7 +67,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <select
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
-            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none sm:px-3 sm:text-[12px]"
           >
             <option value="all">Equipos</option>
             {uniqueTeams.map((t) => (
@@ -78,7 +78,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <select
             value={resultFilter}
             onChange={(e) => setResultFilter(e.target.value)}
-            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none sm:px-3 sm:text-[12px]"
           >
             <option value="all">Resultados</option>
             <option value="win">Victorias</option>
@@ -89,7 +89,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
           <select
             value={mvpFilter}
             onChange={(e) => setMvpFilter(e.target.value)}
-            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none"
+            className="h-7 cursor-pointer appearance-none rounded-full bg-muted/40 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none sm:px-3 sm:text-[12px]"
           >
             <option value="all">MVP (Todos)</option>
             <option value="yes">Solo MVP</option>
@@ -111,23 +111,26 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
             <Link
               key={match.id}
               href={`/matches/${match.id}`}
-              className={`flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-accent/60 ${i > 0 ? 'border-t border-border' : ''
+              className={`flex items-center justify-between gap-2 px-2.5 py-2 transition-colors hover:bg-accent/60 sm:gap-3 sm:px-3 ${i > 0 ? 'border-t border-border' : ''
                 }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <ResultChip
                   won={entry.won}
                   draw={entry.draw}
                   playerScore={playerScore}
                   opponentScore={opponentScore}
                 />
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                  <span className="text-[14px] font-medium text-foreground">
+                <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                  <span className="truncate text-[13px] font-medium text-foreground sm:text-[14px]">
                     {match.map}
                   </span>
                   <div className="flex items-center gap-1">
-                    <span className={cn("rounded border px-2 py-0.5 text-[11px] font-medium", getTeamColorClass(entry.team))}>
-                      {entry.team}
+                    <span
+                      className={cn('whitespace-nowrap rounded border px-1.5 py-0.5 text-[10px] font-medium sm:px-2 sm:text-[11px]', getTeamColorClass(entry.team))}
+                      title={entry.team}
+                    >
+                      {entry.team.replace(/^Equipo\s+/i, '')}
                     </span>
                     {entry.mvps > 0 && (
                       <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-bold text-yellow-500" title="MVP de la partida">
@@ -138,7 +141,7 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 font-mono text-[12px] text-muted-foreground">
+              <div className="flex shrink-0 items-center gap-2.5 font-mono text-[11px] text-muted-foreground sm:gap-4 sm:text-[12px]">
                   <div className="flex items-center gap-1 font-semibold tracking-wide">
                   <span className="text-green-400"><AnimatedNumber value={entry.kills} /></span>
                   <span className="text-muted-foreground/40">/</span>
@@ -147,7 +150,9 @@ export function PlayerMatchHistory({ matches }: { matches: MatchEntry[] }) {
                   <span className="text-blue-400"><AnimatedNumber value={entry.assists} /></span>
                 </div>
                 <span className="hidden sm:inline"><AnimatedNumber value={entry.damage} /> dmg</span>
-                <span className="w-20 text-right">{formatDate(match.date)}</span>
+                <span className="w-12 text-right sm:w-14" title={formatDate(match.date)}>
+                  {formatShortDate(match.date)}
+                </span>
               </div>
             </Link>
             )

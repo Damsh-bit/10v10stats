@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowRight, Crown, Sparkles, Trophy } from 'lucide-react'
 import { getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
-import { formatSeasonDate, getPlacementMatches, getSeasonDay } from '@/lib/seasons'
+import { formatSeasonDate, getSeasonDay } from '@/lib/seasons'
 import { computeSeasonSummary } from '@/lib/season-stats'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion/reveal'
@@ -21,7 +21,7 @@ export default async function SeasonsPage() {
 
   const cards = seasons.map((season) => {
     const data = getSeasonData(league, season.id)
-    const standings = getPlayerStatsForData(data, { minMatches: getPlacementMatches(season) })
+    const standings = getPlayerStatsForData(data, { minMatches: 1 })
     return { season, summary: computeSeasonSummary(data), top: standings[0] ?? null }
   })
 

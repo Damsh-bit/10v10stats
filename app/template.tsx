@@ -1,16 +1,7 @@
-'use client'
-
-import { motion } from 'motion/react'
-
-/** Transición de entrada en cada navegación (template se remonta por ruta). */
+/**
+ * Transición de entrada en cada navegación (template se remonta por ruta).
+ * Es CSS a propósito: no depende de que cargue el JavaScript para mostrarse.
+ */
 export default function Template({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  )
+  return <div className="page-enter">{children}</div>
 }

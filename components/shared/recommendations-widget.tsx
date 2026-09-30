@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
-import { X } from "lucide-react"
+import { MessageSquarePlus, X } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
 
 type Recommendation = {
@@ -77,11 +77,22 @@ export function RecommendationsWidget() {
 
   return (
     <>
+      {/* Mobile: botón redondo en la esquina, para no tapar el contenido. */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed z-50 bottom-6 left-0 flex items-center justify-center bg-background border border-border border-l-0 text-foreground px-1.5 py-4 rounded-r-lg shadow-md hover:bg-muted transition-colors group"
+        className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-emerald-500/40 bg-background/95 text-emerald-400 shadow-lg shadow-black/40 backdrop-blur transition-colors hover:bg-muted sm:hidden"
+        aria-label="Recomendaciones"
+        aria-expanded={isOpen}
+      >
+        <MessageSquarePlus className="h-5 w-5" />
+      </button>
+
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed z-50 bottom-6 left-0 hidden items-center justify-center bg-background border border-border border-l-0 text-foreground px-1.5 py-4 rounded-r-lg shadow-md hover:bg-muted transition-colors group sm:flex"
         style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
         aria-label="Recomendaciones"
+        aria-expanded={isOpen}
       >
         <span className="text-sm font-medium tracking-wider uppercase text-emerald-500 group-hover:text-emerald-400">
           Recomendaciones
@@ -98,7 +109,7 @@ export function RecommendationsWidget() {
 
       {/* Panel */}
       <div
-        className={`fixed z-50 bottom-6 left-2 sm:left-12 w-[calc(100vw-16px)] sm:w-[320px] bg-background border border-border shadow-lg rounded-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out origin-bottom-left ${
+        className={`fixed z-50 bottom-[4.5rem] left-2 right-2 sm:bottom-6 sm:left-12 sm:right-auto sm:w-[320px] bg-background border border-border shadow-lg rounded-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out origin-bottom-right sm:origin-bottom-left ${
           isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
         }`}
         style={{ maxHeight: '420px', height: '100%' }}

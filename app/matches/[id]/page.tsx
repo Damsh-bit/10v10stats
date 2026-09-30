@@ -28,8 +28,10 @@ export default async function MatchDetail({
   const teamALabel = match.teamAName || 'CT'
   const teamBLabel = match.teamBName || 'T'
 
-  const ctPlayers = match.players.filter((p) => p.team === teamALabel || p.team === 'CT')
-  const tPlayers = match.players.filter((p) => p.team === teamBLabel || p.team === 'T')
+  // Los invitados no suman estadísticas pero sí aparecen en el tabulador y en el editor.
+  const entries = [...match.players, ...match.guests]
+  const ctPlayers = entries.filter((p) => p.team === teamALabel || p.team === 'CT')
+  const tPlayers = entries.filter((p) => p.team === teamBLabel || p.team === 'T')
   const isDraw = match.ctScore === match.tScore
   const ctWins = !isDraw && match.ctScore > match.tScore
 
@@ -53,7 +55,7 @@ export default async function MatchDetail({
             initialDate={match.date}
             teamALabel={teamALabel}
             teamBLabel={teamBLabel}
-            matchPlayers={match.players}
+            matchPlayers={entries}
             allPlayers={league.players}
           />
         </div>

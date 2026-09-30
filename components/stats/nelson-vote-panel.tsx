@@ -5,6 +5,7 @@ import { CheckCircle2, Crown, Loader2, ShieldCheck, Skull, Vote, X } from 'lucid
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import confetti from 'canvas-confetti'
+import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 
 type PlayerOption = {
   id: string
@@ -218,6 +219,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
     }
   }
 
+  useBodyScrollLock(showVoteModal)
   const openVoteModal = () => {
     setMessage(null)
     setVoterId('')
@@ -377,79 +379,83 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
 
       {/* Votar Modal */}
       {showVoteModal ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
-          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-semibold text-foreground">Registrar Voto</h3>
-              <button onClick={() => setShowVoteModal(false)} className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleVote} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">¿Quién vota?</label>
-                <select
-                  value={voterId}
-                  onChange={(e) => setVoterId(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                  required
-                >
-                  <option value="">— Seleccionar —</option>
-                  {players.map((p) => {
-                    const alreadyVoted = !!voteState.voters[p.id]
-                    return (
-                      <option key={p.id} value={p.id} disabled={alreadyVoted}>
-                        {p.name} {alreadyVoted ? '(Ya votó)' : ''}
+        <Portal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
+            <div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+                <h3 className="font-semibold text-foreground">Registrar Voto</h3>
+                <button onClick={() => setShowVoteModal(false)} className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+  
+              <form onSubmit={handleVote} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">¿Quién vota?</label>
+                  <select
+                    value={voterId}
+                    onChange={(e) => setVoterId(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    required
+                  >
+                    <option value="">— Seleccionar —</option>
+                    {players.map((p) => {
+                      const alreadyVoted = !!voteState.voters[p.id]
+                      return (
+                        <option key={p.id} value={p.id} disabled={alreadyVoted}>
+                          {p.name} {alreadyVoted ? '(Ya votó)' : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                </div>
+  
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">¿A quién vota para Nelson?</label>
+                  <select
+                    value={voteForId}
+                    onChange={(e) => setVoteForId(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
+                    required
+                  >
+                    <option value="">— Seleccionar —</option>
+                    {players.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
                       </option>
-                    )
-                  })}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">¿A quién vota para Nelson?</label>
-                <select
-                  value={voteForId}
-                  onChange={(e) => setVoteForId(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary"
-                  required
-                >
-                  <option value="">— Seleccionar —</option>
-                  {players.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {message && <p className="text-sm text-destructive">{message}</p>}
-
-              <Button type="submit" className="w-full" disabled={isLoading || !voterId || !voteForId}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Enviar Voto
-              </Button>
-            </form>
+                    ))}
+                  </select>
+                </div>
+  
+                {message && <p className="text-sm text-destructive">{message}</p>}
+  
+                <Button type="submit" className="w-full" disabled={isLoading || !voterId || !voteForId}>
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Enviar Voto
+                </Button>
+              </form>
+            </div>
           </div>
-        </div>
+        </Portal>
       ) : null}
 
       {/* Pop-up Ganador */}
       {winnerPopup?.show && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-500">
-          <div className="animate-in zoom-in-50 fade-in duration-500 flex flex-col items-center justify-center space-y-6 text-center">
-            <div className="text-9xl animate-bounce">
-              💩
-            </div>
-            <div className="rounded-xl border border-border bg-card/90 px-8 py-6 shadow-2xl backdrop-blur-md">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-brand">El nuevo Nelson es:</h2>
-              <p className="mt-2 text-4xl font-bold text-foreground drop-shadow-md">
-                {winnerPopup.name}
-              </p>
+        <Portal>
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-500">
+            <div className="animate-in zoom-in-50 fade-in duration-500 flex flex-col items-center justify-center space-y-6 text-center">
+              <div className="text-9xl animate-bounce">
+                💩
+              </div>
+              <div className="rounded-xl border border-border bg-card/90 px-8 py-6 shadow-2xl backdrop-blur-md">
+                <h2 className="text-sm font-semibold uppercase tracking-widest text-brand">El nuevo Nelson es:</h2>
+                <p className="mt-2 text-4xl font-bold text-foreground drop-shadow-md">
+                  {winnerPopup.name}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </section>
   )

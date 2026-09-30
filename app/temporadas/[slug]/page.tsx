@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { ArrowLeft, Archive, Crown } from 'lucide-react'
 import { getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
-import { findSeasonBySlug, formatSeasonDate, getPlacementMatches, getSeasons } from '@/lib/seasons'
+import { findSeasonBySlug, formatSeasonDate, getSeasons } from '@/lib/seasons'
 import { computeMatchRecords, computeSeasonSummary, toMapWinrateRows } from '@/lib/season-stats'
 import { SeasonPodium } from '@/components/season/season-podium'
 import { SeasonStatStrip } from '@/components/season/season-stat-strip'
@@ -38,7 +38,7 @@ export default async function SeasonArchivePage({ params }: { params: Promise<{ 
   if (season.isCurrent) redirect('/')
 
   const data = getSeasonData(league, season.id)
-  const standings = getPlayerStatsForData(data, { minMatches: getPlacementMatches(season) })
+  const standings = getPlayerStatsForData(data, { minMatches: 1 })
   const summary = computeSeasonSummary(data)
   const records = computeMatchRecords(data)
   const playerRecords = getPlayerRecords(data, standings)
@@ -128,7 +128,6 @@ export default async function SeasonArchivePage({ params }: { params: Promise<{ 
               <SeasonLadder
                 seasonName={season.name}
                 ranked={standings}
-                placementMatches={getPlacementMatches(season)}
                 records={playerRecords}
                 topFakadorId={topFakador?.id ?? null}
                 archived

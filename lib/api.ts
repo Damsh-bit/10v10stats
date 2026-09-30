@@ -9,7 +9,7 @@ import {
   type SeasonSnapshot,
 } from '@/lib/seasons'
 import type { Player, CSMap, Match, PlayerStats, LiveData, NelsonEntry } from '@/types'
-import { computeKDRecord, isExcludedPlayer } from '@/lib/utils'
+import { computeKDRecord } from '@/lib/utils'
 
 export { formatDate } from '@/lib/format'
 
@@ -22,6 +22,7 @@ type SupabaseMatchPlayerRecord = {
   assists: number | null
   damage: number | null
   hs_pct: number | null
+  is_guest?: boolean | null
 }
 
 type SupabaseMatchRecord = {
@@ -62,7 +63,7 @@ const EMPTY_LIVE_DATA: LiveData = {
 const PAGE_SIZE = 1000
 const MATCH_COLUMNS =
   'id, map, played_at, score_ct, score_t, total_rounds, winner_team, foto_url, notes, team_a_name, team_b_name, mvp_id'
-const MATCH_PLAYER_COLUMNS = 'match_players(player_id, team, won, kills, deaths, assists, damage, hs_pct)'
+const MATCH_PLAYER_FIELDS = 'player_id, team, won, kills, deaths, assists, damage, hs_pct'
 
 function normalizeString(value: unknown, fallback = 'Sin info') {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback
@@ -96,8 +97,10 @@ type SupabaseClient = NonNullable<ReturnType<typeof getSupabaseClient>>
  * PostgREST corta en 1000 filas por request y sin paginar las partidas nuevas
  * dejarían de aparecer.
  */
-async function fetchAllMatchRows(supabase: SupabaseClient, withSeason: boolean) {
-  const columns = `${MATCH_COLUMNS}${withSeason ? ', season_id' : ''}, ${MATCH_PLAYER_COLUMNS}`
+async function fetchAllMatchRows(supabase: SupabaseClient, withSeasonColumns: boolean) {
+  const columns = withSeasonColumns
+    ? `${MATCH_COLUMNS}, season_id, match_players(${MATCH_PLAYER_FIELDS}, is_guest)`
+    : `${MATCH_COLUMNS}, match_players(${MATCH_PLAYER_FIELDS})`
   const rows: SupabaseMatchRecord[] = []
 
   for (let from = 0; ; from += PAGE_SIZE) {
@@ -117,13 +120,14 @@ async function fetchAllMatchRows(supabase: SupabaseClient, withSeason: boolean) 
 }
 
 function toMatch(row: SupabaseMatchRecord, seasons: Season[]): Match {
-  const entries = row.match_players ?? []
+  const allEntries = row.match_players ?? []
+  const counted = allEntries.filter((entry) => !entry.is_guest)
   let mvpId = row.mvp_id || ''
 
   // Partidas viejas sin MVP guardado: se calcula igual que al cargarlas.
   if (!mvpId) {
     let maxScore = -1
-    entries.forEach((p) => {
+    counted.forEach((p) => {
       const d = Math.max(1, p.deaths || 0)
       const score = ((p.kills || 0) + (p.assists || 0)) / d + ((p.damage || 0) / 100)
       if (score > maxScore) {
@@ -135,6 +139,21 @@ function toMatch(row: SupabaseMatchRecord, seasons: Season[]): Match {
 
   const isDraw = row.score_ct === row.score_t
   const date = normalizeString(row.played_at, '')
+
+  const toEntry = (entry: SupabaseMatchPlayerRecord) => ({
+    playerId: normalizeString(entry.player_id, 'sin-player'),
+    team: normalizeString(entry.team, 'CT'),
+    kills: normalizeNumber(entry.kills),
+    deaths: normalizeNumber(entry.deaths),
+    assists: normalizeNumber(entry.assists),
+    damage: normalizeNumber(entry.damage),
+    adr: 0,
+    hsPct: normalizeNumber(entry.hs_pct),
+    mvps: !entry.is_guest && entry.player_id === mvpId ? 1 : 0,
+    won: isDraw ? false : normalizeBoolean(entry.won),
+    draw: isDraw,
+    ...(entry.is_guest ? { guest: true } : {}),
+  })
 
   return {
     id: normalizeString(row.id, 'sin-id'),
@@ -150,19 +169,8 @@ function toMatch(row: SupabaseMatchRecord, seasons: Season[]): Match {
     notes: row.notes ?? undefined,
     teamAName: row.team_a_name ?? undefined,
     teamBName: row.team_b_name ?? undefined,
-    players: entries.map((entry) => ({
-      playerId: normalizeString(entry.player_id, 'sin-player'),
-      team: normalizeString(entry.team, 'CT'),
-      kills: normalizeNumber(entry.kills),
-      deaths: normalizeNumber(entry.deaths),
-      assists: normalizeNumber(entry.assists),
-      damage: normalizeNumber(entry.damage),
-      adr: 0,
-      hsPct: normalizeNumber(entry.hs_pct),
-      mvps: entry.player_id === mvpId ? 1 : 0,
-      won: isDraw ? false : normalizeBoolean(entry.won),
-      draw: isDraw,
-    })),
+    players: counted.map(toEntry),
+    guests: allEntries.filter((entry) => entry.is_guest).map(toEntry),
   }
 }
 
@@ -197,8 +205,8 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
       }
     })
 
-    // Con la migración aplicada las partidas traen `season_id`; si todavía no
-    // existe la columna se reintenta sin ella y se asigna la temporada por fecha.
+    // Con las migraciones aplicadas las partidas traen `season_id` e `is_guest`; si
+    // todavía no existen se reintenta sin ellas y se asigna la temporada por fecha.
     let result = await fetchAllMatchRows(supabase, true)
     if (result.error) result = await fetchAllMatchRows(supabase, false)
 
@@ -252,7 +260,6 @@ export function getCareerData(league: LeagueData): LiveData {
 
 function buildNelsonLeague(players: Player[]): NelsonEntry[] {
   return players
-    .filter((p) => !isExcludedPlayer(p))
     .map((p) => ({ rank: 0, id: p.id, name: p.name, points: p.nelsons, trend: 'same' as const }))
     .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
     .map((entry, index) => ({ ...entry, rank: index + 1 }))
@@ -330,7 +337,6 @@ function buildPlayerStatsForData(data: LiveData, playerId: string, lastN?: numbe
 
 function rankStats(data: LiveData, lastNPerPlayer?: number, minMatches = 0) {
   return data.players
-    .filter((p) => !isExcludedPlayer(p))
     .map((p) => buildPlayerStatsForData(data, p.id, lastNPerPlayer))
     .filter((s): s is PlayerStats => s !== null && s.matches >= minMatches)
     .sort((a, b) => b.kda - a.kda)
@@ -369,14 +375,6 @@ export function getPlayerStatsForData(
   }
 
   return buildAllPlayerStatsForData(filteredData, options?.lastNMatchesPerPlayer, options?.minMatches ?? 0)
-}
-
-/** Jugadores con partidas en la temporada pero todavía sin las de clasificación. */
-export function getPlacementStats(data: LiveData, placementMatches: number): PlayerStats[] {
-  if (placementMatches <= 1) return []
-  return rankStats(data)
-    .filter((s) => s.matches > 0 && s.matches < placementMatches)
-    .sort((a, b) => b.matches - a.matches || b.kda - a.kda)
 }
 
 export function getSinglePlayerStats(data: LiveData, playerId: string): PlayerStats | null {

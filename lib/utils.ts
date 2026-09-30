@@ -1,15 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import type { Match, MatchPlayer, Player } from '@/types'
-
-/** Jugadores que no compiten en el ladder ni en los récords. */
-export const EXCLUDED_PLAYER_NAMES = ['sergio vergara']
-
-export function isExcludedPlayer(player?: Pick<Player, 'name'> | null) {
-  if (!player) return true
-  return EXCLUDED_PLAYER_NAMES.includes(player.name.toLowerCase())
-}
+import type { Match, MatchPlayer } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

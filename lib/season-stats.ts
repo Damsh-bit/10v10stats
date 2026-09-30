@@ -1,5 +1,4 @@
 import type { LiveData, Match, PlayerStats } from '@/types'
-import { isExcludedPlayer } from '@/lib/utils'
 
 export type MatchRecordKey =
   | 'maxKills'
@@ -48,7 +47,7 @@ export function computeMatchRecords(data: LiveData): MatchRecords {
   for (const match of chronological) {
     for (const entry of match.players) {
       const player = names.get(entry.playerId)
-      if (!player || isExcludedPlayer(player)) continue
+      if (!player) continue
 
       for (const [key, rule] of Object.entries(RECORD_RULES) as [MatchRecordKey, (typeof RECORD_RULES)[MatchRecordKey]][]) {
         const value = entry[rule.field]

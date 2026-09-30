@@ -1,19 +1,13 @@
-import { getLeagueData, getSeasonData, getPlayerStatsForData, getPlacementStats } from '@/lib/api'
+import { getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
 import { getNelsonData } from '@/lib/nelson'
-import {
-  formatSeasonDate,
-  getPlacementMatches,
-  getPreviousSeason,
-  getSeasonDay,
-} from '@/lib/seasons'
+import { formatSeasonDate, getPreviousSeason, getSeasonDay } from '@/lib/seasons'
 import {
   computeMatchRecords,
   computeRankBattles,
   computeSeasonSummary,
   toMapWinrateRows,
 } from '@/lib/season-stats'
-import { isExcludedPlayer } from '@/lib/utils'
 import { SeasonHero } from '@/components/season/season-hero'
 import { SeasonLegacyCard } from '@/components/season/season-legacy-card'
 import { SeasonLadder } from '@/components/stats/season-ladder'
@@ -38,11 +32,10 @@ export default async function Page() {
   const previousSeason = getPreviousSeason(league.seasons, season)
 
   const data = getSeasonData(league, season.id)
-  const placementMatches = getPlacementMatches(season)
-  const ranked = getPlayerStatsForData(data, { minMatches: placementMatches })
-  const placement = getPlacementStats(data, placementMatches)
+  // Todos suman desde su primera partida de la temporada.
+  const ranked = getPlayerStatsForData(data, { minMatches: 1 })
   const playedIds = new Set(data.matches.flatMap((m) => m.players.map((p) => p.playerId)))
-  const unplayed = data.players.filter((p) => !playedIds.has(p.id) && !isExcludedPlayer(p))
+  const unplayed = data.players.filter((p) => !playedIds.has(p.id))
 
   const recent =
     data.matches.length > RECENT_MATCH_COUNT
@@ -61,7 +54,7 @@ export default async function Page() {
   const previousData = previousSeason ? getSeasonData(league, previousSeason.id) : null
   const previousStandings =
     previousSeason && previousData
-      ? getPlayerStatsForData(previousData, { minMatches: getPlacementMatches(previousSeason) })
+      ? getPlayerStatsForData(previousData, { minMatches: 1 })
       : []
   const previousChampion =
     previousSeason && previousStandings[0]
@@ -83,7 +76,6 @@ export default async function Page() {
           activePlayers={summary.activePlayers}
           leader={ranked[0] ?? null}
           previousChampion={previousChampion}
-          placementMatches={placementMatches}
           primaryAction={<NewMatchModal triggerLabel="Cargar partida" triggerClassName="h-9 px-3.5 shadow-lg shadow-primary/30" />}
         />
 
@@ -94,9 +86,7 @@ export default async function Page() {
                 seasonName={season.name}
                 ranked={ranked}
                 recent={recent}
-                placement={placement}
                 unplayed={unplayed}
-                placementMatches={placementMatches}
                 records={playerRecords}
                 topFakadorId={topFakador?.id ?? null}
                 emptyAction={<NewMatchModal triggerLabel="Cargar la primera partida" />}

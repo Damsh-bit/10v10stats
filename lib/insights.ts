@@ -1,6 +1,5 @@
 import type { LiveData, Match, Player, PlayerStats } from '@/types'
 import { getPlayerStatsForData } from '@/lib/api'
-import { isExcludedPlayer } from '@/lib/utils'
 
 export type InsightCategory =
   | 'day_performance'
@@ -37,15 +36,11 @@ const DAY_NAMES = [
   'los sábados',
 ]
 
-function isExcluded(player?: Player) {
-  return isExcludedPlayer(player)
-}
-
 export function generateInsights(data: LiveData): Insight[] {
   const insights: Insight[] = []
   if (!data || !data.matches || data.matches.length === 0) return insights
 
-  const validPlayers = data.players.filter((p) => !isExcluded(p))
+  const validPlayers = data.players
   const playerMap = new Map<string, Player>()
   validPlayers.forEach((p) => playerMap.set(p.id, p))
 

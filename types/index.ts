@@ -20,6 +20,8 @@ export type MatchPlayer = {
   mvps: number
   won: boolean
   draw: boolean
+  /** Participación de invitado: se muestra en el tabulador pero no suma estadísticas. */
+  guest?: boolean
 }
 
 export type CSMap = string
@@ -32,7 +34,10 @@ export type Match = {
   ctScore: number
   tScore: number
   durationMin: number
+  /** Participaciones que cuentan para las estadísticas. */
   players: MatchPlayer[]
+  /** Invitados: solo para mostrar en el tabulador. */
+  guests: MatchPlayer[]
   winnerTeam?: 'CT' | 'T' | 'EMPATE'
   totalRounds?: number
   fotoUrl?: string

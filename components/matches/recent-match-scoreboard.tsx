@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { motion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
 import type { Match, MatchPlayer, Player } from '@/types'
-import { formatDate, mapImageUrl } from '@/lib/format'
+import { formatShortDate, mapImageUrl } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 type TeamProps = {
@@ -55,7 +55,7 @@ function ScoreboardTeam({ players, names, teamName, score, won, accentClass, bor
 
       <ol>
         {players.map((p, i) => {
-          const name = names.get(p.playerId) ?? p.playerId.slice(0, 8)
+          const name = p.guest ? 'Invitado' : names.get(p.playerId) ?? p.playerId.slice(0, 8)
           const isTopFragger = i === 0
           return (
             <li key={p.playerId}>
@@ -91,13 +91,14 @@ function ScoreboardTeam({ players, names, teamName, score, won, accentClass, bor
 /** Tabulador de la última partida jugada, separado por equipo. */
 export function RecentMatchScoreboard({ match, players }: { match: Match; players: Player[] }) {
   const names = new Map(players.map((p) => [p.id, p.name]))
-  const teams = [...new Set(match.players.map((p) => p.team))].sort()
+  const entries = [...match.players, ...match.guests]
+  const teams = [...new Set(entries.map((p) => p.team))].sort()
   const teamA = match.teamAName && teams.includes(match.teamAName) ? match.teamAName : teams[0] ?? 'CT'
   const teamB = teams.find((t) => t !== teamA) ?? 'T'
 
   const byDamage = (a: MatchPlayer, b: MatchPlayer) => b.damage - a.damage
-  const playersA = match.players.filter((p) => p.team === teamA).sort(byDamage)
-  const playersB = match.players.filter((p) => p.team === teamB).sort(byDamage)
+  const playersA = entries.filter((p) => p.team === teamA).sort(byDamage)
+  const playersB = entries.filter((p) => p.team === teamB).sort(byDamage)
 
   const isDraw = match.ctScore === match.tScore
   const wonA = !isDraw && match.ctScore > match.tScore
@@ -105,17 +106,21 @@ export function RecentMatchScoreboard({ match, players }: { match: Match; player
   return (
     <section>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-foreground">▶ Partida reciente</h2>
+        <h2 className="shrink-0 whitespace-nowrap font-heading text-sm font-bold uppercase tracking-[0.15em] text-foreground sm:tracking-[0.2em]">
+          ▶ Partida reciente
+        </h2>
         <Link
           href={`/matches/${match.id}`}
-          className="group flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+          className="group flex min-w-0 items-center gap-1.5 rounded-md border border-border bg-card px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
         >
           <span
             className="h-3 w-5 rounded-sm bg-cover bg-center"
             style={{ backgroundImage: `url('${mapImageUrl(match.map)}')` }}
             aria-hidden="true"
           />
-          {match.map} · {formatDate(match.date)}
+          <span className="truncate">
+            {match.map} · {formatShortDate(match.date)}
+          </span>
           <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </Link>
       </div>

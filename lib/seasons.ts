@@ -51,14 +51,6 @@ const FALLBACK_SEASONS: Season[] = [
   },
 ]
 
-/** Partidas mínimas en la temporada para entrar al ranking (a partir de la S2). */
-export const PLACEMENT_MATCHES = 3
-
-export function getPlacementMatches(season: Pick<Season, 'id'>) {
-  // La Season 1 se jugó sin partidas de clasificación: se respeta tal cual terminó.
-  return season.id >= 2 ? PLACEMENT_MATCHES : 1
-}
-
 type SeasonRow = {
   id: number
   slug: string

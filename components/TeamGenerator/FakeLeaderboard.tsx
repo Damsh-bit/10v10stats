@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { Drama, X } from 'lucide-react'
 import { LayoutGroup, motion } from 'motion/react'
+import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 
 const ADMIN_PASSWORD = 'alzhannah2026'
 
@@ -34,6 +35,7 @@ export function FakeLeaderboard({ archived }: { archived?: ArchivedFakeEntry[] }
   const [passwordError, setPasswordError] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
+  useBodyScrollLock(!!selectedPlayer)
   const supabase = getSupabaseClient()
 
   useEffect(() => {
@@ -239,81 +241,83 @@ export function FakeLeaderboard({ archived }: { archived?: ArchivedFakeEntry[] }
       </section>
 
       {selectedPlayer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border p-5 rounded-lg shadow-xl max-w-[320px] w-full animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Sumar Fakaso</h3>
-              <button 
-                onClick={() => { setSelectedPlayer(null); setPassword(''); setPasswordError(false) }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <p className="text-[13px] text-muted-foreground mb-4">
-              ¿Confirmás que querés sumarle un fakaso a <strong className="text-foreground">{selectedPlayer.player_name}</strong>?
-            </p>
-
-            <div className="mb-4">
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Clave
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setPasswordError(false) }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+        <Portal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-card border border-border p-5 rounded-lg shadow-xl max-w-[320px] w-full animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Sumar Fakaso</h3>
+                <button 
+                  onClick={() => { setSelectedPlayer(null); setPassword(''); setPasswordError(false) }}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <p className="text-[13px] text-muted-foreground mb-4">
+                ¿Confirmás que querés sumarle un fakaso a <strong className="text-foreground">{selectedPlayer.player_name}</strong>?
+              </p>
+  
+              <div className="mb-4">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Clave
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setPasswordError(false) }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (password !== ADMIN_PASSWORD) {
+                        setPasswordError(true)
+                      } else {
+                        handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
+                        setSelectedPlayer(null)
+                        setPassword('')
+                        setPasswordError(false)
+                      }
+                    }
+                  }}
+                  placeholder="••••••••••••"
+                  autoFocus
+                  className={`w-full rounded border px-3 py-1.5 text-sm bg-background text-foreground placeholder:text-muted-foreground/40 outline-none transition-colors ${
+                    passwordError
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-border focus:border-primary'
+                  }`}
+                />
+                {passwordError && (
+                  <p className="mt-1.5 text-[11px] text-red-500">Clave incorrecta.</p>
+                )}
+              </div>
+              
+              <div className="flex gap-2 justify-end">
+                <button 
+                  className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => { setSelectedPlayer(null); setPassword(''); setPasswordError(false) }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={!password}
+                  onClick={() => {
                     if (password !== ADMIN_PASSWORD) {
                       setPasswordError(true)
-                    } else {
-                      handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
-                      setSelectedPlayer(null)
-                      setPassword('')
-                      setPasswordError(false)
+                      return
                     }
-                  }
-                }}
-                placeholder="••••••••••••"
-                autoFocus
-                className={`w-full rounded border px-3 py-1.5 text-sm bg-background text-foreground placeholder:text-muted-foreground/40 outline-none transition-colors ${
-                  passwordError
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-border focus:border-primary'
-                }`}
-              />
-              {passwordError && (
-                <p className="mt-1.5 text-[11px] text-red-500">Clave incorrecta.</p>
-              )}
-            </div>
-            
-            <div className="flex gap-2 justify-end">
-              <button 
-                className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => { setSelectedPlayer(null); setPassword(''); setPasswordError(false) }}
-              >
-                Cancelar
-              </button>
-              <button 
-                className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={!password}
-                onClick={() => {
-                  if (password !== ADMIN_PASSWORD) {
-                    setPasswordError(true)
-                    return
-                  }
-                  handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
-                  setSelectedPlayer(null)
-                  setPassword('')
-                  setPasswordError(false)
-                }}
-              >
-                Confirmar
-              </button>
+                    handleIncrement(selectedPlayer.id, selectedPlayer.fake_count)
+                    setSelectedPlayer(null)
+                    setPassword('')
+                    setPasswordError(false)
+                  }}
+                >
+                  Confirmar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </>
   )

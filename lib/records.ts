@@ -1,5 +1,4 @@
 import type { LiveData, PlayerStats } from '@/types'
-import { isExcludedPlayer } from '@/lib/utils'
 
 
 export type RecordType = 
@@ -45,12 +44,9 @@ export function getPlayerRecords(data: LiveData, stats: PlayerStats[]): PlayerRe
   let maxDamage = -1, minDamage = Infinity
 
   // Find the absolute min/max values
-  const excludedPlayerIds = data.players.filter((p) => isExcludedPlayer(p)).map((p) => p.id)
 
   data.matches.forEach(m => {
     m.players.forEach(p => {
-      if (excludedPlayerIds.includes(p.playerId)) return
-
       if (p.kills > maxKills) maxKills = p.kills
       if (p.kills < minKills) minKills = p.kills
       
@@ -67,8 +63,6 @@ export function getPlayerRecords(data: LiveData, stats: PlayerStats[]): PlayerRe
   // Assign the badges to whoever matches these records
   data.matches.forEach(m => {
     m.players.forEach(p => {
-      if (excludedPlayerIds.includes(p.playerId)) return
-
       if (p.kills === maxKills && maxKills > -1) addRecord(p.playerId, 'max_kills')
       if (p.kills === minKills && minKills !== Infinity) addRecord(p.playerId, 'min_kills')
       

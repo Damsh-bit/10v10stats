@@ -8,7 +8,6 @@ import { formatDate, mapImageUrl } from '@/lib/format'
 import { toDateKey } from '@/lib/matches-calendar'
 import { cn, getTeamColorClass } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { motion } from 'motion/react'
 
 const mapColors: Record<CSMap, string> = {
   Mirage: '#c2853b',
@@ -97,12 +96,10 @@ export function MatchList({
             ? (match.teamAName || 'CT')
             : (match.teamBName || 'T')
           return (
-            <motion.div
+            <div
               key={match.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.3), ease: [0.22, 1, 0.36, 1] }}
-              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/60 sm:flex-row"
+              style={{ animationDelay: `${Math.min(index * 0.03, 0.3)}s` }}
+              className="enter group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/60 sm:flex-row"
             >
               <div
                 className="h-24 w-full shrink-0 bg-cover bg-center sm:h-auto sm:w-40"
@@ -139,7 +136,7 @@ export function MatchList({
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )
         })}
 

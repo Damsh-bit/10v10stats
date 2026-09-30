@@ -6,7 +6,6 @@ import { ArrowRight, Crown, History, Swords, Target, Trophy, Users } from 'lucid
 import type { PlayerStats } from '@/types'
 import AnimatedNumber from '@/components/ui/animated-number'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
-import { EASE_OUT } from '@/components/motion/reveal'
 
 type Props = {
   seasonNumber: number
@@ -18,7 +17,6 @@ type Props = {
   activePlayers: number
   leader: PlayerStats | null
   previousChampion: { seasonName: string; seasonSlug: string; stats: PlayerStats } | null
-  placementMatches: number
   primaryAction: React.ReactNode
 }
 
@@ -32,7 +30,6 @@ export function SeasonHero({
   activePlayers,
   leader,
   previousChampion,
-  placementMatches,
   primaryAction,
 }: Props) {
   const letters = seasonName.toUpperCase().split('')
@@ -59,52 +56,40 @@ export function SeasonHero({
 
       <div className="grid gap-8 lg:grid-cols-[1.35fr_1fr] lg:items-center">
         <div className="flex flex-col items-start gap-4">
-          <motion.span
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: EASE_OUT }}
-            className="flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300"
+          <span
+            className="enter flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300"
           >
             <span className="relative flex h-2 w-2" aria-hidden="true">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
             Temporada en curso · Día {dayNumber}
-          </motion.span>
+          </span>
 
           <h1 className="font-heading text-5xl font-black uppercase leading-[0.9] tracking-tight sm:text-7xl" aria-label={seasonName}>
             <span className="flex" aria-hidden="true">
               {letters.map((letter, i) => (
-                <motion.span
+                <span
                   key={`${letter}-${i}`}
-                  className="season-gradient-text inline-block"
-                  initial={{ opacity: 0, y: 30, rotateX: -80 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 + i * 0.045, ease: EASE_OUT }}
+                  className="enter-letter season-gradient-text"
+                  style={{ animationDelay: `${0.1 + i * 0.045}s` }}
                 >
                   {letter === ' ' ? ' ' : letter}
-                </motion.span>
+                </span>
               ))}
             </span>
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.55, ease: EASE_OUT }}
-            className="max-w-lg text-[14px] leading-relaxed text-foreground/80 sm:text-[15px]"
+          <p
+            style={{ animationDelay: '0.55s' }}
+            className="enter max-w-lg text-[14px] leading-relaxed text-foreground/80 sm:text-[15px]"
           >
             <span className="font-semibold text-white">{tagline ?? 'Nueva temporada, tabla nueva.'}</span>{' '}
             Todo lo de la temporada pasada quedó en el archivo: el ladder, los récords, los Nelsons y los Fakasos
-            vuelven a cero. Jugá {placementMatches} partidas para entrar al ranking y escalá hasta el #1.
-          </motion.p>
+            vuelven a cero. Cada partida suma desde la primera: jugá y escalá hasta el #1.
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7, ease: EASE_OUT }}
-            className="flex flex-wrap items-center gap-2"
-          >
+          <div className="enter flex flex-wrap items-center gap-2" style={{ animationDelay: '0.7s' }}>
             {primaryAction}
             <Link
               href="/creacion-de-equipos"
@@ -123,7 +108,7 @@ export function SeasonHero({
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
             )}
-          </motion.div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
@@ -186,22 +171,19 @@ function HeroStat({
   gold?: boolean
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, delay, ease: EASE_OUT }}
-      whileHover={{ y: -2 }}
+    <div
+      style={{ animationDelay: `${delay}s` }}
       className={
         gold
-          ? 'flex min-h-[92px] flex-col justify-between gap-2 rounded-xl border border-amber-300/30 bg-gradient-to-br from-amber-300/15 to-black/20 p-3 backdrop-blur-sm sm:p-4'
-          : 'flex min-h-[92px] flex-col justify-between gap-2 rounded-xl border border-white/10 bg-black/25 p-3 backdrop-blur-sm sm:p-4'
+          ? 'enter flex min-h-[84px] min-w-0 flex-col justify-between gap-2 rounded-xl border border-amber-300/30 bg-gradient-to-br from-amber-300/15 to-black/20 p-3 transition-transform hover:-translate-y-0.5 sm:min-h-[92px] sm:p-4'
+          : 'enter flex min-h-[84px] min-w-0 flex-col justify-between gap-2 rounded-xl border border-white/10 bg-black/25 p-3 transition-transform hover:-translate-y-0.5 sm:min-h-[92px] sm:p-4'
       }
     >
       <span className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${gold ? 'text-amber-200' : 'text-muted-foreground'}`}>
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
         {label}
       </span>
-      <div className="font-semibold text-foreground">{children}</div>
-    </motion.div>
+      <div className="min-w-0 font-semibold text-foreground">{children}</div>
+    </div>
   )
 }

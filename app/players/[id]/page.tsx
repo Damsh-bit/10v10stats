@@ -9,7 +9,7 @@ import {
   getSinglePlayerStats,
 } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
-import { getPlacementMatches, getPreviousSeason } from '@/lib/seasons'
+import { getPreviousSeason } from '@/lib/seasons'
 import { buildSeasonComparison } from '@/lib/season-stats'
 import { BadgePill } from '@/components/shared/strike-ui'
 import { EnlargeableAvatar } from '@/components/players/enlargeable-avatar'
@@ -26,10 +26,7 @@ export async function generateStaticParams() {
 }
 
 function rankText(scope: PlayerScope) {
-  const matches = scope.stats?.matches ?? 0
-  if (scope.rank) return `#${scope.rank}`
-  if (matches === 0) return '—'
-  return `Clasif. ${matches}/${scope.placementMatches}`
+  return scope.rank ? `#${scope.rank}` : '—'
 }
 
 export default async function PlayerProfile({
@@ -49,9 +46,9 @@ export default async function PlayerProfile({
     key: string,
     label: string,
     data: LiveData,
-    options: { seasonId: number | null; isCurrent: boolean; placementMatches: number },
+    options: { seasonId: number | null; isCurrent: boolean },
   ): PlayerScope => {
-    const ranked = getPlayerStatsForData(data, { minMatches: options.placementMatches })
+    const ranked = getPlayerStatsForData(data, { minMatches: 1 })
     const rankIndex = ranked.findIndex((s) => s.player.id === id)
     const stats = getSinglePlayerStats(data, id)
     return {
@@ -62,7 +59,6 @@ export default async function PlayerProfile({
       stats,
       rank: rankIndex >= 0 ? rankIndex + 1 : null,
       rankedCount: ranked.length,
-      placementMatches: options.placementMatches,
       records: getPlayerRecords(data, ranked)[id] ?? [],
       isLast: ranked.length > 3 && rankIndex === ranked.length - 1,
       nelsons: data.players.find((p) => p.id === id)?.nelsons ?? 0,
@@ -75,13 +71,11 @@ export default async function PlayerProfile({
       buildScope(season.slug, season.name, getSeasonData(league, season.id), {
         seasonId: season.id,
         isCurrent: season.isCurrent,
-        placementMatches: getPlacementMatches(season),
       }),
     )
   const careerScope = buildScope('carrera', 'Carrera', getCareerData(league), {
     seasonId: null,
     isCurrent: false,
-    placementMatches: 1,
   })
   const scopes = [...seasonScopes, careerScope]
 
@@ -94,8 +88,8 @@ export default async function PlayerProfile({
     .sort((a, b) => b.match.date.localeCompare(a.match.date))
 
   return (
-    <main className="cs-grid min-h-screen">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-3 py-6 sm:px-4 sm:py-8">
+    <main className="cs-grid min-h-screen overflow-x-hidden">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-3 py-5 sm:gap-5 sm:px-4 sm:py-7">
         <Link
           href="/"
           className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
@@ -104,18 +98,20 @@ export default async function PlayerProfile({
           Ladder
         </Link>
 
-        <Reveal immediate className="flex items-center gap-4">
-          <EnlargeableAvatar player={player} size={84} />
-          <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <h1 className="truncate font-heading text-3xl font-bold uppercase tracking-wide text-foreground">{player.name}</h1>
+        <Reveal immediate className="flex items-center gap-3 sm:gap-4">
+          <EnlargeableAvatar player={player} size={64} />
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="truncate font-heading text-2xl font-bold uppercase tracking-wide text-foreground sm:text-3xl">
+                {player.name}
+              </h1>
               <EditPlayerModal player={{ id: player.id, name: player.name, photoUrl: player.photoUrl }} />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {player.badge && player.badge !== 'Sin info' && <BadgePill>{player.badge}</BadgePill>}
               {currentScope && (
                 <span className="season-chip rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-black">
-                  {current.name}: {currentScope.rank ? `#${currentScope.rank}` : currentScope.stats?.matches ? 'en clasificación' : 'sin debut'}
+                  {current.name}: {currentScope.rank ? `#${currentScope.rank}` : 'sin debut'}
                 </span>
               )}
               {previous && previousScope?.rank && (
@@ -127,11 +123,11 @@ export default async function PlayerProfile({
           </div>
         </Reveal>
 
-        <Reveal immediate delay={0.1}>
+        <Reveal immediate delay={0.08}>
           <PlayerSeasonView
             scopes={scopes}
             history={history}
-            beforeHistory={
+            aside={
               previous && currentScope && previousScope ? (
                 <SeasonComparison
                   metrics={buildSeasonComparison(currentScope.stats, previousScope.stats)}

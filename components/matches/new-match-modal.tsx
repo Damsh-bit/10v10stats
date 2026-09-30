@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Loader2, Plus, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 
 type Team = 'CT' | 'T' | 'EMPATE'
 
@@ -143,6 +144,7 @@ export function NewMatchModal({
   const mapValid = form.map.trim().length > 0
   const canSave = mapValid && scoresValid && allPlayersAssigned && !hasDuplicateSelection
 
+  useBodyScrollLock(isOpen)
   const handleOpen = () => {
     setIsOpen(true)
     setStep(1)
@@ -586,9 +588,9 @@ export function NewMatchModal({
             </div>
             <div className="space-y-3">
               {form.players.filter((row) => row.team === 'CT').map((row) => (
-                <div key={row.id} className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 md:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr]">
-                  <div className="space-y-1">
-                    <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Jugador</label>
+                <div key={row.id} className="grid grid-cols-5 gap-1.5 rounded-xl border border-border bg-background/70 p-2.5 sm:gap-2 sm:p-3 md:grid-cols-[minmax(0,1.3fr)_repeat(5,minmax(0,0.7fr))]">
+                  <div className="col-span-5 space-y-1 md:col-span-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Jugador</label>
                     <select
                       value={row.player_id}
                       onChange={(event) => updatePlayerRow(row.id, 'player_id', event.target.value)}
@@ -604,25 +606,25 @@ export function NewMatchModal({
                         ))}
                     </select>
                   </div>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Kills</span>
-                    <input type="number" min="0" value={row.kills} onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>K</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.kills} onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Deaths</span>
-                    <input type="number" min="0" value={row.deaths} onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>D</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.deaths} onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Assists</span>
-                    <input type="number" min="0" value={row.assists} onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>A</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.assists} onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                     <span>HS%</span>
-                    <input type="number" min="0" max="100" value={row.hsPct} onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                    <input type="number" inputMode="numeric" min="0" max="100" value={row.hsPct} onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Damage</span>
-                    <input type="number" min="0" value={row.damage} onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>DMG</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.damage} onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
                 </div>
               ))}
@@ -642,9 +644,9 @@ export function NewMatchModal({
             </div>
             <div className="space-y-3">
               {form.players.filter((row) => row.team === 'T').map((row) => (
-                <div key={row.id} className="grid gap-2 rounded-xl border border-border bg-background/70 p-3 md:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr]">
-                  <div className="space-y-1">
-                    <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Jugador</label>
+                <div key={row.id} className="grid grid-cols-5 gap-1.5 rounded-xl border border-border bg-background/70 p-2.5 sm:gap-2 sm:p-3 md:grid-cols-[minmax(0,1.3fr)_repeat(5,minmax(0,0.7fr))]">
+                  <div className="col-span-5 space-y-1 md:col-span-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Jugador</label>
                     <select
                       value={row.player_id}
                       onChange={(event) => updatePlayerRow(row.id, 'player_id', event.target.value)}
@@ -660,25 +662,25 @@ export function NewMatchModal({
                         ))}
                     </select>
                   </div>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Kills</span>
-                    <input type="number" min="0" value={row.kills} onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>K</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.kills} onChange={(event) => updatePlayerRow(row.id, 'kills', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Deaths</span>
-                    <input type="number" min="0" value={row.deaths} onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>D</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.deaths} onChange={(event) => updatePlayerRow(row.id, 'deaths', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Assists</span>
-                    <input type="number" min="0" value={row.assists} onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>A</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.assists} onChange={(event) => updatePlayerRow(row.id, 'assists', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                     <span>HS%</span>
-                    <input type="number" min="0" max="100" value={row.hsPct} onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                    <input type="number" inputMode="numeric" min="0" max="100" value={row.hsPct} onChange={(event) => updatePlayerRow(row.id, 'hsPct', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
-                  <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>Damage</span>
-                    <input type="number" min="0" value={row.damage} onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none ring-0 focus:border-primary" />
+                  <label className="min-w-0 space-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>DMG</span>
+                    <input type="number" inputMode="numeric" min="0" value={row.damage} onChange={(event) => updatePlayerRow(row.id, 'damage', event.target.value)} className="w-full rounded-lg border border-border bg-background px-1.5 py-2 text-center text-sm text-foreground outline-none ring-0 focus:border-primary sm:px-3" />
                   </label>
                 </div>
               ))}
@@ -731,99 +733,101 @@ export function NewMatchModal({
       </Button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:p-4">
-          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center">
-            <div className="relative flex min-h-screen flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 sm:min-h-[80vh] sm:rounded-2xl sm:border sm:border-border">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Nueva partida</p>
-                  <h2 className="text-xl font-semibold text-foreground">Registrar match de CS2</h2>
+        <Portal>
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:p-4">
+            <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center">
+              <div className="relative flex min-h-screen flex-col rounded-none border-0 bg-background/95 p-4 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 sm:min-h-[80vh] sm:rounded-2xl sm:border sm:border-border">
+                <div className="flex items-center justify-between border-b border-border pb-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">Nueva partida</p>
+                    <h2 className="text-xl font-semibold text-foreground">Registrar match de CS2</h2>
+                  </div>
+                  <button onClick={handleClose} className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-                <button onClick={handleClose} className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {!isAuthenticated ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="w-full max-w-sm space-y-4">
-                    <div className="space-y-2 text-center">
-                      <h3 className="text-lg font-medium text-foreground">Acceso restringido</h3>
-                      <p className="text-sm text-muted-foreground">Ingresa la clave de administrador para continuar.</p>
-                    </div>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        if (adminPassword === 'alzhannah2026') {
-                          setIsAuthenticated(true)
-                          setAuthError(null)
-                        } else {
-                          setAuthError('Clave de administrador incorrecta.')
-                        }
-                      }}
-                      className="space-y-4"
-                    >
-                      <input
-                        type="password"
-                        autoFocus
-                        value={adminPassword}
-                        onChange={(e) => {
-                          setAdminPassword(e.target.value)
-                          setAuthError(null)
+  
+                {!isAuthenticated ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-full max-w-sm space-y-4">
+                      <div className="space-y-2 text-center">
+                        <h3 className="text-lg font-medium text-foreground">Acceso restringido</h3>
+                        <p className="text-sm text-muted-foreground">Ingresa la clave de administrador para continuar.</p>
+                      </div>
+                      <form 
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          if (adminPassword === 'alzhannah2026') {
+                            setIsAuthenticated(true)
+                            setAuthError(null)
+                          } else {
+                            setAuthError('Clave de administrador incorrecta.')
+                          }
                         }}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-widest text-foreground outline-none ring-0 focus:border-primary"
-                        placeholder="••••••••"
-                      />
-                      {authError && <p className="text-center text-sm text-destructive">{authError}</p>}
-                      <Button type="submit" className="w-full">Desbloquear</Button>
-                    </form>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {STEP_LABELS.map((label, index) => {
-                      const active = index + 1 === step
-                      const complete = index + 1 < step
-                      return (
-                        <div key={label} className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${active ? 'bg-primary text-primary-foreground' : complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
-                          {label}
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className="mt-6 flex-1">{stepContent}</div>
-
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                    <div className="text-sm text-muted-foreground">
-                      {isLoadingPlayers ? 'Cargando jugadores…' : 'Los jugadores se traen desde la base de datos.'}
-                    </div>
-                    <div className="flex gap-2">
-                      {step > 1 ? (
-                        <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                          Volver
-                        </Button>
-                      ) : null}
-                      {step < 3 ? (
-                        <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isAnalyzing}>
-                          Siguiente
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button onClick={handleSubmit} disabled={!canSave || isSubmitting}>
-                          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          Guardar partida
-                        </Button>
-                      )}
+                        className="space-y-4"
+                      >
+                        <input
+                          type="password"
+                          autoFocus
+                          value={adminPassword}
+                          onChange={(e) => {
+                            setAdminPassword(e.target.value)
+                            setAuthError(null)
+                          }}
+                          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-widest text-foreground outline-none ring-0 focus:border-primary"
+                          placeholder="••••••••"
+                        />
+                        {authError && <p className="text-center text-sm text-destructive">{authError}</p>}
+                        <Button type="submit" className="w-full">Desbloquear</Button>
+                      </form>
                     </div>
                   </div>
-                </>
-              )}
+                ) : (
+                  <>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {STEP_LABELS.map((label, index) => {
+                        const active = index + 1 === step
+                        const complete = index + 1 < step
+                        return (
+                          <div key={label} className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${active ? 'bg-primary text-primary-foreground' : complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                            {label}
+                          </div>
+                        )
+                      })}
+                    </div>
+  
+                    <div className="mt-6 flex-1">{stepContent}</div>
+  
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                      <div className="text-sm text-muted-foreground">
+                        {isLoadingPlayers ? 'Cargando jugadores…' : 'Los jugadores se traen desde la base de datos.'}
+                      </div>
+                      <div className="flex gap-2">
+                        {step > 1 ? (
+                          <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Volver
+                          </Button>
+                        ) : null}
+                        {step < 3 ? (
+                          <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isAnalyzing}>
+                            Siguiente
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button onClick={handleSubmit} disabled={!canSave || isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Guardar partida
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       ) : null}
     </>
   )

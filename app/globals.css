@@ -211,6 +211,95 @@
   letter-spacing: -0.04em;
 }
 
+/* Entradas por CSS: corren al pintar, sin esperar a la hidratación de React. */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) rotateX(-70deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enter {
+  animation: enter-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enter-letter {
+  display: inline-block;
+  animation: letter-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes podium-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.9);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(3px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes podium-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.podium-drop {
+  animation: podium-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.podium-grow {
+  animation: podium-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enter-stagger > * {
+  animation: enter-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.enter-stagger > :nth-child(2) { animation-delay: 60ms; }
+.enter-stagger > :nth-child(3) { animation-delay: 120ms; }
+.enter-stagger > :nth-child(4) { animation-delay: 180ms; }
+.enter-stagger > :nth-child(5) { animation-delay: 240ms; }
+.enter-stagger > :nth-child(6) { animation-delay: 300ms; }
+.enter-stagger > :nth-child(n + 7) { animation-delay: 360ms; }
+
 :focus-visible {
   outline: 2px solid var(--season-gold);
   outline-offset: 2px;
@@ -220,7 +309,13 @@
   .season-chip,
   .season-gradient-text,
   .btn-gold-glow,
-  .text-gold-glow {
+  .text-gold-glow,
+  .page-enter,
+  .enter,
+  .enter-letter,
+  .podium-drop,
+  .podium-grow,
+  .enter-stagger > * {
     animation: none;
   }
 }

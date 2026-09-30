@@ -5,11 +5,13 @@ import Image from 'next/image'
 import { X } from 'lucide-react'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import type { Player } from '@/types'
+import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 
 
 export function EnlargeableAvatar({ player, size = 80 }: { player: Player; size?: number }) {
   const [isOpen, setIsOpen] = useState(false)
 
+  useBodyScrollLock(isOpen)
   return (
     <>
       <button 
@@ -21,40 +23,42 @@ export function EnlargeableAvatar({ player, size = 80 }: { player: Player; size?
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
-          <div 
-            className="relative flex flex-col items-center animate-in fade-in zoom-in duration-200" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setIsOpen(false)}
-              className="absolute -right-4 -top-4 md:-right-12 md:-top-8 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white transition-colors z-10 bg-black/50 backdrop-blur-md"
+        <Portal>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 p-4 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
+            <div 
+              className="relative flex flex-col items-center animate-in fade-in zoom-in duration-200" 
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="h-6 w-6" />
-            </button>
-            
-            {player.photoUrl ? (
-              <Image
-                src={player.photoUrl}
-                alt={player.name}
-                width={800}
-                height={800}
-                className="max-h-[85vh] max-w-[90vw] w-auto h-auto rounded-xl object-contain shadow-2xl border border-white/10"
-              />
-            ) : (
-              <div 
-                className="flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 font-mono font-bold shadow-2xl border border-white/10"
-                style={{
-                  width: Math.min(window.innerWidth * 0.8, 400),
-                  height: Math.min(window.innerWidth * 0.8, 400),
-                  fontSize: Math.min(window.innerWidth * 0.8, 400) * 0.4
-                }}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="absolute -right-4 -top-4 md:-right-12 md:-top-8 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white transition-colors z-10 bg-black/50 backdrop-blur-md"
               >
-                {(player.name || '??').slice(0, 2).toUpperCase()}
-              </div>
-            )}
+                <X className="h-6 w-6" />
+              </button>
+              
+              {player.photoUrl ? (
+                <Image
+                  src={player.photoUrl}
+                  alt={player.name}
+                  width={800}
+                  height={800}
+                  className="max-h-[85vh] max-w-[90vw] w-auto h-auto rounded-xl object-contain shadow-2xl border border-white/10"
+                />
+              ) : (
+                <div 
+                  className="flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 font-mono font-bold shadow-2xl border border-white/10"
+                  style={{
+                    width: Math.min(window.innerWidth * 0.8, 400),
+                    height: Math.min(window.innerWidth * 0.8, 400),
+                    fontSize: Math.min(window.innerWidth * 0.8, 400) * 0.4
+                  }}
+                >
+                  {(player.name || '??').slice(0, 2).toUpperCase()}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </Portal>
       )}
     </>
   )

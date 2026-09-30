@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { getCareerData, getLeagueData, getPlayerStatsForData, getSeasonData } from '@/lib/api'
-import { getPlacementMatches } from '@/lib/seasons'
 import { computeMatchRecords, computeSeasonSummary, type MatchRecord } from '@/lib/season-stats'
 import { mapImageUrl } from '@/lib/format'
 import { HallOfFameView, type HallCard, type HallScope } from '@/components/stats/hall-of-fame-view'
@@ -21,10 +20,10 @@ function recordCard(title: string, record: MatchRecord | null, color: string, fo
   }
 }
 
-function buildCards(data: LiveData, placementMatches: number, leaderTitle: string): HallCard[] {
+function buildCards(data: LiveData, leaderTitle: string): HallCard[] {
   const summary = computeSeasonSummary(data)
   const records = computeMatchRecords(data)
-  const standings = getPlayerStatsForData(data, { minMatches: placementMatches })
+  const standings = getPlayerStatsForData(data, { minMatches: 1 })
   const byWins = [...standings].sort((a, b) => b.wins - a.wins)[0]
   const byLosses = [...standings].sort((a, b) => b.losses - a.losses)[0]
   const leader = standings[0]
@@ -82,10 +81,10 @@ export default async function EstadisticasPage() {
         key: season.slug,
         label: season.name,
         hint: season.isCurrent ? 'actual' : undefined,
-        cards: buildCards(data, getPlacementMatches(season), season.isCurrent ? 'Líder actual' : 'Campeón'),
+        cards: buildCards(data, season.isCurrent ? 'Líder actual' : 'Campeón'),
       }
     }),
-    { key: 'historico', label: 'Histórico', cards: buildCards(getCareerData(league), 1, 'Mejor KDA histórico') },
+    { key: 'historico', label: 'Histórico', cards: buildCards(getCareerData(league), 'Mejor KDA histórico') },
   ]
 
   // Recién arrancada la temporada no hay récords: se abre en la última con partidas.
