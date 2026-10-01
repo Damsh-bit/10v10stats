@@ -82,6 +82,9 @@ export type Preferencia = { id: string; init_point: string; sandbox_init_point?:
 
 export function crearPreferencia(input: PreferenciaInput) {
   const volver = (estado: string) => `${input.siteUrl}${input.volverA}?pago=${estado}&posicion=${input.posicionId}`
+  // Mercado Pago rechaza auto_return (y no puede avisar) si el sitio no es una URL pública con https, como
+  // en localhost: ahí el jugador vuelve con el botón del checkout y la página consulta el pago sola.
+  const publico = input.siteUrl.startsWith('https://')
   return mp<Preferencia>('/checkout/preferences', {
     method: 'POST',
     idempotencyKey: `pref-${input.posicionId}-${input.total}`,
@@ -98,9 +101,8 @@ export function crearPreferencia(input: PreferenciaInput) {
         },
       ],
       external_reference: input.posicionId,
-      notification_url: `${input.siteUrl}/api/apuestas/webhook`,
+      ...(publico ? { notification_url: `${input.siteUrl}/api/apuestas/webhook`, auto_return: 'approved' } : {}),
       back_urls: { success: volver('ok'), pending: volver('pendiente'), failure: volver('error') },
-      auto_return: 'approved',
       // Se aprueba o se rechaza en el momento: nada de pagos "pendientes" que se acrediten después del cierre.
       binary_mode: true,
       expires: true,

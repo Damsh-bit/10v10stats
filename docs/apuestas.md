@@ -88,12 +88,21 @@ bloquean al jugador 15 minutos. Cada uno carga su alias/CVU de cobro.
    | `APUESTAS_BANCA_ALIAS` | Sólo modo manual (sin Mercado Pago). |
 
 3. **Mercado Pago** ([developers](https://www.mercadopago.com.ar/developers/panel/app)):
-   1. Crear una aplicación de tipo **Checkout Pro** / pagos online.
-   2. Crear usuarios de prueba (un vendedor y un comprador) y usar las credenciales de prueba del vendedor.
-   3. En la aplicación → **Webhooks**: URL `https://<tu-sitio>/api/apuestas/webhook`, evento **Pagos**. Copiar la clave
-      secreta a `MERCADOPAGO_WEBHOOK_SECRET`. (Cada checkout también manda `notification_url` a la misma ruta.)
-   4. Probar todo el circuito con el comprador de prueba. Después pasar a las credenciales de producción.
-   5. En local el webhook no llega (localhost): al volver del checkout la página consulta el pago sola (`verificar`).
+   1. Crear una aplicación de tipo **Checkout Pro** / pagos online. Ya existe: "10v10stats apuestas" (App ID
+      `8325289027034473`), con su vendedor y comprador de prueba en **Cuentas de prueba**.
+   2. Las **credenciales de prueba** de la aplicación (`APP_USR-…`) son las del vendedor de prueba: ese access token va en
+      `MERCADOPAGO_ACCESS_TOKEN`. Con ellas el `init_point` normal ya cobra en modo prueba (no hace falta
+      `MERCADOPAGO_USE_SANDBOX`).
+   3. En la aplicación → **Webhooks**: URL `https://alzstats.pro/api/apuestas/webhook`, evento **Pagos** (ya está
+      configurado, sólo para producción). Copiar la clave secreta a `MERCADOPAGO_WEBHOOK_SECRET`. Cada checkout también
+      manda `notification_url` a la misma ruta.
+   4. Para pagar en modo prueba: ventana de incógnito, entrar como el comprador de prueba y usar una tarjeta de prueba con
+      titular `APRO` y DNI `12345678`.
+   5. En local (`http://localhost`) Mercado Pago no acepta `auto_return` ni puede avisar al webhook, así que no se mandan:
+      el jugador vuelve con el botón del checkout y la página consulta el pago sola (`verificar`).
+   6. **Devoluciones**: con credenciales de prueba la API de reembolsos contesta `401 Unauthorized use of live credentials`
+      (código 7), aun con saldo en la cuenta. No se pueden probar en el sandbox. Si una devolución falla, queda como
+      "a devolver" en el panel de la banca. Conviene probar una de verdad con un monto chico al pasar a producción.
 4. **Banca**: entrar a `/apuestas` → "Panel de la banca" con `APUESTAS_ADMIN_KEY` y armar el PIN de cada uno.
 5. Sumar la novedad en `lib/novedades.ts` cuando se prenda para todos.
 
