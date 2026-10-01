@@ -77,14 +77,19 @@ export function getProveedor(): ProveedorPago | null {
   return null
 }
 
+/** Distingue una clave que no está de una que está pero es corta (sin decir cuánto mide). */
+function faltaClave(name: string, minimo: number) {
+  return env(name) ? `${name} es muy corta: necesita ${minimo}+ caracteres` : `${name} (${minimo}+ caracteres)`
+}
+
 export function getApuestasConfig(): ApuestasPublicConfig {
   const proveedor = getProveedor()
   const flag = env('APUESTAS_HABILITADAS')
   const faltantes: string[] = []
   if (flag !== 'true') faltantes.push('APUESTAS_HABILITADAS=true')
   if (!env('SUPABASE_SERVICE_ROLE_KEY')) faltantes.push('SUPABASE_SERVICE_ROLE_KEY')
-  if (!getSessionSecret()) faltantes.push('APUESTAS_SESSION_SECRET (32+ caracteres)')
-  if (!getAdminKey()) faltantes.push('APUESTAS_ADMIN_KEY (12+ caracteres)')
+  if (!getSessionSecret()) faltantes.push(faltaClave('APUESTAS_SESSION_SECRET', 32))
+  if (!getAdminKey()) faltantes.push(faltaClave('APUESTAS_ADMIN_KEY', 12))
   if (!proveedor) faltantes.push('MERCADOPAGO_ACCESS_TOKEN (o APUESTAS_BANCA_ALIAS para modo manual)')
 
   const montoMin = Math.max(1, Math.round(envNumber('APUESTAS_MONTO_MIN', DEFAULT_MONTO_MIN)))
