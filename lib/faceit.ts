@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import type { Player } from '@/types'
-import { LEVEL_MIN_ELO } from '@/lib/faceit-format'
+import { LEVEL_MIN_ELO, levelForElo } from '@/lib/faceit-format'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 /**
@@ -514,11 +514,7 @@ export function eloTimeline(profile: FaceitProfile, now = Date.now()): EloPoint[
   return timeline
 }
 
-export function levelForElo(elo: number) {
-  let level = 1
-  for (let l = 1; l < LEVEL_MIN_ELO.length; l++) if (elo >= LEVEL_MIN_ELO[l]) level = l
-  return level
-}
+export { levelForElo }
 
 function nextLevelInfo(elo: number): FaceitSummary['nextLevel'] {
   const level = levelForElo(elo)

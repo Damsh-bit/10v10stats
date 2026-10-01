@@ -1,15 +1,20 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { PlayerStats } from '@/types'
 
-import { computePlayerRating, balanceTeams, regenerateTeams, sumRating, type RatedPlayer } from '@/lib/teamBalancer'
+import { FACEIT_WEIGHTS, generateTeams, type FaceitInfo, type FaceitWeightKey } from '@/lib/teamBalancer'
+import type { PairStatsMap, PlayerForm } from '@/lib/team-history'
 import { PlayerSelector } from './PlayerSelector'
-import { TeamResultCard } from './TeamResultCard'
+import { MatchupHeader } from './MatchupHeader'
+import { DuelBoard } from './DuelBoard'
+import { TeamComparison } from './TeamComparison'
+import { BalanceReasons } from './BalanceReasons'
 import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
 import { SeasonTabs } from '@/components/season/season-tabs'
 
 const MAP_POOL = ['Mirage', 'Inferno', 'Nuke', 'Overpass', 'Vertigo', 'Ancient', 'Anubis', 'Dust II']
+const TEAM_SIZE = 5
 
 function getMapImageUrl(mapName: string) {
   const nameMap: Record<string, string> = {
@@ -26,119 +31,159 @@ function getMapImageUrl(mapName: string) {
   return file ? `/maps/${file}` : null
 }
 
+function randomMap(exclude?: string | null) {
+  const pool = MAP_POOL.filter((map) => map !== exclude)
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 export type RatingSource = {
   key: string
   label: string
   hint?: string
+  /** Toda la carrera: no hace falta completar con nada. */
+  isCareer?: boolean
   stats: PlayerStats[]
+  /** Duplas (juntos, rivales, quién rinde más) dentro de este contexto. */
+  pairs: PairStatsMap
 }
 
-export function TeamGenerator({ players, sources }: { players: PlayerStats[]; sources: RatingSource[] }) {
-  // Sort players alphabetically for the selector
+export function TeamGenerator({
+  players,
+  sources,
+  faceit,
+  form,
+}: {
+  /** Carrera de todos. */
+  players: PlayerStats[]
+  sources: RatingSource[]
+  faceit: Record<string, FaceitInfo>
+  form: Record<string, PlayerForm>
+}) {
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => a.player.name.localeCompare(b.player.name))
   }, [players])
 
-  // Initially select all players, up to 10. If more, just first 10. Wait, the prompt says "Default state: ALL players selected (active)" 
-  // Let's just select everyone by default, and user deselects.
+  // Arrancan todos seleccionados; se destilda a los que no juegan hoy.
   const [selectedIds, setSelectedIds] = useState<string[]>(sortedPlayers.map(p => p.player.id))
-  
-  const [teams, setTeams] = useState<[RatedPlayer[], RatedPlayer[]] | null>(null)
+  const [sourceKey, setSourceKey] = useState(sources[0]?.key ?? '')
+  const [weightKey, setWeightKey] = useState<FaceitWeightKey>('medio')
+  const [generated, setGenerated] = useState(false)
+  const [optionIndex, setOptionIndex] = useState(0)
   const [recommendedMap, setRecommendedMap] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
-  const [sourceKey, setSourceKey] = useState(sources[0]?.key ?? '')
+
+  const source = sources.find((s) => s.key === sourceKey) ?? sources[0]
+  const sourceLabel = source?.label ?? 'Carrera'
+  const faceitWeight = FACEIT_WEIGHTS.find((w) => w.key === weightKey)?.value ?? 0.5
+  const ready = selectedIds.length === TEAM_SIZE * 2
+
+  const result = useMemo(() => {
+    if (!generated || !ready) return null
+    return generateTeams(selectedIds, {
+      sourceStats: source?.stats ?? players,
+      sourceLabel,
+      sourceIsCareer: source?.isCareer ?? true,
+      careerStats: players,
+      faceit,
+      form,
+      pairs: source?.pairs ?? {},
+      faceitWeight,
+    })
+  }, [generated, ready, selectedIds, source, sourceLabel, players, faceit, form, faceitWeight])
+
+  const optionCount = result?.options.length ?? 0
+  const option = result && optionCount > 0 ? result.options[optionIndex % optionCount] : null
 
   const togglePlayer = (id: string) => {
-    setSelectedIds(prev => 
+    setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     )
-  }
-
-  const getSelectedStats = (ids: string[]) => {
-    const statsSource = sources.find((source) => source.key === sourceKey)?.stats ?? players
-    return ids.map(id => {
-      return statsSource.find(p => p.player.id === id) || players.find(p => p.player.id === id)!
-    }).filter(Boolean)
+    setGenerated(false)
+    setOptionIndex(0)
   }
 
   const handleGenerate = () => {
-    if (selectedIds.length !== 10) return
-    const rated = computePlayerRating(getSelectedStats(selectedIds))
-    setTeams(balanceTeams(rated))
-    setRecommendedMap(MAP_POOL[Math.floor(Math.random() * MAP_POOL.length)])
+    if (!ready) return
+    setGenerated(true)
+    setOptionIndex(0)
+    setRecommendedMap(randomMap())
     setIsCopied(false)
   }
 
-  const handleRegenerate = () => {
-    if (selectedIds.length !== 10) return
-    const rated = computePlayerRating(getSelectedStats(selectedIds))
-    setTeams(regenerateTeams(rated))
-    setRecommendedMap(MAP_POOL[Math.floor(Math.random() * MAP_POOL.length)])
+  const handleNextOption = () => {
+    if (!ready) return
+    setOptionIndex((i) => i + 1)
+    setRecommendedMap((current) => randomMap(current))
     setIsCopied(false)
-  }
-
-  const handleRerollPlayer = (playerId: string) => {
-    const unselectedIds = sortedPlayers.map(p => p.player.id).filter(id => !selectedIds.includes(id))
-    if (unselectedIds.length === 0) return
-
-    const randomNewId = unselectedIds[Math.floor(Math.random() * unselectedIds.length)]
-    const newSelectedIds = selectedIds.map(id => id === playerId ? randomNewId : id)
-    
-    setSelectedIds(newSelectedIds)
-    const rated = computePlayerRating(getSelectedStats(newSelectedIds))
-    setTeams(balanceTeams(rated))
   }
 
   const handleCopy = () => {
-    if (!teams) return
-    const [t1, t2] = teams
-    const t1Names = t1.map(p => p.player.name).join(', ')
-    const t2Names = t2.map(p => p.player.name).join(', ')
+    if (!option) return
+    const lines = option.teams.map(
+      (team) => `${team.name} (${Math.round(team.winProb * 100)}%): ${team.players.map((p) => p.stats.player.name).join(', ')}`,
+    )
     const mapText = recommendedMap ? `\n\nMapa: ${recommendedMap}` : ''
-    const text = `Equipo 1: ${t1Names}\n\nEquipo 2: ${t2Names}${mapText}`
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(`${lines.join('\n\n')}${mapText}`)
     setIsCopied(true)
     setTimeout(() => setIsCopied(false), 2000)
   }
 
+  const mainAction = generated && ready ? handleNextOption : handleGenerate
+
   return (
     <div className="flex flex-col gap-8">
-      <PlayerSelector 
-        players={sortedPlayers} 
-        selectedIds={selectedIds} 
-        onToggle={togglePlayer} 
+      <PlayerSelector
+        players={sortedPlayers}
+        selectedIds={selectedIds}
+        onToggle={togglePlayer}
+        faceit={faceit}
       />
 
-      {sources.length > 1 && (
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Balancear según</span>
+      <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-center sm:gap-8">
+        {sources.length > 1 && (
+          <div className="flex max-w-full flex-col items-center gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Rendimiento 10v10</span>
+            <SeasonTabs
+              options={sources.map((s) => ({ value: s.key, label: s.label, hint: s.hint }))}
+              value={sourceKey}
+              onChange={(key) => {
+                setSourceKey(key)
+                setOptionIndex(0)
+              }}
+              layoutId="team-source-tab"
+              ariaLabel="Estadísticas del 10v10 para balancear"
+            />
+          </div>
+        )}
+        <div className="flex max-w-full flex-col items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Peso de FACEIT</span>
           <SeasonTabs
-            options={sources.map((source) => ({ value: source.key, label: source.label, hint: source.hint }))}
-            value={sourceKey}
+            options={FACEIT_WEIGHTS.map((w) => ({ value: w.key, label: w.label, hint: `${Math.round(w.value * 100)}%` }))}
+            value={weightKey}
             onChange={(key) => {
-              setSourceKey(key)
-              setTeams(null)
+              setWeightKey(key as FaceitWeightKey)
+              setOptionIndex(0)
             }}
-            layoutId="team-source-tab"
-            ariaLabel="Estadísticas para balancear"
+            layoutId="team-faceit-weight-tab"
+            ariaLabel="Cuánto pesa el nivel de FACEIT"
           />
         </div>
-      )}
+      </div>
 
       <div className="flex justify-center">
         <button
-          onClick={teams ? handleRegenerate : handleGenerate}
-          disabled={selectedIds.length !== 10}
+          onClick={mainAction}
+          disabled={!ready}
           className={`flex items-center gap-2 rounded-full px-8 py-3 text-[14px] font-bold uppercase tracking-widest transition-all ${
-            selectedIds.length === 10
+            ready
               ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 hover:bg-primary/90'
               : 'cursor-not-allowed bg-muted text-muted-foreground opacity-50'
           }`}
         >
-          {teams ? (
+          {generated && ready ? (
             <>
               <RefreshCw className="h-4 w-4" />
-              Regenerar
+              Otra opción
             </>
           ) : (
             <>
@@ -149,9 +194,9 @@ export function TeamGenerator({ players, sources }: { players: PlayerStats[]; so
         </button>
       </div>
 
-      {teams && (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          
+      {option && result && (
+        <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
           {recommendedMap && (
             <div className="relative mx-auto flex w-full max-w-sm flex-col items-center justify-center overflow-hidden rounded-xl border border-border bg-card shadow-md">
               {(() => {
@@ -163,8 +208,8 @@ export function TeamGenerator({ players, sources }: { players: PlayerStats[]; so
                 }
                 return null
               })()}
-              <div className="relative z-10 flex flex-col items-center p-6 text-center">
-                <span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="relative z-10 flex flex-col items-center p-5 text-center">
+                <span className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                   <MapIcon className="h-4 w-4" />
                   Mapa recomendado
                 </span>
@@ -175,40 +220,23 @@ export function TeamGenerator({ players, sources }: { players: PlayerStats[]; so
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <TeamResultCard teamName="Equipo 1" players={teams[0]} />
-            <TeamResultCard teamName="Equipo 2" players={teams[1]} />
-          </div>
-          
-          <div className="flex flex-col items-center justify-center gap-4">
-            {(() => {
-              const diff = Math.abs(sumRating(teams[0]) - sumRating(teams[1]))
-              let color = ''
-              let label = ''
-              if (diff < 5) {
-                color = 'text-green-400 bg-green-400/10 border-green-400/30'
-                label = 'Muy balanceado ✓'
-              } else if (diff <= 15) {
-                color = 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30'
-                label = 'Aceptable'
-              } else {
-                color = 'text-red-400 bg-red-400/10 border-red-400/30'
-                label = 'Desbalanceado'
-              }
-              
-              return (
-                <div className={`flex flex-col items-center justify-center p-3 rounded-lg border ${color}`}>
-                  <span className="text-[11px] uppercase tracking-widest font-semibold opacity-80 mb-1">
-                    Diferencia de rating
-                  </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-mono text-2xl font-black">{diff.toFixed(1)} pts</span>
-                    <span className="text-[13px] font-bold tracking-wide">— {label}</span>
-                  </div>
-                </div>
-              )
-            })()}
+          <MatchupHeader option={option} optionIndex={optionIndex % optionCount} optionCount={optionCount} />
 
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            <DuelBoard option={option} sourceLabel={sourceLabel} />
+            <TeamComparison option={option} sourceLabel={sourceLabel} />
+          </div>
+
+          <BalanceReasons option={option} sourceLabel={sourceLabel} faceitPct={Math.round(faceitWeight * 100)} total={result.total} />
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={handleNextOption}
+              className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Otra opción
+            </button>
             <button
               onClick={handleCopy}
               className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"

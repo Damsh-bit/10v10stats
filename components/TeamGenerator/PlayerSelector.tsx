@@ -2,16 +2,21 @@
 
 import type { PlayerStats } from '@/types'
 
+import type { FaceitInfo } from '@/lib/teamBalancer'
 import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
+import { FaceitLevel } from '@/components/faceit/faceit-bits'
+import { NoFaceitLevel } from './team-ui'
 
 export function PlayerSelector({
   players,
   selectedIds,
   onToggle,
+  faceit,
 }: {
   players: PlayerStats[]
   selectedIds: string[]
   onToggle: (id: string) => void
+  faceit: Record<string, FaceitInfo>
 }) {
   const selectedCount = selectedIds.length
   
@@ -29,6 +34,7 @@ export function PlayerSelector({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {players.map((p) => {
           const isSelected = selectedIds.includes(p.player.id)
+          const level = faceit[p.player.id]?.level
           return (
             <button
               key={p.player.id}
@@ -40,7 +46,12 @@ export function PlayerSelector({
                   : 'border-border/50 bg-background/50 opacity-60 hover:opacity-100 hover:border-border'
               }`}
             >
-              <PlayerAvatar player={p.player} size={32} />
+              <span className="relative flex shrink-0">
+                <PlayerAvatar player={p.player} size={32} />
+                <span className="absolute -bottom-1.5 -right-1.5" title={level ? `Nivel ${level} de FACEIT` : 'Sin FACEIT cargado'}>
+                  {level ? <FaceitLevel level={level} size={18} /> : <NoFaceitLevel size={18} className="bg-card" />}
+                </span>
+              </span>
               <div className="flex min-w-0 flex-col items-start gap-0.5">
                 <span
                   className={`truncate text-[13px] font-semibold leading-none ${

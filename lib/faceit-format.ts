@@ -3,6 +3,12 @@
 /** Elo mínimo de cada nivel de CS2 (índice = nivel). */
 export const LEVEL_MIN_ELO = [0, 100, 501, 751, 901, 1051, 1201, 1351, 1531, 1751, 2001]
 
+export function levelForElo(elo: number) {
+  let level = 1
+  for (let l = 1; l < LEVEL_MIN_ELO.length; l++) if (elo >= LEVEL_MIN_ELO[l]) level = l
+  return level
+}
+
 /** Pisos de nivel que caen dentro de un rango de elo (para marcar en los gráficos). */
 export function levelFloorsBetween(min: number, max: number) {
   return LEVEL_MIN_ELO.map((elo, level) => ({ level, elo })).filter((l) => l.level >= 2 && l.elo > min && l.elo < max)
