@@ -4,6 +4,7 @@ import { buildPairStats, buildPlayerForm } from '@/lib/team-history'
 import type { FaceitInfo } from '@/lib/teamBalancer'
 import { TeamGenerator, type RatingSource } from '@/components/TeamGenerator/TeamGenerator'
 import { Reveal } from '@/components/motion/reveal'
+import { getApuestasConfig } from '@/lib/apuestas/config'
 
 export const revalidate = 60
 // Margen para refrescar FACEIT (los pedidos van de a uno).
@@ -61,7 +62,7 @@ export default async function TeamGeneratorPage() {
           </p>
         </Reveal>
 
-        <TeamGenerator players={careerStats} sources={sources} faceit={faceit} form={form} />
+        <TeamGenerator players={careerStats} sources={sources} faceit={faceit} form={form} apuestas={getApuestasConfig()} />
       </div>
     </main>
   )

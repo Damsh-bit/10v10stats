@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
+import { resolverConPartidaNueva } from '@/lib/apuestas/servicio'
 
 const TABULADOR_BUCKET = process.env.SUPABASE_TABULADOR_BUCKET ?? 'tabulador'
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024
@@ -279,6 +280,9 @@ export async function POST(request: Request) {
         console.log(`MVP updated successfully for player ${mvpPlayerId}. New total: ${currentMvps + 1}`)
       }
     }
+
+    // Si había apuestas abiertas con estos mismos 10, se liquidan solas (nunca hace fallar la carga).
+    await resolverConPartidaNueva(matchData.id)
 
     // Las páginas son ISR: se regeneran ya para que la partida aparezca sin esperar.
     revalidatePath('/', 'layout')

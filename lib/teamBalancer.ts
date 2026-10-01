@@ -389,6 +389,12 @@ function summarizeTeam(name: string, idx: number[], input: AnalysisInput): Omit<
   }
 }
 
+/** Chance de que A tenga mejor partida que B: el modelo mezclado con el historial real entre los dos. */
+export function duelProbability(a: PlayerProfile, b: PlayerProfile, pairs: PairStatsMap) {
+  const pair = getPair(pairs, a.id, b.id)
+  return (pair.better + DUEL_PRIOR_MATCHES * duelModelProb(a, b)) / (pair.shared + DUEL_PRIOR_MATCHES)
+}
+
 function buildDuels(t1: TeamSummary, t2: TeamSummary, pairs: PairStatsMap): Duel[] {
   return t1.players.map((a, k) => {
     const b = t2.players[k]
@@ -397,7 +403,7 @@ function buildDuels(t1: TeamSummary, t2: TeamSummary, pairs: PairStatsMap): Duel
     return {
       a,
       b,
-      probA: (pair.better + DUEL_PRIOR_MATCHES * modelProbA) / (pair.shared + DUEL_PRIOR_MATCHES),
+      probA: duelProbability(a, b, pairs),
       modelProbA,
       shared: pair.shared,
       betterA: pair.better,

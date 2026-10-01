@@ -10,6 +10,8 @@ import { MatchupHeader } from './MatchupHeader'
 import { DuelBoard } from './DuelBoard'
 import { TeamComparison } from './TeamComparison'
 import { BalanceReasons } from './BalanceReasons'
+import { BetPanel } from './BetPanel'
+import type { ApuestasPublicConfig } from '@/lib/apuestas/config'
 import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
 import { SeasonTabs } from '@/components/season/season-tabs'
 
@@ -52,12 +54,14 @@ export function TeamGenerator({
   sources,
   faceit,
   form,
+  apuestas,
 }: {
   /** Carrera de todos. */
   players: PlayerStats[]
   sources: RatingSource[]
   faceit: Record<string, FaceitInfo>
   form: Record<string, PlayerForm>
+  apuestas: ApuestasPublicConfig
 }) {
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => a.player.name.localeCompare(b.player.name))
@@ -228,6 +232,17 @@ export function TeamGenerator({
           </div>
 
           <BalanceReasons option={option} sourceLabel={sourceLabel} faceitPct={Math.round(faceitWeight * 100)} total={result.total} />
+
+          {apuestas.visibles && (
+            <BetPanel
+              option={option}
+              pairs={source?.pairs ?? {}}
+              map={recommendedMap}
+              sourceLabel={sourceLabel}
+              faceitWeight={faceitWeight}
+              config={apuestas}
+            />
+          )}
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button

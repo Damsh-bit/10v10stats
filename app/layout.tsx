@@ -11,6 +11,7 @@ import { SeasonBanner } from '@/components/season/season-banner'
 import { MotionProvider } from '@/components/motion/motion-provider'
 import { NovedadesLink } from '@/components/novedades/novedades-link'
 import { getCurrentSeason, getPreviousSeason, getSeasons } from '@/lib/seasons'
+import { getApuestasConfig } from '@/lib/apuestas/config'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import pkg from '../package.json'
 
@@ -65,7 +66,7 @@ export default async function RootLayout({
             previousSeasonSlug={previousSeason?.slug ?? null}
             previousSeasonName={previousSeason?.name ?? null}
           />
-          <Navbar seasonNumber={currentSeason.id} />
+          <Navbar seasonNumber={currentSeason.id} apuestas={getApuestasConfig().visibles} />
           <CuriositiesBanner />
           <div className="flex-1">{children}</div>
           <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background/80 py-8 text-sm text-muted-foreground backdrop-blur-md">

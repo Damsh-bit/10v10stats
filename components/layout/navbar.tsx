@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Menu, X, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const links = [
+const LINKS = [
   { href: '/', label: 'Dashboard' },
   { href: '/matches', label: 'Partidas' },
   { href: '/creacion-de-equipos', label: 'Equipos' },
@@ -15,12 +15,15 @@ const links = [
   { href: '/faceit', label: 'FACEIT' },
 ]
 
+const APUESTAS_LINK = { href: '/apuestas', label: 'Apuestas' }
+
 function isActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
 }
 
-export function Navbar({ seasonNumber }: { seasonNumber: number }) {
+export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: number; apuestas?: boolean }) {
   const pathname = usePathname()
+  const links = apuestas ? [...LINKS, APUESTAS_LINK] : LINKS
   const [isOpen, setIsOpen] = useState(false)
   const seasonsActive = pathname.startsWith('/temporadas')
 
