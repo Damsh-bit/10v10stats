@@ -22,6 +22,7 @@ import { NewMatchModal } from '@/components/matches/new-match-modal'
 import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 import { Reveal } from '@/components/motion/reveal'
 import { FaceitLadder } from '@/components/faceit/faceit-ladder'
+import { WhatsNewModal } from '@/components/novedades/whats-new-modal'
 import { getFaceitEntries, toLadderRows } from '@/lib/faceit'
 
 export const revalidate = 60
@@ -70,6 +71,7 @@ export default async function Page() {
 
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
+      <WhatsNewModal />
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-2 py-5 sm:px-4 sm:py-8">
         <SeasonHero
           seasonNumber={season.id}

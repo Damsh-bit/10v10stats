@@ -9,6 +9,7 @@ import { RecommendationsWidget } from '@/components/shared/recommendations-widge
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
 import { SeasonBanner } from '@/components/season/season-banner'
 import { MotionProvider } from '@/components/motion/motion-provider'
+import { NovedadesLink } from '@/components/novedades/novedades-link'
 import { getCurrentSeason, getPreviousSeason, getSeasons } from '@/lib/seasons'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import pkg from '../package.json'
@@ -78,6 +79,8 @@ export default async function RootLayout({
               <Link href="/temporadas" className="transition-colors hover:text-foreground">
                 {currentSeason.name.toUpperCase()}
               </Link>
+              <span aria-hidden="true">·</span>
+              <NovedadesLink className="uppercase transition-colors hover:text-foreground">Novedades</NovedadesLink>
               <span aria-hidden="true">·</span>
               <span title="Versión de la aplicación">v{pkg.version}</span>
             </p>
