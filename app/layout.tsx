@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Geist, Geist_Mono, Oswald } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
+import { MapBackdrop } from '@/components/layout/map-backdrop'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
 import { SeasonBanner } from '@/components/season/season-banner'
@@ -56,6 +57,7 @@ export default async function RootLayout({
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <MotionProvider>
+          <MapBackdrop />
           <SeasonBanner
             seasonSlug={currentSeason.slug}
             seasonNumber={currentSeason.id}
@@ -65,7 +67,7 @@ export default async function RootLayout({
           <Navbar seasonNumber={currentSeason.id} />
           <CuriositiesBanner />
           <div className="flex-1">{children}</div>
-          <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background py-8 text-sm text-muted-foreground">
+          <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background/80 py-8 text-sm text-muted-foreground backdrop-blur-md">
             <p className="flex items-center justify-center gap-1.5">
               Desarrollado con <span className="text-rose-500">❤️</span> por
               <span className="font-heading font-bold uppercase tracking-widest text-brand">
