@@ -187,7 +187,7 @@ function FaceitRow({ row, index: i, compact }: { row: FaceitLadderRow; index: nu
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <FaceitForm results={row.lastFive} />
           <span className="truncate font-mono text-[10px] text-muted-foreground">
-            {compact ? row.lastPlayedLabel ?? 'sin partidas' : row.nickname}
+            {compact ? row.lastPlayedLabel : row.nickname}
             {!compact && row.lastPlayedLabel && <span className="hidden sm:inline"> · {row.lastPlayedLabel}</span>}
           </span>
         </div>
@@ -204,8 +204,14 @@ function FaceitRow({ row, index: i, compact }: { row: FaceitLadderRow; index: nu
         </div>
       )}
 
-      <div className="flex shrink-0 flex-col items-center gap-0.5" title={`Elo de las últimas ${row.spark.length} partidas`}>
-        <EloSparkline id={`${compact ? 'c' : 'f'}-${row.player.id}`} values={row.spark} width={compact ? 56 : 96} height={compact ? 24 : 30} />
+      <div className="flex shrink-0 flex-col items-center gap-0.5" title={`Elo en las últimas ${Math.max(0, row.spark.length - 1)} partidas`}>
+        <EloSparkline
+          id={`${compact ? 'c' : 'f'}-${row.player.id}`}
+          values={row.spark}
+          trend={row.trendMatches > 0 ? row.eloTrend : undefined}
+          width={compact ? 56 : 96}
+          height={compact ? 24 : 30}
+        />
         {row.trendMatches > 0 && <EloDelta value={row.eloTrend} className="text-[10px]" />}
       </div>
 

@@ -78,7 +78,8 @@ export function FaceitEloChart({ points, height = 220 }: { points: EloChartPoint
             tick={AXIS_TEXT}
             interval="preserveStartEnd"
             minTickGap={24}
-            tickFormatter={(n: number) => data[n - 1]?.label ?? ''}
+            // Varias partidas el mismo día: la fecha va una sola vez.
+            tickFormatter={(n: number) => (data[n - 1]?.label === data[n - 2]?.label ? '' : (data[n - 1]?.label ?? ''))}
           />
           <YAxis domain={domain} tickLine={false} axisLine={false} tick={AXIS_TEXT} width={44} allowDecimals={false} />
           <LevelLines domain={domain} />
@@ -91,8 +92,15 @@ export function FaceitEloChart({ points, height = 220 }: { points: EloChartPoint
                 <div className="rounded-lg border border-border bg-popover/95 px-3 py-2 text-[11px] shadow-xl backdrop-blur">
                   <p className="font-mono text-base font-black text-foreground">{point.elo}</p>
                   <p className="text-muted-foreground">
-                    {point.label} · {point.map} ·{' '}
-                    <span className={point.won ? 'text-emerald-300' : 'text-rose-300'}>{point.won ? 'Victoria' : 'Derrota'}</span>
+                    {point.label} ·{' '}
+                    {point.won === null ? (
+                      'Actualización de elo'
+                    ) : (
+                      <>
+                        {point.map} ·{' '}
+                        <span className={point.won ? 'text-emerald-300' : 'text-rose-300'}>{point.won ? 'Victoria' : 'Derrota'}</span>
+                      </>
+                    )}
                     {point.delta !== null && <> · {formatEloDelta(point.delta)}</>}
                   </p>
                 </div>

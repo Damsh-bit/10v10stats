@@ -22,6 +22,8 @@ import { getFaceitProfile, summarizeFaceit } from '@/lib/faceit'
 import type { LiveData } from '@/types'
 
 export const revalidate = 60
+// Margen para refrescar FACEIT (los pedidos van de a uno).
+export const maxDuration = 60
 
 export async function generateStaticParams() {
   return []
@@ -41,7 +43,7 @@ export default async function PlayerProfile({
   const player = league.players.find((p) => p.id === id)
   if (!player) notFound()
 
-  const faceitProfile = player.faceitNickname ? await getFaceitProfile(player.faceitNickname) : null
+  const faceitProfile = await getFaceitProfile(player)
   const faceitSummary = faceitProfile ? summarizeFaceit(faceitProfile) : null
 
   const current = league.currentSeason

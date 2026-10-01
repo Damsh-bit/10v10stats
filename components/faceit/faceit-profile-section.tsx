@@ -38,7 +38,7 @@ export function FaceitProfileSection({
 
   const points = toEloChartPoints(summary)
   const tiles = [
-    { label: 'Win rate', value: `${summary.winRate}%`, tone: summary.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400' },
+    { label: 'Win %', value: `${summary.winRate}%`, tone: summary.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400' },
     { label: 'K/D', value: summary.kd.toFixed(2), tone: summary.kd >= 1 ? 'text-emerald-400' : 'text-rose-400' },
     { label: 'ADR', value: Math.round(summary.adr).toString() },
     { label: 'HS', value: `${summary.hsPct}%` },

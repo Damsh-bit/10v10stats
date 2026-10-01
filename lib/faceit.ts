@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import type { Player } from '@/types'
 import { LEVEL_MIN_ELO } from '@/lib/faceit-format'
+import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 
 /**
  * Datos de FACEIT en vivo.
@@ -9,8 +10,9 @@ import { LEVEL_MIN_ELO } from '@/lib/faceit-format'
  * Perfil e historial salen de la API que usa la propia web de FACEIT: no pide
  * clave y es la única que trae el elo después de cada partida. Se pide con un
  * User-Agent que identifica al sitio y de a un pedido por vez, porque FACEIT
- * corta las ráfagas. Cada resultado queda en la caché de Next: si un refresco
- * falla, se sigue mostrando el último dato bueno en vez de quedar vacío.
+ * corta las ráfagas. Cuando FACEIT responde, las partidas y el elo se guardan en
+ * Supabase (faceit_matches, faceit_elo_snapshots); si un pedido falla se usa lo
+ * guardado, así la página nunca queda vacía por un corte de FACEIT.
  * Con FACEIT_API_KEY (developers.faceit.com) hay respaldo en la Data API
  * oficial: mismo historial, pero sin el elo por partida.
  */
@@ -54,6 +56,8 @@ export type FaceitProfile = {
   elo: number
   /** Más nueva primero. */
   matches: FaceitMatch[]
+  /** Elo registrado en cada sincronización (más viejo primero): completa el gráfico entre partidas. */
+  snapshots: { at: number; elo: number }[]
 }
 
 export type FaceitSummary = {
@@ -63,8 +67,8 @@ export type FaceitSummary = {
   /** Elo ganado/perdido en las últimas 10 partidas. */
   eloTrend: number
   trendMatches: number
-  /** Elo después de cada partida, de la más vieja a la actual. */
-  eloHistory: { at: number; elo: number; won: boolean; map: string; delta: number | null }[]
+  /** Elo después de cada partida (o registro), del más viejo al actual. */
+  eloHistory: EloPoint[]
   peakElo: number
   /** Promedios de las últimas 20 partidas. */
   sample: number
@@ -76,6 +80,9 @@ export type FaceitSummary = {
   lastPlayedAt: number | null
   nextLevel: { level: number; eloNeeded: number; progress: number } | null
 }
+
+/** Un punto del elo en el tiempo: una partida, o un registro sin partida asociada. */
+export type EloPoint = { at: number; elo: number; won: boolean | null; map: string | null; delta: number | null }
 
 export type FaceitEntry = {
   player: Player
@@ -99,8 +106,8 @@ function createQueue(gapMs: number) {
 }
 
 // El historial es lo que FACEIT más limita; los perfiles aguantan un ritmo mayor.
-const profileQueue = createQueue(300)
-const historyQueue = createQueue(500)
+const profileQueue = createQueue(100)
+const historyQueue = createQueue(200)
 
 async function getJson<T>(
   url: string,
@@ -144,7 +151,7 @@ type DataApiUser = {
   games?: { cs2?: { faceit_elo?: number; skill_level?: number } }
 }
 
-type ProfileBase = Omit<FaceitProfile, 'matches'>
+type ProfileBase = Omit<FaceitProfile, 'matches' | 'snapshots'>
 
 async function fetchProfileBase(nickname: string): Promise<ProfileBase | null> {
   const web = await getJson<WebUser>(`${WEB_API}/users/v1/nicknames/${encodeURIComponent(nickname)}`, profileQueue)
@@ -265,32 +272,166 @@ async function fetchMatches(faceitId: string): Promise<FaceitMatch[] | null> {
   return data?.items ? data.items.map((item) => fromDataApiRow(item.stats)).filter((m) => m.id) : null
 }
 
-// Si el refresco tira error, unstable_cache sigue devolviendo el último valor bueno.
-const cachedProfileBase = unstable_cache(
-  async (nickname: string) => {
+// ─── Guardado en Supabase ─────────────────────────────────────────────────────
+
+const STORED_MATCHES = 40
+const STORED_DAYS = 60
+
+function toRow(playerId: string, m: FaceitMatch) {
+  return {
+    player_id: playerId,
+    match_id: m.id,
+    played_at: new Date(m.playedAt).toISOString(),
+    map: m.map,
+    won: m.won,
+    team_score: m.teamScore,
+    enemy_score: m.enemyScore,
+    kills: m.kills,
+    deaths: m.deaths,
+    assists: m.assists,
+    kd: Math.round(m.kd * 100) / 100,
+    adr: Math.round(m.adr * 10) / 10,
+    hs_pct: Math.round(m.hsPct),
+    elo: m.elo,
+    elo_delta: m.eloDelta,
+    team_id: m.teamId,
+    updated_at: new Date().toISOString(),
+  }
+}
+
+type StoredMatchRow = Omit<ReturnType<typeof toRow>, 'player_id' | 'updated_at'>
+
+function fromRow(row: StoredMatchRow): FaceitMatch {
+  return {
+    id: row.match_id,
+    playedAt: Date.parse(row.played_at),
+    map: row.map,
+    won: row.won,
+    teamScore: row.team_score,
+    enemyScore: row.enemy_score,
+    kills: row.kills,
+    deaths: row.deaths,
+    assists: row.assists,
+    kd: toNumber(row.kd),
+    adr: toNumber(row.adr),
+    hsPct: row.hs_pct,
+    elo: row.elo,
+    eloDelta: row.elo_delta,
+    teamId: row.team_id,
+  }
+}
+
+/** Guarda lo que trajo FACEIT. Nunca tira error: si falla, la próxima sincronización lo reintenta. */
+async function persistSync(playerId: string, base: ProfileBase, matches: FaceitMatch[] | null) {
+  const supabase = getSupabaseAdminClient()
+  if (!supabase) return
+
+  try {
+    const { data: last } = await supabase
+      .from('faceit_elo_snapshots')
+      .select('elo')
+      .eq('player_id', playerId)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!last || last.elo !== base.elo) {
+      await supabase.from('faceit_elo_snapshots').insert({ player_id: playerId, elo: base.elo, level: base.level })
+    }
+
+    if (matches && matches.length > 0) {
+      // Con elo (API de la web) se pisa todo; sin elo (Data API) sólo se suman las nuevas, para no borrar el elo guardado.
+      const withElo = matches.some((m) => m.elo !== null)
+      await supabase
+        .from('faceit_matches')
+        .upsert(
+          matches.map((m) => toRow(playerId, m)),
+          { onConflict: 'player_id,match_id', ignoreDuplicates: !withElo },
+        )
+    }
+  } catch (err) {
+    console.error('No se pudo guardar FACEIT en Supabase', err)
+  }
+}
+
+/** Lo guardado de un jugador, para cuando FACEIT no devuelve el historial. */
+const readStored = unstable_cache(
+  async (playerId: string) => {
+    const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
+    if (!supabase) return { matches: [] as FaceitMatch[], snapshots: [] as FaceitProfile['snapshots'] }
+
+    const since = new Date(Date.now() - STORED_DAYS * 24 * 60 * 60 * 1000).toISOString()
+    const [matchesResult, snapshotsResult] = await Promise.all([
+      supabase
+        .from('faceit_matches')
+        .select('match_id, played_at, map, won, team_score, enemy_score, kills, deaths, assists, kd, adr, hs_pct, elo, elo_delta, team_id')
+        .eq('player_id', playerId)
+        .order('played_at', { ascending: false })
+        .limit(STORED_MATCHES),
+      supabase
+        .from('faceit_elo_snapshots')
+        .select('elo, recorded_at')
+        .eq('player_id', playerId)
+        .gte('recorded_at', since)
+        .order('recorded_at', { ascending: true })
+        .limit(200),
+    ])
+
+    return {
+      matches: ((matchesResult.data ?? []) as StoredMatchRow[]).map(fromRow),
+      snapshots: (snapshotsResult.data ?? []).map((row) => ({ at: Date.parse(row.recorded_at), elo: Number(row.elo) })),
+    }
+  },
+  ['faceit-stored-v1'],
+  { revalidate: FACEIT_REVALIDATE_SECONDS, tags: ['faceit'] },
+)
+
+// ─── Sincronización ───────────────────────────────────────────────────────────
+
+/**
+ * Perfil + historial de FACEIT, como mucho una vez cada FACEIT_REVALIDATE_SECONDS
+ * por jugador. Si el perfil no llega se tira error y unstable_cache sigue
+ * devolviendo el último valor bueno.
+ */
+const syncPlayer = unstable_cache(
+  async (playerId: string, nickname: string) => {
     const base = await fetchProfileBase(nickname)
     if (!base) throw new Error(`FACEIT no devolvió el perfil de ${nickname}`)
-    return base
+    const matches = await fetchMatches(base.faceitId)
+    await persistSync(playerId, base, matches)
+    return { base, matches: matches ? matches.sort((a, b) => b.playedAt - a.playedAt) : null }
   },
-  ['faceit-profile-v1'],
+  ['faceit-sync-v1'],
   { revalidate: FACEIT_REVALIDATE_SECONDS, tags: ['faceit'] },
 )
 
-const cachedMatches = unstable_cache(
-  async (faceitId: string) => {
-    const matches = await fetchMatches(faceitId)
-    if (!matches) throw new Error(`FACEIT no devolvió el historial de ${faceitId}`)
-    return matches.sort((a, b) => b.playedAt - a.playedAt)
-  },
-  ['faceit-matches-v1'],
-  { revalidate: FACEIT_REVALIDATE_SECONDS, tags: ['faceit'] },
-)
+/** Datos de FACEIT de un jugador del 10v10 (null si no tiene nick o FACEIT nunca respondió). */
+export const getFaceitProfile = cache(async (player: Player): Promise<FaceitProfile | null> => {
+  if (!player.faceitNickname) return null
+  const synced = await syncPlayer(player.id, player.faceitNickname).catch(() => null)
+  // Sin historial nuevo (o sin perfil) se completa con lo guardado.
+  const stored = synced?.matches ? null : await readStored(player.id).catch(() => null)
 
-export const getFaceitProfile = cache(async (nickname: string): Promise<FaceitProfile | null> => {
-  const base = await cachedProfileBase(nickname).catch(() => null)
+  const latestSnapshot = stored?.snapshots[stored.snapshots.length - 1]
+  const base: ProfileBase | null =
+    synced?.base ??
+    (latestSnapshot
+      ? {
+          nickname: player.faceitNickname,
+          faceitId: '',
+          url: `https://www.faceit.com/es/players/${encodeURIComponent(player.faceitNickname)}`,
+          avatar: null,
+          country: null,
+          level: levelForElo(latestSnapshot.elo),
+          elo: latestSnapshot.elo,
+        }
+      : null)
   if (!base) return null
-  const matches = await cachedMatches(base.faceitId).catch(() => [])
-  return { ...base, matches }
+
+  return {
+    ...base,
+    matches: synced?.matches ?? stored?.matches ?? [],
+    snapshots: stored?.snapshots ?? [],
+  }
 })
 
 /** Jugadores con nick de FACEIT cargado y sus datos, ordenados por elo. */
@@ -298,7 +439,7 @@ export async function getFaceitEntries(players: Player[]): Promise<FaceitEntry[]
   const linked = players.filter((p) => p.faceitNickname)
   const entries = await Promise.all(
     linked.map(async (player) => {
-      const profile = await getFaceitProfile(player.faceitNickname!)
+      const profile = await getFaceitProfile(player)
       return profile ? { player, profile, summary: summarizeFaceit(profile) } : null
     }),
   )
@@ -322,11 +463,7 @@ export function summarizeFaceit(profile: FaceitProfile, now = Date.now()): Facei
   const trendSlice = matches.slice(0, 10).filter((m) => m.eloDelta !== null)
   const eloTrend = trendSlice.reduce((acc, m) => acc + (m.eloDelta ?? 0), 0)
 
-  const eloHistory = matches
-    .filter((m) => m.elo !== null)
-    .slice(0, 30)
-    .reverse()
-    .map((m) => ({ at: m.playedAt, elo: m.elo!, won: m.won, map: m.map, delta: m.eloDelta }))
+  const eloHistory = eloTimeline(profile, now).slice(-30)
 
   const sample = matches.slice(0, 20)
   const kills = sum(sample.map((m) => m.kills))
@@ -348,6 +485,33 @@ export function summarizeFaceit(profile: FaceitProfile, now = Date.now()): Facei
     lastPlayedAt: matches[0]?.playedAt ?? null,
     nextLevel: nextLevelInfo(profile.elo),
   }
+}
+
+/**
+ * Elo en el tiempo, del más viejo al actual: el elo después de cada partida,
+ * los registros guardados entre partidas y, si cambió, el elo de ahora.
+ */
+export function eloTimeline(profile: FaceitProfile, now = Date.now()): EloPoint[] {
+  const points: EloPoint[] = profile.matches
+    .filter((m) => m.elo !== null)
+    .map((m) => ({ at: m.playedAt, elo: m.elo!, won: m.won, map: m.map, delta: m.eloDelta }))
+  for (const snap of profile.snapshots) points.push({ at: snap.at, elo: snap.elo, won: null, map: null, delta: null })
+  points.sort((a, b) => a.at - b.at)
+
+  // Un registro que repite el elo del punto anterior no aporta nada.
+  const timeline: EloPoint[] = []
+  for (const point of points) {
+    const prev = timeline[timeline.length - 1]
+    if (point.won === null && prev?.elo === point.elo) continue
+    if (point.won === null && prev) point.delta = point.elo - prev.elo
+    timeline.push(point)
+  }
+
+  const last = timeline[timeline.length - 1]
+  if (last && last.elo !== profile.elo) {
+    timeline.push({ at: now, elo: profile.elo, won: null, map: null, delta: profile.elo - last.elo })
+  }
+  return timeline
 }
 
 export function levelForElo(elo: number) {
@@ -437,7 +601,7 @@ export type FaceitLadderRow = {
   streak: FaceitSummary['streak']
   eloTrend: number
   trendMatches: number
-  /** Elo de las últimas partidas, de la más vieja a la actual. */
+  /** Elo de las últimas 10 partidas (11 puntos), del más viejo al actual: el mismo tramo que eloTrend. */
   spark: number[]
   winRate: number
   kd: number
@@ -460,7 +624,7 @@ export function toLadderRows(entries: FaceitEntry[], now = Date.now()): FaceitLa
     streak: summary.streak,
     eloTrend: summary.eloTrend,
     trendMatches: summary.trendMatches,
-    spark: summary.eloHistory.slice(-20).map((p) => p.elo),
+    spark: summary.eloHistory.slice(-11).map((p) => p.elo),
     winRate: summary.winRate,
     kd: summary.kd,
     adr: summary.adr,
@@ -509,14 +673,8 @@ export function buildEloRace(entries: FaceitEntry[], days = 30, now = Date.now()
     level: profile.level,
   }))
 
-  const timelines = entries.map(({ player, profile }) => {
-    const withElo = profile.matches.filter((m) => m.elo !== null).sort((a, b) => a.playedAt - b.playedAt)
-    const earliest = withElo[0]
-    const coversWindow =
-      profile.matches.length < MATCHES_TO_FETCH || (earliest !== undefined && earliest.playedAt < windowStart)
-    const before = earliest ? earliest.elo! - (earliest.eloDelta ?? 0) : profile.elo
-    return { id: player.id, withElo, coversWindow, before }
-  })
+  // Antes del primer dato conocido de cada uno no se inventa nada: su línea arranca ahí.
+  const timelines = entries.map(({ player, profile }) => ({ id: player.id, points: eloTimeline(profile, now) }))
 
   const rows: EloRaceDay[] = []
   for (let d = 0; d < days; d++) {
@@ -528,20 +686,17 @@ export function buildEloRace(entries: FaceitEntry[], days = 30, now = Date.now()
       label: `${local.getUTCDate()} ${MONTHS[local.getUTCMonth()]}`,
     }
     for (const t of timelines) {
-      const last = [...t.withElo].reverse().find((m) => m.playedAt < end)
-      row[t.id] = last ? last.elo : t.coversWindow ? t.before : null
+      const last = [...t.points].reverse().find((p) => p.at < end)
+      row[t.id] = last ? last.elo : null
     }
     rows.push(row)
   }
 
-  // Ganancia neta de la ventana por jugador (para destacar y ordenar).
-  const first = rows[0]
-  const lastRow = rows[rows.length - 1]
+  // Ganancia neta de la ventana por jugador: desde su primer dato dentro de la ventana.
   const change = Object.fromEntries(
     series.map((s) => {
-      const a = first[s.id]
-      const b = lastRow[s.id]
-      return [s.id, typeof a === 'number' && typeof b === 'number' ? b - a : 0]
+      const values = rows.map((r) => r[s.id]).filter((v): v is number => typeof v === 'number')
+      return [s.id, values.length >= 2 ? values[values.length - 1] - values[0] : 0]
     }),
   )
 
@@ -554,7 +709,7 @@ export function shortDate(timestamp: number) {
   return `${local.getUTCDate()} ${MONTHS[local.getUTCMonth()]}`
 }
 
-export type EloChartPoint = { label: string; elo: number; won: boolean; map: string; delta: number | null }
+export type EloChartPoint = { label: string; elo: number; won: boolean | null; map: string | null; delta: number | null }
 
 export function toEloChartPoints(summary: FaceitSummary): EloChartPoint[] {
   return summary.eloHistory.map((p) => ({ label: shortDate(p.at), elo: p.elo, won: p.won, map: p.map, delta: p.delta }))

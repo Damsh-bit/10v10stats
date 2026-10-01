@@ -25,6 +25,8 @@ import { FaceitLadder } from '@/components/faceit/faceit-ladder'
 import { getFaceitEntries, toLadderRows } from '@/lib/faceit'
 
 export const revalidate = 60
+// Margen para refrescar FACEIT (los pedidos van de a uno).
+export const maxDuration = 60
 
 const RECENT_MATCH_COUNT = 30
 

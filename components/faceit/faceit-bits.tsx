@@ -64,7 +64,7 @@ export function FaceitLevel({ level, size = 28, className }: { level: number; si
 /** Últimos resultados: de la más vieja (izquierda) a la última (derecha, resaltada). */
 export function FaceitForm({ results, size = 'sm' }: { results: boolean[]; size?: 'sm' | 'md' }) {
   if (results.length === 0) {
-    return <span className="text-[10px] text-muted-foreground">Sin partidas</span>
+    return <span className="whitespace-nowrap text-[10px] text-muted-foreground">Sin partidas</span>
   }
 
   const ordered = [...results].reverse()
@@ -95,6 +95,7 @@ export function FaceitForm({ results, size = 'sm' }: { results: boolean[]; size?
 export function EloSparkline({
   id,
   values,
+  trend,
   width = 96,
   height = 28,
   className,
@@ -102,6 +103,8 @@ export function EloSparkline({
   /** Único por página: el degradé se referencia por id. */
   id: string
   values: number[]
+  /** Fuerza el color (por ejemplo con el mismo número que se muestra al lado). */
+  trend?: number
   width?: number
   height?: number
   className?: string
@@ -117,7 +120,7 @@ export function EloSparkline({
     const y = height - pad - ((v - min) / span) * (height - pad * 2)
     return [x, y] as const
   })
-  const up = values[values.length - 1] >= values[0]
+  const up = (trend ?? values[values.length - 1] - values[0]) >= 0
   const stroke = up ? '#34d399' : '#fb7185'
   const line = points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
   const area = `${pad},${height} ${line} ${width - pad},${height}`

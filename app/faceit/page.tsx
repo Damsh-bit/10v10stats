@@ -10,6 +10,8 @@ import { Reveal } from '@/components/motion/reveal'
 
 // Igual que el cache de los pedidos a FACEIT (FACEIT_REVALIDATE_SECONDS).
 export const revalidate = 300
+// Margen para refrescar FACEIT (los pedidos van de a uno).
+export const maxDuration = 60
 
 export const metadata: Metadata = {
   title: 'FACEIT — 10v10 STATS',
