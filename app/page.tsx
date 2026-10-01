@@ -21,6 +21,8 @@ import { RecentMatchScoreboard } from '@/components/matches/recent-match-scorebo
 import { NewMatchModal } from '@/components/matches/new-match-modal'
 import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 import { Reveal } from '@/components/motion/reveal'
+import { FaceitLadder } from '@/components/faceit/faceit-ladder'
+import { getFaceitEntries, toLadderRows } from '@/lib/faceit'
 
 export const revalidate = 60
 
@@ -28,6 +30,7 @@ const RECENT_MATCH_COUNT = 30
 
 export default async function Page() {
   const [league, nelsonData] = await Promise.all([getLeagueData(), getNelsonData()])
+  const faceitRows = toLadderRows(await getFaceitEntries(league.players))
   const season = league.currentSeason
   const previousSeason = getPreviousSeason(league.seasons, season)
 
@@ -109,6 +112,12 @@ export default async function Page() {
           </div>
 
           <div className="flex min-w-0 flex-col gap-6">
+            {faceitRows.length > 0 && (
+              <Reveal immediate delay={0.25}>
+                <FaceitLadder rows={faceitRows} variant="compact" />
+              </Reveal>
+            )}
+
             {previousSeason && previousData && previousStandings.length > 0 && (
               <Reveal immediate delay={0.3}>
                 <SeasonLegacyCard

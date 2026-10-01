@@ -22,12 +22,15 @@ export async function PATCH(
     let password = ''
     let photoUrl = ''
     let photoFile: File | null = null
+    // undefined = no vino en el pedido: no se toca la columna.
+    let faceitNickname: string | null | undefined
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
       name = formData.get('name') as string
       password = formData.get('password') as string
       photoUrl = formData.get('photoUrl') as string
+      if (formData.has('faceitNickname')) faceitNickname = String(formData.get('faceitNickname') ?? '')
       const file = formData.get('photoFile')
       if (file instanceof File && file.size > 0) {
         photoFile = file
@@ -37,10 +40,20 @@ export async function PATCH(
       name = body.name
       password = body.password
       photoUrl = body.photoUrl
+      if (typeof body.faceitNickname === 'string') faceitNickname = body.faceitNickname
     }
 
     if (password !== 'alzhannah2026') {
       return NextResponse.json({ error: 'Contraseña incorrecta' }, { status: 401 })
+    }
+
+    if (typeof faceitNickname === 'string') {
+      // Acepta el nick o el link completo del perfil.
+      const nick = faceitNickname.trim().replace(/^(https?:\/\/)?(www\.)?faceit\.com\/[a-z-]*\/?players\//i, '').split(/[/?#]/)[0]
+      if (nick && !/^[\w.-]{2,32}$/.test(nick)) {
+        return NextResponse.json({ error: 'Nick de FACEIT inválido' }, { status: 400 })
+      }
+      faceitNickname = nick || null
     }
 
     const supabase = getSupabaseAdminClient() ?? getSupabaseClient()
@@ -75,9 +88,10 @@ export async function PATCH(
 
     const { error } = await supabase
       .from('players')
-      .update({ 
-        name: name, 
-        photo_url: photoUrl || null 
+      .update({
+        name: name,
+        photo_url: photoUrl || null,
+        ...(faceitNickname !== undefined ? { faceit_nickname: faceitNickname } : {}),
       })
       .eq('id', id)
 

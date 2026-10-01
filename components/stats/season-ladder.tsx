@@ -135,6 +135,7 @@ export function SeasonLadder({
                 >
                   <PlayerAvatar player={player} size={18} />
                   {player.name}
+                  {player.menudaMierda && <span title="Menuda mierda">💩</span>}
                 </Link>
               </li>
             ))}
@@ -161,7 +162,6 @@ function LadderRow({
   isTopFakador: boolean
 }) {
   const medal = MEDALS[i]
-  const isLast = total > 3 && i === total - 1
   const inDangerZone = total > 5 && i >= total - 3
   const winrate = s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0
 
@@ -231,8 +231,8 @@ function LadderRow({
                 🎭 Fakaso
               </Chip>
             )}
-            {isLast && (
-              <Chip className="border-amber-700/50 text-amber-600" title="Último lugar del ladder">
+            {s.player.menudaMierda && (
+              <Chip className="border-amber-700/50 text-amber-600" title="Badge de honor">
                 💩 Menuda mierda
               </Chip>
             )}

@@ -17,6 +17,8 @@ import { EditPlayerModal } from '@/components/players/edit-player-modal'
 import { PlayerSeasonView, type PlayerScope } from '@/components/players/player-season-view'
 import { SeasonComparison } from '@/components/players/season-comparison'
 import { Reveal } from '@/components/motion/reveal'
+import { FaceitHeaderChip, FaceitProfileSection } from '@/components/faceit/faceit-profile-section'
+import { getFaceitProfile, summarizeFaceit } from '@/lib/faceit'
 import type { LiveData } from '@/types'
 
 export const revalidate = 60
@@ -39,6 +41,9 @@ export default async function PlayerProfile({
   const player = league.players.find((p) => p.id === id)
   if (!player) notFound()
 
+  const faceitProfile = player.faceitNickname ? await getFaceitProfile(player.faceitNickname) : null
+  const faceitSummary = faceitProfile ? summarizeFaceit(faceitProfile) : null
+
   const current = league.currentSeason
   const previous = getPreviousSeason(league.seasons, current)
 
@@ -60,7 +65,7 @@ export default async function PlayerProfile({
       rank: rankIndex >= 0 ? rankIndex + 1 : null,
       rankedCount: ranked.length,
       records: getPlayerRecords(data, ranked)[id] ?? [],
-      isLast: ranked.length > 3 && rankIndex === ranked.length - 1,
+      menudaMierda: !!player.menudaMierda,
       nelsons: data.players.find((p) => p.id === id)?.nelsons ?? 0,
     }
   }
@@ -105,7 +110,9 @@ export default async function PlayerProfile({
               <h1 className="truncate font-heading text-2xl font-bold uppercase tracking-wide text-foreground sm:text-3xl">
                 {player.name}
               </h1>
-              <EditPlayerModal player={{ id: player.id, name: player.name, photoUrl: player.photoUrl }} />
+              <EditPlayerModal
+                player={{ id: player.id, name: player.name, photoUrl: player.photoUrl, faceitNickname: player.faceitNickname }}
+              />
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               {player.badge && player.badge !== 'Sin info' && <BadgePill>{player.badge}</BadgePill>}
@@ -114,6 +121,7 @@ export default async function PlayerProfile({
                   {current.name}: {currentScope.rank ? `#${currentScope.rank}` : 'sin debut'}
                 </span>
               )}
+              {faceitProfile && <FaceitHeaderChip profile={faceitProfile} />}
               {previous && previousScope?.rank && (
                 <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {previousScope.rank === 1 ? '👑 Campeón' : `#${previousScope.rank}`} {previous.name}
@@ -122,6 +130,12 @@ export default async function PlayerProfile({
             </div>
           </div>
         </Reveal>
+
+        {player.faceitNickname && (
+          <Reveal immediate delay={0.05}>
+            <FaceitProfileSection profile={faceitProfile} summary={faceitSummary} />
+          </Reveal>
+        )}
 
         <Reveal immediate delay={0.08}>
           <PlayerSeasonView

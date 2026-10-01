@@ -12,6 +12,7 @@ const links = [
   { href: '/matches', label: 'Partidas' },
   { href: '/creacion-de-equipos', label: 'Equipos' },
   { href: '/estadisticas', label: 'Hall of Fame' },
+  { href: '/faceit', label: 'FACEIT' },
 ]
 
 function isActive(pathname: string, href: string) {

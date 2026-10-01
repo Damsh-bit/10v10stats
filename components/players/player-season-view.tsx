@@ -21,7 +21,7 @@ export type PlayerScope = {
   rank: number | null
   rankedCount: number
   records: RecordType[]
-  isLast: boolean
+  menudaMierda: boolean
   nelsons: number
 }
 
@@ -60,7 +60,7 @@ export function PlayerSeasonView({
   const winrate = matches > 0 && s ? Math.round((s.wins / matches) * 100) : 0
   const label = rankLabel(scope)
   const hasBadges =
-    scope.records.length > 0 || scope.isLast || (s?.mvps ?? 0) > 0 || (s?.currentStreak ?? 0) >= 3 || scope.nelsons > 0 || matches > 0
+    scope.records.length > 0 || scope.menudaMierda || (s?.mvps ?? 0) > 0 || (s?.currentStreak ?? 0) >= 3 || scope.nelsons > 0 || matches > 0
 
   const cards = [
     { label: 'Partidas', value: matches },
@@ -140,8 +140,8 @@ export function PlayerSeasonView({
                 {scope.records.map((record) => (
                   <RecordBadge key={record} type={record} />
                 ))}
-                {scope.isLast && (
-                  <span title="Último lugar del ladder" className={cn(chipClass, 'cursor-help border-amber-700/50 text-amber-600')}>
+                {scope.menudaMierda && (
+                  <span title="Badge de honor" className={cn(chipClass, 'cursor-help border-amber-700/50 text-amber-600')}>
                     💩 Menuda mierda
                   </span>
                 )}

@@ -6,6 +6,10 @@ export type Player = {
   photoUrl?: string
   nelsons: number
   fakes?: number
+  /** Nick de FACEIT; con él se traen nivel, elo e historial en vivo. */
+  faceitNickname?: string
+  /** Lleva el badge "💩 Menuda mierda" (se marca a mano en la base). */
+  menudaMierda?: boolean
 }
 
 export type MatchPlayer = {

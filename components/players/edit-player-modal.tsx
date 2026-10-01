@@ -9,6 +9,7 @@ type PlayerOption = {
   id: string
   name: string
   photoUrl?: string
+  faceitNickname?: string
 }
 
 export function EditPlayerModal({ player }: { player: PlayerOption }) {
@@ -16,6 +17,7 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState(player.name)
   const [photoUrl, setPhotoUrl] = useState(player.photoUrl || '')
+  const [faceitNickname, setFaceitNickname] = useState(player.faceitNickname || '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -32,6 +34,7 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
       formData.append('name', name)
       formData.append('password', password)
       formData.append('photoUrl', photoUrl)
+      formData.append('faceitNickname', faceitNickname)
       if (photoFile) {
         formData.append('photoFile', photoFile)
       }
@@ -127,6 +130,21 @@ export function EditPlayerModal({ player }: { player: PlayerOption }) {
                     }
                   }}
                   className="w-full text-foreground file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand hover:file:bg-primary/20"
+                />
+              </div>
+              <div className="space-y-2 text-sm">
+                <label className="font-semibold text-muted-foreground" htmlFor={`faceit-${player.id}`}>
+                  Nick de FACEIT
+                </label>
+                <input
+                  id={`faceit-${player.id}`}
+                  type="text"
+                  value={faceitNickname}
+                  onChange={(e) => setFaceitNickname(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground outline-none ring-0 focus:border-primary"
+                  placeholder="Como aparece en faceit.com/players/..."
+                  autoComplete="off"
+                  spellCheck={false}
                 />
               </div>
               <div className="space-y-2 text-sm">

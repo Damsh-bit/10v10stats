@@ -183,13 +183,23 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
   if (!supabase) return empty
 
   try {
-    const [playersResult, fakesResult] = await Promise.all([
+    const [playersResult, fakesResult, faceitResult] = await Promise.all([
       supabase.from('players').select('id, name, photo_url, badge, contador_nelson').order('name'),
       supabase.from('fake_leaderboard').select('player_name, fake_count'),
+      // Aparte: si estas columnas no existen, el resto de la app sigue andando sin ellas.
+      supabase.from('players').select('id, faceit_nickname, menuda_mierda'),
     ])
 
     const fakesByName = new Map<string, number>(
       (fakesResult.data ?? []).map((row) => [String(row.player_name).toLowerCase(), Number(row.fake_count ?? 0)]),
+    )
+    const menudaMierdaIds = new Set(
+      (faceitResult.data ?? []).filter((row) => row.menuda_mierda === true).map((row) => String(row.id)),
+    )
+    const faceitById = new Map<string, string>(
+      (faceitResult.data ?? [])
+        .filter((row) => typeof row.faceit_nickname === 'string' && row.faceit_nickname.trim())
+        .map((row) => [String(row.id), String(row.faceit_nickname).trim()]),
     )
 
     const players: Player[] = (playersResult.data ?? []).map((row) => {
@@ -202,6 +212,8 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
         photoUrl: row.photo_url ?? undefined,
         nelsons: normalizeNumber(row.contador_nelson),
         fakes: fakesByName.get(name.toLowerCase()) ?? 0,
+        faceitNickname: faceitById.get(String(row.id)),
+        menudaMierda: menudaMierdaIds.has(String(row.id)),
       }
     })
 
