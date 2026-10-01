@@ -5,16 +5,18 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion, type Variants } from 'motion/react'
 import confetti from 'canvas-confetti'
-import { ArrowRight, BarChart3, Flame, Scale, Sparkles, Swords, X } from 'lucide-react'
+import { ArrowRight, BarChart3, Coins, Flame, Scale, Sparkles, Swords, Trophy, Wallet, X } from 'lucide-react'
 import { NOVEDADES, NOVEDADES_MAX_AGE_DAYS, type Novedad, type NovedadDemo, type NovedadIcon } from '@/lib/novedades'
 import { FaceitLevel } from '@/components/faceit/faceit-bits'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
+import { ApuestasDemo } from './apuestas-demo'
 import { TeamGeneratorDemo } from './team-generator-demo'
 import { NOVEDADES_HASH, OPEN_NOVEDADES_EVENT } from './novedades-link'
 
 const DEMOS: Record<NovedadDemo, ComponentType> = {
   'team-generator': TeamGeneratorDemo,
+  apuestas: ApuestasDemo,
 }
 
 const STORAGE_KEY = 'novedades-vistas'
@@ -58,25 +60,17 @@ function formatDate(iso: string) {
 
 /**
  * Pop-up de novedades de la home: aparece una sola vez por novedad (ver
- * lib/novedades.ts) y se puede volver a abrir desde el pie de página.
+ * lib/novedades.ts) y se puede volver a abrir desde el pie de página. Si hay
+ * varias, van de a una: al cerrar una se abre la siguiente.
  */
 export function WhatsNewModal() {
-  const [items, setItems] = useState<Novedad[]>([])
-  const [open, setOpen] = useState(false)
-  const [index, setIndex] = useState(0)
-  const [direction, setDirection] = useState(1)
-  const ctaRef = useRef<HTMLAnchorElement>(null)
+  const [queue, setQueue] = useState<{ items: Novedad[]; index: number } | null>(null)
+  const open = queue !== null
 
   useBodyScrollLock(open)
 
   const show = useCallback((list: Novedad[]) => {
-    if (list.length === 0) return
-    setItems(list)
-    setIndex(0)
-    setDirection(1)
-    setOpen(true)
-    // Se marca al abrir: aunque se vaya por el link sin cerrar, no vuelve a aparecer.
-    markSeen(list.map((n) => n.id))
+    if (list.length > 0) setQueue({ items: list, index: 0 })
   }, [])
 
   useEffect(() => {
@@ -97,52 +91,39 @@ export function WhatsNewModal() {
     }
   }, [show])
 
-  const close = useCallback(() => {
-    setOpen(false)
+  const clearHash = useCallback(() => {
     if (window.location.hash === NOVEDADES_HASH) {
       window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
     }
   }, [])
 
-  const goTo = useCallback(
-    (next: number) => {
-      if (next < 0 || next >= items.length || next === index) return
-      setDirection(next > index ? 1 : -1)
-      setIndex(next)
-    },
-    [items.length, index],
-  )
+  /** Cierra la novedad que se ve; si queda otra, se abre esa. */
+  const close = useCallback(() => {
+    clearHash()
+    setQueue((q) => (q && q.index < q.items.length - 1 ? { ...q, index: q.index + 1 } : null))
+  }, [clearHash])
+
+  /** Se va por el botón principal: las que faltaban aparecen en la próxima visita. */
+  const dismiss = useCallback(() => {
+    clearHash()
+    setQueue(null)
+  }, [clearHash])
 
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close()
-      else if (event.key === 'ArrowRight') goTo(index + 1)
-      else if (event.key === 'ArrowLeft') goTo(index - 1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, close, goTo, index])
+  }, [open, close])
 
-  // Festejo y foco en el botón principal apenas entra la tarjeta.
-  useEffect(() => {
-    if (!open) return
-    const timer = window.setTimeout(() => {
-      ctaRef.current?.focus({ preventScroll: true })
-      const base = { particleCount: 45, spread: 60, startVelocity: 42, ticks: 160, zIndex: 130, colors: CONFETTI_COLORS, disableForReducedMotion: true, scalar: 0.9 }
-      confetti({ ...base, angle: 60, origin: { x: 0.18, y: 0.7 } })
-      confetti({ ...base, angle: 120, origin: { x: 0.82, y: 0.7 } })
-    }, 380)
-    return () => window.clearTimeout(timer)
-  }, [open])
-
-  const item = items[index]
-  const hasNext = index < items.length - 1
+  const item = queue?.items[queue.index]
 
   return (
     <Portal>
       <AnimatePresence>
-        {open && item && (
+        {queue && item && (
           <motion.div
             key="novedades"
             className="fixed inset-0 z-[120] flex items-center justify-center p-4"
@@ -152,88 +133,17 @@ export function WhatsNewModal() {
           >
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={close} aria-hidden="true" />
 
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="novedades-title"
-              initial={{ opacity: 0, y: 40, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.96, transition: { duration: 0.2 } }}
-              transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-              className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-[0_30px_90px_-20px_rgba(0,0,0,0.85),0_0_60px_-25px_rgba(255,92,141,0.6)]"
-            >
-              <button
-                type="button"
-                onClick={close}
-                className="absolute right-3 top-3 z-20 rounded-full bg-black/40 p-1.5 text-white/70 backdrop-blur transition-colors hover:bg-black/60 hover:text-white"
-                aria-label="Cerrar novedades"
-              >
-                <X className="h-4 w-4" />
-              </button>
-
-              <div className="min-h-0 overflow-y-auto overflow-x-hidden">
-                <AnimatePresence mode="wait" initial={false} custom={direction}>
-                  <motion.div
-                    key={item.id}
-                    custom={direction}
-                    variants={slide}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.3, ease: EASE }}
-                  >
-                    <NovedadVisual item={item} />
-                    <NovedadBody item={item} />
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              <footer className="flex items-center gap-3 border-t border-border/60 bg-black/10 px-5 py-3.5 sm:px-6">
-                {items.length > 1 && (
-                  <div className="flex items-center gap-1.5" role="tablist" aria-label="Novedades">
-                    {items.map((n, i) => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={i === index}
-                        aria-label={n.title}
-                        onClick={() => goTo(i)}
-                        className={cn(
-                          'h-1.5 rounded-full transition-all duration-300',
-                          i === index ? 'w-5 bg-brand' : 'w-1.5 bg-muted-foreground/40 hover:bg-muted-foreground/70',
-                        )}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                <div className="ml-auto flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={hasNext ? () => goTo(index + 1) : close}
-                    className="rounded-full px-3 py-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-                  >
-                    {hasNext ? 'Siguiente' : 'Después'}
-                  </button>
-                  <Link
-                    ref={ctaRef}
-                    href={item.cta.href}
-                    onClick={close}
-                    className="group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-primary px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 outline-none transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.98]"
-                  >
-                    <motion.span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ x: ['0%', '320%'] }}
-                      transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.2, ease: 'easeInOut' }}
-                    />
-                    <span className="relative">{item.cta.label}</span>
-                    <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                  </Link>
-                </div>
-              </footer>
-            </motion.div>
+            {/* mode="wait": la siguiente entra recién cuando terminó de irse la anterior. */}
+            <AnimatePresence mode="wait">
+              <NovedadDialog
+                key={item.id}
+                item={item}
+                position={queue.index}
+                total={queue.items.length}
+                onClose={close}
+                onCta={dismiss}
+              />
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -241,10 +151,110 @@ export function WhatsNewModal() {
   )
 }
 
-const slide: Variants = {
-  enter: (direction: number) => ({ opacity: 0, x: direction * 40 }),
-  center: { opacity: 1, x: 0 },
-  exit: (direction: number) => ({ opacity: 0, x: direction * -40 }),
+function NovedadDialog({
+  item,
+  position,
+  total,
+  onClose,
+  onCta,
+}: {
+  item: Novedad
+  position: number
+  total: number
+  onClose: () => void
+  onCta: () => void
+}) {
+  const ctaRef = useRef<HTMLAnchorElement>(null)
+  const hasNext = position < total - 1
+
+  // Se marca al mostrarla: aunque se vaya por el link sin cerrar, no vuelve a
+  // aparecer. Festejo y foco en el botón principal apenas entra la tarjeta.
+  useEffect(() => {
+    markSeen([item.id])
+    const timer = window.setTimeout(() => {
+      ctaRef.current?.focus({ preventScroll: true })
+      const base = { particleCount: 45, spread: 60, startVelocity: 42, ticks: 160, zIndex: 130, colors: CONFETTI_COLORS, disableForReducedMotion: true, scalar: 0.9 }
+      confetti({ ...base, angle: 60, origin: { x: 0.18, y: 0.7 } })
+      confetti({ ...base, angle: 120, origin: { x: 0.82, y: 0.7 } })
+    }, 380)
+    return () => window.clearTimeout(timer)
+  }, [item.id])
+
+  return (
+    <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="novedades-title"
+      initial={{ opacity: 0, y: 40, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.96, transition: { duration: 0.2 } }}
+      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+      className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-card shadow-[0_30px_90px_-20px_rgba(0,0,0,0.85),0_0_60px_-25px_rgba(255,92,141,0.6)]"
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-3 top-3 z-20 rounded-full bg-black/40 p-1.5 text-white/70 backdrop-blur transition-colors hover:bg-black/60 hover:text-white"
+        aria-label={hasNext ? 'Cerrar y ver la siguiente novedad' : 'Cerrar novedades'}
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      <div className="min-h-0 overflow-y-auto overflow-x-hidden">
+        <NovedadVisual item={item} />
+        <NovedadBody item={item} />
+      </div>
+
+      <footer className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border/60 bg-black/10 px-5 py-3.5 sm:px-6">
+        {total > 1 && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5" aria-hidden="true">
+              {Array.from({ length: total }, (_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'h-1.5 rounded-full transition-all duration-300',
+                    i === position ? 'w-5 bg-brand' : i < position ? 'w-1.5 bg-brand/50' : 'w-1.5 bg-muted-foreground/40',
+                  )}
+                />
+              ))}
+            </div>
+            <span className="sr-only">
+              Novedad {position + 1} de {total}
+            </span>
+            <span className="hidden font-mono text-[11px] tabular-nums text-muted-foreground sm:inline" aria-hidden="true">
+              {position + 1}/{total}
+            </span>
+          </div>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="whitespace-nowrap rounded-full px-2.5 py-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground sm:px-3"
+          >
+            {hasNext ? 'Siguiente' : 'Después'}
+          </button>
+          <Link
+            ref={ctaRef}
+            href={item.cta.href}
+            onClick={onCta}
+            className="group relative flex items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full bg-primary px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 outline-none transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.98]"
+          >
+            <motion.span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ['0%', '320%'] }}
+              transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.2, ease: 'easeInOut' }}
+            />
+            <span className="relative">{item.cta.label}</span>
+            <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+        </div>
+      </footer>
+    </motion.div>
+  )
 }
 
 const ORBS = [
@@ -370,6 +380,12 @@ function HighlightIcon({ icon }: { icon: NovedadIcon }) {
       return <Scale className="h-4 w-4 text-emerald-300" aria-hidden="true" />
     case 'chart':
       return <BarChart3 className="h-4 w-4 text-sky-300" aria-hidden="true" />
+    case 'coins':
+      return <Coins className="h-4 w-4 text-amber-300" aria-hidden="true" />
+    case 'wallet':
+      return <Wallet className="h-4 w-4 text-sky-300" aria-hidden="true" />
+    case 'trophy':
+      return <Trophy className="h-4 w-4 text-yellow-300" aria-hidden="true" />
     default:
       return <Sparkles className="h-4 w-4 text-amber-300" aria-hidden="true" />
   }

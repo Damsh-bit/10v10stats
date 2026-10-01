@@ -104,7 +104,7 @@ bloquean al jugador 15 minutos. Cada uno carga su alias/CVU de cobro.
       (código 7), aun con saldo en la cuenta. No se pueden probar en el sandbox. Si una devolución falla, queda como
       "a devolver" en el panel de la banca. Conviene probar una de verdad con un monto chico al pasar a producción.
 4. **Banca**: entrar a `/apuestas` → "Panel de la banca" con `APUESTAS_ADMIN_KEY` y armar el PIN de cada uno.
-5. Sumar la novedad en `lib/novedades.ts` cuando se prenda para todos.
+5. La novedad del pop-up de la home ya está en `lib/novedades.ts` (`2026-10-01-apuestas`).
 
 ### Modo manual (sin Mercado Pago)
 
