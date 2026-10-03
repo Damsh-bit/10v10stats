@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdminClient } from '@/lib/supabase'
+import { mvpWinnersOnly, pickMvp } from '@/lib/mvp'
 
 type EditMatchPlayerPayload = {
   player_id: string
@@ -49,7 +50,7 @@ export async function PUT(
     // 1. Obtener la partida actual para conocer los nombres de los equipos y ganador
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
-      .select('id, team_a_name, team_b_name, mvp_id')
+      .select('id, team_a_name, team_b_name, mvp_id, season_id')
       .eq('id', matchId)
       .single()
 
@@ -59,22 +60,19 @@ export async function PUT(
 
     const teamAName = matchData.team_a_name || 'Equipo A'
     const teamBName = matchData.team_b_name || 'Equipo B'
-    
+
     // Determinar nuevo equipo ganador
     const winnerTeam = payload.score_ct === payload.score_t ? 'EMPATE' : (payload.score_ct > payload.score_t ? teamAName : teamBName)
 
-    // 2. Calcular MVP de la partida
-    let mvpPlayerId = ''
-    let maxScore = -1
-
-    payload.players.forEach((p) => {
-      const d = Math.max(1, p.deaths || 0)
-      const score = (p.kills + p.assists) / d + (p.damage / 100)
-      if (score > maxScore) {
-        maxScore = score
-        mvpPlayerId = p.player_id
-      }
+    // player.team vendrá como el nombre original ("Team A" o "CT", o el nombre de label si no tiene team_a_name)
+    // Mantenemos el team que nos pasa el frontend porque allí armaremos bien el label
+    const playerRows = payload.players.map((player) => {
+      const teamLabel = player.team === teamAName || player.team === 'CT' ? teamAName : teamBName
+      return { ...player, team: teamLabel, won: winnerTeam === 'EMPATE' ? null : teamLabel === winnerTeam }
     })
+
+    // 2. Calcular MVP de la partida (desde la Season 2, sólo del equipo ganador)
+    const mvpPlayerId = pickMvp(playerRows, { winnersOnly: mvpWinnersOnly(matchData.season_id) }) ?? ''
 
     // 3. Actualizar la partida
     const updateData: any = {
@@ -96,17 +94,12 @@ export async function PUT(
     }
 
     // 4. Actualizar a los jugadores en match_players
-    for (const player of payload.players) {
-      // player.team vendrá como el nombre original ("Team A" o "CT", o el nombre de label si no tiene team_a_name)
-      // Mantenemos el team que nos pasa el frontend porque allí armaremos bien el label
-      const teamLabel = player.team === teamAName || player.team === 'CT' ? teamAName : teamBName
-      const won = winnerTeam === 'EMPATE' ? null : teamLabel === winnerTeam
-
+    for (const player of playerRows) {
       const { error: playerUpdateError } = await supabase
         .from('match_players')
         .update({
-          team: teamLabel,
-          won: won,
+          team: player.team,
+          won: player.won,
           kills: player.kills,
           deaths: player.deaths,
           assists: player.assists,

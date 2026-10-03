@@ -10,6 +10,7 @@ import {
 } from '@/lib/seasons'
 import type { Player, CSMap, Match, PlayerStats, LiveData, NelsonEntry } from '@/types'
 import { computeKDRecord } from '@/lib/utils'
+import { mvpWinnersOnly, pickMvp } from '@/lib/mvp'
 
 export { formatDate } from '@/lib/format'
 
@@ -122,23 +123,18 @@ async function fetchAllMatchRows(supabase: SupabaseClient, withSeasonColumns: bo
 function toMatch(row: SupabaseMatchRecord, seasons: Season[]): Match {
   const allEntries = row.match_players ?? []
   const counted = allEntries.filter((entry) => !entry.is_guest)
-  let mvpId = row.mvp_id || ''
-
-  // Partidas viejas sin MVP guardado: se calcula igual que al cargarlas.
-  if (!mvpId) {
-    let maxScore = -1
-    counted.forEach((p) => {
-      const d = Math.max(1, p.deaths || 0)
-      const score = ((p.kills || 0) + (p.assists || 0)) / d + ((p.damage || 0) / 100)
-      if (score > maxScore) {
-        maxScore = score
-        mvpId = p.player_id
-      }
-    })
-  }
-
   const isDraw = row.score_ct === row.score_t
   const date = normalizeString(row.played_at, '')
+  const seasonId = row.season_id ?? seasonIdForDate(seasons, date)
+  const winnersOnly = mvpWinnersOnly(seasonId)
+  let mvpId = row.mvp_id || ''
+
+  // Desde la Season 2 un MVP guardado del equipo que perdió no vale: se recalcula.
+  const winners = counted.filter((p) => p.won === true)
+  if (winnersOnly && mvpId && winners.length > 0 && !winners.some((p) => p.player_id === mvpId)) mvpId = ''
+
+  // Partidas viejas sin MVP guardado: se calcula igual que al cargarlas.
+  if (!mvpId) mvpId = pickMvp(counted, { winnersOnly }) ?? ''
 
   const toEntry = (entry: SupabaseMatchPlayerRecord) => ({
     playerId: normalizeString(entry.player_id, 'sin-player'),
@@ -157,7 +153,7 @@ function toMatch(row: SupabaseMatchRecord, seasons: Season[]): Match {
 
   return {
     id: normalizeString(row.id, 'sin-id'),
-    seasonId: row.season_id ?? seasonIdForDate(seasons, date),
+    seasonId,
     map: normalizeMap(row.map),
     date,
     ctScore: normalizeNumber(row.score_ct),

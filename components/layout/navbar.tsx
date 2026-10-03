@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'motion/react'
-import { Menu, X, Sparkles } from 'lucide-react'
+import { Menu, Megaphone, X, Sparkles } from 'lucide-react'
+import { useUnreadNovedades } from '@/components/novedades/novedades-state'
 import { cn } from '@/lib/utils'
 
 const LINKS = [
@@ -17,8 +18,20 @@ const LINKS = [
 
 const APUESTAS_LINK = { href: '/apuestas', label: 'Apuestas' }
 
+const NOVEDADES_HREF = '/novedades'
+
 function isActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
+}
+
+/** Puntito que late cuando hay novedades sin leer. */
+function UnreadDot({ className }: { className?: string }) {
+  return (
+    <span className={cn('pointer-events-none absolute flex h-2.5 w-2.5', className)} aria-hidden="true">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full border-2 border-background bg-brand" />
+    </span>
+  )
 }
 
 export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: number; apuestas?: boolean }) {
@@ -26,6 +39,9 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
   const links = apuestas ? [...LINKS, APUESTAS_LINK] : LINKS
   const [isOpen, setIsOpen] = useState(false)
   const seasonsActive = pathname.startsWith('/temporadas')
+  const novedadesActive = isActive(pathname, NOVEDADES_HREF)
+  const unread = useUnreadNovedades()
+  const novedadesLabel = unread > 0 ? `Novedades (${unread} sin leer)` : 'Novedades'
 
   useEffect(() => {
     setIsOpen(false)
@@ -47,7 +63,7 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
           {links.map((link) => {
             const active = isActive(pathname, link.href)
             return (
@@ -56,7 +72,7 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative rounded-md px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider transition-colors',
+                  'relative whitespace-nowrap rounded-md px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wider transition-colors',
                   active ? 'text-white' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -72,10 +88,33 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
             )
           })}
           <Link
+            href={NOVEDADES_HREF}
+            aria-current={novedadesActive ? 'page' : undefined}
+            aria-label={novedadesLabel}
+            title={novedadesLabel}
+            className={cn(
+              'relative flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider transition-colors xl:px-3',
+              novedadesActive ? 'text-white' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {novedadesActive && (
+              <motion.span
+                layoutId="nav-active"
+                className="absolute inset-0 rounded-md bg-primary/20 ring-1 ring-primary/40"
+                transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+              />
+            )}
+            <span className="relative">
+              <Megaphone className={cn('h-4 w-4', unread > 0 && !novedadesActive && 'text-brand')} aria-hidden="true" />
+              {unread > 0 && <UnreadDot className="-right-1.5 -top-1.5" />}
+            </span>
+            <span className="relative hidden xl:inline">Novedades</span>
+          </Link>
+          <Link
             href="/temporadas"
             aria-current={seasonsActive ? 'page' : undefined}
             className={cn(
-              'season-chip ml-2 flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-black transition-transform hover:scale-105',
+              'season-chip ml-2 flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-black transition-transform hover:scale-105',
               seasonsActive && 'ring-2 ring-amber-200/70 ring-offset-2 ring-offset-background',
             )}
           >
@@ -84,15 +123,29 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
           </Link>
         </nav>
 
-        <button
-          className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground md:hidden"
-          onClick={() => setIsOpen((open) => !open)}
-          aria-expanded={isOpen}
-          aria-controls="mobile-nav"
-          aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-1 lg:hidden">
+          <Link
+            href={NOVEDADES_HREF}
+            aria-current={novedadesActive ? 'page' : undefined}
+            aria-label={novedadesLabel}
+            className={cn(
+              'relative flex items-center justify-center rounded-md p-2 transition-colors',
+              novedadesActive ? 'bg-primary/15 text-white' : unread > 0 ? 'text-brand' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Megaphone className="h-5 w-5" aria-hidden="true" />
+            {unread > 0 && <UnreadDot className="right-1 top-1" />}
+          </Link>
+          <button
+            className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+            onClick={() => setIsOpen((open) => !open)}
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav"
+            aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
+          >
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence initial={false}>
@@ -104,7 +157,7 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-t border-border bg-background md:hidden"
+            className="overflow-hidden border-t border-border bg-background lg:hidden"
           >
             <nav className="flex flex-col gap-1.5 p-4" aria-label="Principal">
               <Link
@@ -136,6 +189,28 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
                   </motion.div>
                 )
               })}
+              <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.04 * links.length + 0.05 }}
+              >
+                <Link
+                  href={NOVEDADES_HREF}
+                  aria-current={novedadesActive ? 'page' : undefined}
+                  className={cn(
+                    'flex items-center gap-2 rounded-md px-4 py-3 text-[14px] font-semibold uppercase tracking-wider transition-colors',
+                    novedadesActive ? 'bg-primary/15 text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  )}
+                >
+                  <Megaphone className="h-4 w-4" aria-hidden="true" />
+                  Novedades
+                  {unread > 0 && (
+                    <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[11px] font-extrabold normal-case tracking-normal text-black">
+                      {unread === 1 ? '1 nueva' : `${unread} nuevas`}
+                    </span>
+                  )}
+                </Link>
+              </motion.div>
             </nav>
           </motion.div>
         )}

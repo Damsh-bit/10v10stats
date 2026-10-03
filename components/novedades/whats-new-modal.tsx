@@ -5,18 +5,20 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion, type Variants } from 'motion/react'
 import confetti from 'canvas-confetti'
-import { ArrowRight, BarChart3, Coins, Flame, Scale, Sparkles, Swords, Trophy, Wallet, X } from 'lucide-react'
-import { NOVEDADES, NOVEDADES_MAX_AGE_DAYS, type Novedad, type NovedadDemo, type NovedadIcon } from '@/lib/novedades'
-import { FaceitLevel } from '@/components/faceit/faceit-bits'
+import { ArrowRight, Sparkles, X } from 'lucide-react'
+import { NOVEDADES, NOVEDADES_MAX_AGE_DAYS, NOVEDADES_POPUP, type Novedad, type NovedadDemo } from '@/lib/novedades'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
 import { ApuestasDemo } from './apuestas-demo'
+import { MvpDemo } from './mvp-demo'
 import { TeamGeneratorDemo } from './team-generator-demo'
-import { NOVEDADES_HASH, OPEN_NOVEDADES_EVENT } from './novedades-link'
+import { HighlightIcon } from './novedad-icons'
+import { OPEN_NOVEDAD_EVENT } from './novedades-state'
 
 const DEMOS: Record<NovedadDemo, ComponentType> = {
   'team-generator': TeamGeneratorDemo,
   apuestas: ApuestasDemo,
+  mvp: MvpDemo,
 }
 
 const STORAGE_KEY = 'novedades-vistas'
@@ -49,7 +51,7 @@ function markSeen(ids: string[]) {
 }
 
 function pendingNovedades(seen: string[], now = Date.now()) {
-  return NOVEDADES.filter(
+  return NOVEDADES_POPUP.filter(
     (n) => !seen.includes(n.id) && now - Date.parse(n.date) <= NOVEDADES_MAX_AGE_DAYS * DAY_MS,
   ).slice(0, MAX_SHOWN)
 }
@@ -59,11 +61,12 @@ function formatDate(iso: string) {
 }
 
 /**
- * Pop-up de novedades de la home: aparece una sola vez por novedad (ver
- * lib/novedades.ts) y se puede volver a abrir desde el pie de página. Si hay
- * varias, van de a una: al cerrar una se abre la siguiente.
+ * Pop-up de novedades: en la home aparece solo, una vez por novedad marcada
+ * como `popup` (ver lib/novedades.ts). Si hay varias, van de a una: al cerrar
+ * una se abre la siguiente. En /novedades se abre a mano para ver la demo de
+ * una puntual.
  */
-export function WhatsNewModal() {
+export function WhatsNewModal({ autoOpen = true }: { autoOpen?: boolean }) {
   const [queue, setQueue] = useState<{ items: Novedad[]; index: number } | null>(null)
   const open = queue !== null
 
@@ -74,40 +77,32 @@ export function WhatsNewModal() {
   }, [])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (window.location.hash === NOVEDADES_HASH) {
-        show(NOVEDADES.slice(0, MAX_SHOWN))
-        return
-      }
-      const seen = readSeen()
-      if (seen) show(pendingNovedades(seen))
-    }, OPEN_DELAY_MS)
+    const timer = autoOpen
+      ? window.setTimeout(() => {
+          const seen = readSeen()
+          if (seen) show(pendingNovedades(seen))
+        }, OPEN_DELAY_MS)
+      : undefined
 
-    const openAll = () => show(NOVEDADES.slice(0, MAX_SHOWN))
-    window.addEventListener(OPEN_NOVEDADES_EVENT, openAll)
+    const openOne = (event: Event) => {
+      const id = (event as CustomEvent<{ id?: string }>).detail?.id
+      const item = NOVEDADES.find((n) => n.id === id)
+      if (item) show([item])
+    }
+    window.addEventListener(OPEN_NOVEDAD_EVENT, openOne)
     return () => {
       window.clearTimeout(timer)
-      window.removeEventListener(OPEN_NOVEDADES_EVENT, openAll)
+      window.removeEventListener(OPEN_NOVEDAD_EVENT, openOne)
     }
-  }, [show])
-
-  const clearHash = useCallback(() => {
-    if (window.location.hash === NOVEDADES_HASH) {
-      window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
-    }
-  }, [])
+  }, [autoOpen, show])
 
   /** Cierra la novedad que se ve; si queda otra, se abre esa. */
   const close = useCallback(() => {
-    clearHash()
     setQueue((q) => (q && q.index < q.items.length - 1 ? { ...q, index: q.index + 1 } : null))
-  }, [clearHash])
+  }, [])
 
   /** Se va por el botón principal: las que faltaban aparecen en la próxima visita. */
-  const dismiss = useCallback(() => {
-    clearHash()
-    setQueue(null)
-  }, [clearHash])
+  const dismiss = useCallback(() => setQueue(null), [])
 
   useEffect(() => {
     if (!open) return
@@ -166,6 +161,7 @@ function NovedadDialog({
 }) {
   const ctaRef = useRef<HTMLAnchorElement>(null)
   const hasNext = position < total - 1
+  const cta = item.cta ?? { label: 'Ver novedades', href: '/novedades' }
 
   // Se marca al mostrarla: aunque se vaya por el link sin cerrar, no vuelve a
   // aparecer. Festejo y foco en el botón principal apenas entra la tarjeta.
@@ -238,7 +234,7 @@ function NovedadDialog({
           </button>
           <Link
             ref={ctaRef}
-            href={item.cta.href}
+            href={cta.href}
             onClick={onCta}
             className="group relative flex items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full bg-primary px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 outline-none transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.98]"
           >
@@ -248,7 +244,7 @@ function NovedadDialog({
               animate={{ x: ['0%', '320%'] }}
               transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.2, ease: 'easeInOut' }}
             />
-            <span className="relative">{item.cta.label}</span>
+            <span className="relative">{cta.label}</span>
             <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
         </div>
@@ -355,7 +351,7 @@ function NovedadBody({ item }: { item: Novedad }) {
       </motion.p>
 
       <ul className="mt-1 flex flex-col gap-2">
-        {item.highlights.map((highlight) => (
+        {item.highlights?.map((highlight) => (
           <motion.li key={highlight.text} variants={itemVariants} className="flex items-center gap-3 text-[13px] leading-snug text-foreground/90">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-white/10">
               <HighlightIcon icon={highlight.icon} />
@@ -366,27 +362,4 @@ function NovedadBody({ item }: { item: Novedad }) {
       </ul>
     </motion.div>
   )
-}
-
-function HighlightIcon({ icon }: { icon: NovedadIcon }) {
-  switch (icon) {
-    case 'faceit':
-      return <FaceitLevel level={8} size={20} />
-    case 'flame':
-      return <Flame className="h-4 w-4 text-orange-400" aria-hidden="true" />
-    case 'swords':
-      return <Swords className="h-4 w-4 text-brand" aria-hidden="true" />
-    case 'scale':
-      return <Scale className="h-4 w-4 text-emerald-300" aria-hidden="true" />
-    case 'chart':
-      return <BarChart3 className="h-4 w-4 text-sky-300" aria-hidden="true" />
-    case 'coins':
-      return <Coins className="h-4 w-4 text-amber-300" aria-hidden="true" />
-    case 'wallet':
-      return <Wallet className="h-4 w-4 text-sky-300" aria-hidden="true" />
-    case 'trophy':
-      return <Trophy className="h-4 w-4 text-yellow-300" aria-hidden="true" />
-    default:
-      return <Sparkles className="h-4 w-4 text-amber-300" aria-hidden="true" />
-  }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdminClient, getSupabaseClient } from '@/lib/supabase'
 import { resolverConPartidaNueva } from '@/lib/apuestas/servicio'
+import { pickMvp } from '@/lib/mvp'
 
 const TABULADOR_BUCKET = process.env.SUPABASE_TABULADOR_BUCKET ?? 'tabulador'
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024
@@ -169,18 +170,23 @@ export async function POST(request: Request) {
     const teamBName = typeof payload.team_b_name === 'string' && payload.team_b_name.trim() ? payload.team_b_name.trim() : 'Equipo B'
     const winnerTeam = isDraw ? 'EMPATE' : (winnerTeamRaw === 'CT' || winnerTeamRaw === teamAName ? teamAName : teamBName)
 
-    // 1. Calcular MVP de la partida
-    let mvpPlayerId = ''
-    let maxScore = -1
-
-    payload.players.forEach((p) => {
-      const d = Math.max(1, p.deaths || 0)
-      const score = (p.kills + p.assists) / d + (p.damage / 100)
-      if (score > maxScore) {
-        maxScore = score
-        mvpPlayerId = p.player_id
+    const playerRows = payload.players.map((player) => {
+      const team = player.team === 'CT' ? teamAName : teamBName
+      return {
+        player_id: player.player_id,
+        team,
+        won: winnerTeam === 'EMPATE' ? null : team === winnerTeam,
+        kills: player.kills,
+        deaths: player.deaths,
+        assists: player.assists,
+        damage: player.damage,
+        hs_pct: player.hs_pct,
       }
     })
+
+    // 1. Calcular MVP de la partida: la partida nueva cae en la temporada activa,
+    // así que el MVP sale del equipo ganador.
+    const mvpPlayerId = pickMvp(playerRows, { winnersOnly: true }) ?? ''
 
     // 2. Insertar la partida (match)
     const { data: matchData, error: matchError } = await supabase
@@ -204,17 +210,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Insertar a los jugadores en match_players
-    const rows = payload.players.map((player) => ({
-      match_id: matchData.id,
-      player_id: player.player_id,
-      team: player.team === 'CT' ? teamAName : teamBName,
-      won: winnerTeam === 'EMPATE' ? null : ((player.team === 'CT' ? teamAName : teamBName) === winnerTeam),
-      kills: player.kills,
-      deaths: player.deaths,
-      assists: player.assists,
-      damage: player.damage,
-      hs_pct: player.hs_pct,
-    }))
+    const rows = playerRows.map((row) => ({ match_id: matchData.id, ...row }))
 
     const { error: playersError } = await supabase.from('match_players').insert(rows)
 
