@@ -6,6 +6,8 @@ import type { Posicion } from '@/lib/apuestas/tipos'
 import { formatPesos, redondearCentavos } from '@/lib/apuestas/cuotas'
 import { llamar, useAccion } from './cliente'
 import { Aviso, EstadoPosicionChip } from './ui'
+import { GlowButton } from '@/components/amicro/glow-button'
+import { useWebHaptics } from '@/components/amicro/hooks/use-web-haptics'
 
 type InicioPago = { tipo: 'checkout'; url: string } | { tipo: 'manual'; alias: string; total: number }
 
@@ -19,6 +21,7 @@ export function PagarBoton({ posicion, etiqueta }: { posicion: Posicion; etiquet
   const [manual, setManual] = useState<{ alias: string; total: number } | null>(null)
   const [yendo, setYendo] = useState(false)
   const [copiado, setCopiado] = useState(false)
+  const haptics = useWebHaptics()
   const total = redondearCentavos(posicion.monto + posicion.recargo)
 
   const pagar = async () => {
@@ -53,14 +56,18 @@ export function PagarBoton({ posicion, etiqueta }: { posicion: Posicion; etiquet
         {posicion.estado === 'en_proceso' ? (
           <EstadoPosicionChip estado="en_proceso" />
         ) : (
-          <button
-            onClick={pagar}
+          <GlowButton
+            onClick={() => {
+              haptics.trigger('medium')
+              pagar()
+            }}
             disabled={yendo}
-            className="flex items-center gap-1.5 rounded-full bg-sky-500 px-3.5 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-sky-400 disabled:opacity-60"
+            glowColor="rgba(255, 255, 255, 0.35)"
+            className="flex h-auto items-center gap-1.5 rounded-full border-0 bg-sky-500 px-3.5 py-1.5 text-[12px] font-bold text-white shadow-none transition-colors hover:bg-sky-400 disabled:opacity-60"
           >
             {yendo ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />}
             Pagar {formatPesos(total)}
-          </button>
+          </GlowButton>
         )}
       </div>
 

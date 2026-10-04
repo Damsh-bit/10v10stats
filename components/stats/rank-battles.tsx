@@ -6,6 +6,7 @@ import { Swords } from 'lucide-react'
 import type { RankBattle } from '@/lib/season-stats'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { Stagger, StaggerItem } from '@/components/motion/reveal'
+import { BlurText } from '@/components/amicro/blur-text'
 
 /** Los puestos más peleados: quién está a un paso de pasar a quién. */
 export function RankBattles({ battles }: { battles: RankBattle[] }) {
@@ -20,7 +21,7 @@ export function RankBattles({ battles }: { battles: RankBattle[] }) {
           </span>
           <div>
             <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
-              Duelos por el puesto
+              <BlurText text="Duelos por el puesto" />
             </h2>
             <p className="text-[11px] text-muted-foreground">Las diferencias de KDA más chicas del ladder</p>
           </div>

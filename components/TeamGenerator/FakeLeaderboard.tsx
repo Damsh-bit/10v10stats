@@ -5,6 +5,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { Drama, X } from 'lucide-react'
 import { LayoutGroup, motion } from 'motion/react'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
+import { BlurText } from '@/components/amicro/blur-text'
 
 const ADMIN_PASSWORD = 'alzhannah2026'
 
@@ -141,7 +142,7 @@ export function FakeLeaderboard({ archived }: { archived?: ArchivedFakeEntry[] }
       </span>
       <div>
         <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
-          StatTrak™ Fakasos
+          <BlurText text="StatTrak™ Fakasos" />
         </h2>
         <p className="text-[11px] text-muted-foreground">
           {readOnly ? 'Conteo final de la temporada' : 'Tocá un jugador para sumarle un fakaso'}

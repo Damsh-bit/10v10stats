@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import confetti from 'canvas-confetti'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
+import { ZoomIn } from '@/components/amicro/zoom-in'
+import { CharacterStagger } from '@/components/amicro/character-stagger'
 
 type PlayerOption = {
   id: string
@@ -443,17 +445,17 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
       {winnerPopup?.show && (
         <Portal>
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-500">
-            <div className="animate-in zoom-in-50 fade-in duration-500 flex flex-col items-center justify-center space-y-6 text-center">
+            <ZoomIn className="flex flex-col items-center justify-center space-y-6 text-center">
               <div className="text-9xl animate-bounce">
                 💩
               </div>
               <div className="rounded-xl border border-border bg-card/90 px-8 py-6 shadow-2xl backdrop-blur-md">
                 <h2 className="text-sm font-semibold uppercase tracking-widest text-brand">El nuevo Nelson es:</h2>
                 <p className="mt-2 text-4xl font-bold text-foreground drop-shadow-md">
-                  {winnerPopup.name}
+                  <CharacterStagger text={winnerPopup.name} staggerDelay={0.05} />
                 </p>
               </div>
-            </div>
+            </ZoomIn>
           </div>
         </Portal>
       )}

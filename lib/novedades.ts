@@ -80,6 +80,21 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-04-animaciones',
+    date: '2026-10-04',
+    tag: 'Diseño',
+    title: 'La página se mueve más',
+    summary: 'Sumamos un montón de animaciones chiquitas para que todo se sienta más vivo al usarla.',
+    highlights: [
+      { icon: 'trophy', text: 'Las tarjetas de las temporadas se inclinan en 3D cuando les pasás el mouse.' },
+      { icon: 'sparkles', text: 'La ladder, los récords, la Nelson League y la ladder de FACEIT se iluminan donde apuntás.' },
+      { icon: 'target', text: 'El botón de "Generar equipos" te persigue el mouse, y los del cartel y de pagar brillan.' },
+      { icon: 'list', text: 'Una rayita rosa arriba de todo te marca cuánto te falta para llegar al final de la página.' },
+      { icon: 'phone', text: 'En celulares Android algunos botones vibran al tocarlos.' },
+    ],
+    cta: { label: 'Ver las temporadas', href: '/temporadas' },
+  },
+  {
     id: '2026-10-03-zonas-ladder',
     date: '2026-10-03',
     tag: 'Estadísticas',

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { Crosshair, Flame, HandHelping, ShieldCheck, Skull, Snail, Medal } from 'lucide-react'
 import type { MatchRecordKey, MatchRecords } from '@/lib/season-stats'
 import { Stagger, StaggerItem } from '@/components/motion/reveal'
+import { Spotlight } from '@/components/amicro/spotlight'
+import { BlurText } from '@/components/amicro/blur-text'
 
 const RECORD_ROWS: { key: MatchRecordKey; label: string; icon: React.ElementType; color: string; format?: (v: number) => string }[] = [
   { key: 'maxKills', label: 'Más kills', icon: Crosshair, color: 'text-emerald-400' },
@@ -33,14 +35,14 @@ export function SeasonRecords({
   const hasAny = hasOwn || showingPrevious
 
   return (
-    <section className="rounded-xl border border-border bg-card">
+    <Spotlight as="section" glowColor="rgba(255, 92, 141, 0.08)" className="overflow-visible rounded-xl border border-border bg-card p-0">
       <header className="flex items-center gap-2.5 border-b border-border px-4 py-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300">
           <Medal className="h-4 w-4" aria-hidden="true" />
         </span>
         <div>
           <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
-            {showingPrevious ? 'Récords a batir' : 'Récords'}
+            <BlurText text={showingPrevious ? 'Récords a batir' : 'Récords'} />
           </h2>
           <p className="text-[11px] text-muted-foreground">
             {showingPrevious && previous
@@ -83,6 +85,6 @@ export function SeasonRecords({
           })}
         </Stagger>
       )}
-    </section>
+    </Spotlight>
   )
 }

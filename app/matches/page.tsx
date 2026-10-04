@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getLeagueData } from '@/lib/api'
 import { MatchesPageContent } from '@/components/matches/matches-page-content'
 import { Reveal } from '@/components/motion/reveal'
+import { Skeleton } from '@/components/amicro/skeleton'
 
 export const revalidate = 60
 
@@ -24,7 +25,7 @@ export default async function MatchesPage() {
           fallback={
             <div className="flex flex-col gap-3" aria-hidden="true">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-24 animate-pulse rounded-xl border border-border bg-card" />
+                <Skeleton key={i} className="h-24 rounded-xl border border-border bg-card dark:bg-card" />
               ))}
             </div>
           }

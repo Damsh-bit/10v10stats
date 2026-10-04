@@ -1,3 +1,5 @@
+import { TextShimmerWave } from '@/components/amicro/text-shimmer-wave'
+
 export function LoaderScreen({ label = 'Cargando...' }: { label?: string }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 py-12">
@@ -19,9 +21,10 @@ export function LoaderScreen({ label = 'Cargando...' }: { label?: string }) {
           style={{ animationDuration: '1.5s' }}
         />
       </div>
-      <p className="font-mono text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        {label}
-      </p>
+      <TextShimmerWave
+        text={label}
+        className="font-mono text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground dark:text-muted-foreground"
+      />
     </main>
   )
 }
