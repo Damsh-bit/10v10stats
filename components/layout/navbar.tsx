@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { AnimatePresence, motion } from 'motion/react'
+import { motion } from 'motion/react'
 import { Menu, Megaphone, X, Sparkles } from 'lucide-react'
 import { useUnreadNovedades } from '@/components/novedades/novedades-state'
+import { useDropdownTransition } from '@/components/ui/dropdown'
 import { cn } from '@/lib/utils'
 
 const LINKS = [
@@ -38,6 +39,8 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
   const pathname = usePathname()
   const links = apuestas ? [...LINKS, APUESTAS_LINK] : LINKS
   const [isOpen, setIsOpen] = useState(false)
+  const dropdownState = useDropdownTransition(isOpen)
+  const headerRef = useRef<HTMLElement>(null)
   const seasonsActive = pathname.startsWith('/temporadas')
   const novedadesActive = isActive(pathname, NOVEDADES_HREF)
   const unread = useUnreadNovedades()
@@ -47,8 +50,25 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
     setIsOpen(false)
   }, [pathname])
 
+  // El menú flota sobre la página: se cierra al tocar afuera o con Escape.
+  useEffect(() => {
+    if (!isOpen) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!headerRef.current?.contains(e.target as Node)) setIsOpen(false)
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [isOpen])
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
+    <header ref={headerRef} className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2">
           <motion.img
@@ -148,73 +168,57 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
         </div>
       </div>
 
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            id="mobile-nav"
-            key="mobile-nav"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-t border-border bg-background lg:hidden"
-          >
-            <nav className="flex flex-col gap-1.5 p-4" aria-label="Principal">
-              <Link
-                href="/temporadas"
-                className="season-chip mb-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-[13px] font-extrabold uppercase tracking-wider text-black"
-              >
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                Season {seasonNumber} · Temporadas
-              </Link>
-              {links.map((link, i) => {
-                const active = isActive(pathname, link.href)
-                return (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.04 * i + 0.05 }}
-                  >
-                    <Link
-                      href={link.href}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'block rounded-md px-4 py-3 text-[14px] font-semibold uppercase tracking-wider transition-colors',
-                        active ? 'bg-primary/15 text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                      )}
-                    >
-                      {link.label}
-                    </Link>
-                  </motion.div>
-                )
-              })}
-              <motion.div
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.04 * links.length + 0.05 }}
-              >
-                <Link
-                  href={NOVEDADES_HREF}
-                  aria-current={novedadesActive ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-4 py-3 text-[14px] font-semibold uppercase tracking-wider transition-colors',
-                    novedadesActive ? 'bg-primary/15 text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                  )}
-                >
-                  <Megaphone className="h-4 w-4" aria-hidden="true" />
-                  Novedades
-                  {unread > 0 && (
-                    <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[11px] font-extrabold normal-case tracking-normal text-black">
-                      {unread === 1 ? '1 nueva' : `${unread} nuevas`}
-                    </span>
-                  )}
-                </Link>
-              </motion.div>
-            </nav>
-          </motion.div>
+      <div
+        id="mobile-nav"
+        data-origin="top-right"
+        inert={!isOpen}
+        className={cn(
+          't-dropdown absolute inset-x-0 top-full border-y border-border bg-background shadow-xl shadow-black/40 lg:hidden',
+          dropdownState,
         )}
-      </AnimatePresence>
+      >
+        <nav className="flex flex-col gap-1.5 p-4" aria-label="Principal">
+          <Link
+            href="/temporadas"
+            className="season-chip mb-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-[13px] font-extrabold uppercase tracking-wider text-black"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Season {seasonNumber} · Temporadas
+          </Link>
+          {links.map((link) => {
+            const active = isActive(pathname, link.href)
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'block rounded-md px-4 py-3 text-[14px] font-semibold uppercase tracking-wider transition-colors',
+                  active ? 'bg-primary/15 text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                )}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
+          <Link
+            href={NOVEDADES_HREF}
+            aria-current={novedadesActive ? 'page' : undefined}
+            className={cn(
+              'flex items-center gap-2 rounded-md px-4 py-3 text-[14px] font-semibold uppercase tracking-wider transition-colors',
+              novedadesActive ? 'bg-primary/15 text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+            )}
+          >
+            <Megaphone className="h-4 w-4" aria-hidden="true" />
+            Novedades
+            {unread > 0 && (
+              <span className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[11px] font-extrabold normal-case tracking-normal text-black">
+                {unread === 1 ? '1 nueva' : `${unread} nuevas`}
+              </span>
+            )}
+          </Link>
+        </nav>
+      </div>
     </header>
   )
 }

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { MessageSquarePlus, X } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
+import { useDropdownTransition } from "@/components/ui/dropdown"
 
 type Recommendation = {
   id: string
@@ -14,6 +15,7 @@ type Recommendation = {
 
 export function RecommendationsWidget() {
   const [isOpen, setIsOpen] = useState(false)
+  const dropdownState = useDropdownTransition(isOpen)
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [content, setContent] = useState("")
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
@@ -109,9 +111,10 @@ export function RecommendationsWidget() {
 
       {/* Panel */}
       <div
-        className={`fixed z-50 bottom-[4.5rem] left-2 right-2 sm:bottom-6 sm:left-12 sm:right-auto sm:w-[320px] bg-background border border-border shadow-lg rounded-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out origin-bottom-right sm:origin-bottom-left ${
-          isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
-        }`}
+        data-origin="bottom-right"
+        data-origin-sm="bottom-left"
+        inert={!isOpen}
+        className={`t-dropdown ${dropdownState} fixed z-50 bottom-[4.5rem] left-2 right-2 sm:bottom-6 sm:left-12 sm:right-auto sm:w-[320px] bg-background border border-border shadow-lg rounded-xl flex flex-col overflow-hidden`}
         style={{ maxHeight: '420px', height: '100%' }}
       >
         <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
