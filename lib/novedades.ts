@@ -80,6 +80,29 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-03-zonas-ladder',
+    date: '2026-10-03',
+    tag: 'Estadísticas',
+    title: 'La ladder ahora tiene zonas',
+    summary: 'Como en una liga: según tu puesto en la temporada quedás en una zona, cada una con su color.',
+    highlights: [
+      { icon: 'crown', text: 'Del 1 al 3: Top globales, en dorado.' },
+      { icon: 'medal', text: 'El 4: en promoción a top globales.' },
+      { icon: 'scale', text: 'Del 5 al 9: empujan pero la tienen corta.' },
+      { icon: 'shield', text: 'El 10: en promoción de descenso.' },
+      { icon: 'target', text: 'Del 11 para abajo: la vergüenza del servidor.' },
+    ],
+    cta: { label: 'Ver la ladder', href: '/' },
+  },
+  {
+    id: '2026-10-03-top-donadores',
+    date: '2026-10-03',
+    tag: 'Cartel',
+    title: 'Top donadores en el inicio',
+    summary: 'Abajo del cartel ahora están los que más plata pusieron, con medalla para los tres primeros.',
+    cta: { label: 'Ver el ranking', href: '/cartel' },
+  },
+  {
     id: NOVEDAD_CARTEL_ID,
     date: '2026-10-03',
     tag: 'Cartel',
