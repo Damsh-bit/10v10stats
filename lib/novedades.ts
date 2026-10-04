@@ -89,7 +89,7 @@ export const NOVEDADES: Novedad[] = [
       { icon: 'crown', text: 'Del 1 al 3: Top globales, en dorado.' },
       { icon: 'medal', text: 'El 4: en promoción a top globales.' },
       { icon: 'scale', text: 'Del 5 al 9: empujan pero la tienen corta.' },
-      { icon: 'shield', text: 'El 10: en promoción de descenso.' },
+      { icon: 'shield', text: 'El 10: en peligro de descenso.' },
       { icon: 'target', text: 'Del 11 para abajo: la vergüenza del servidor.' },
     ],
     cta: { label: 'Ver la ladder', href: '/' },

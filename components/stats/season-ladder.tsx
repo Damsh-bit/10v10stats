@@ -97,7 +97,7 @@ const ZONAS: Zona[] = [
     id: 'promo-descenso',
     desde: 10,
     hasta: 10,
-    titulo: 'En promoción de descenso',
+    titulo: 'En peligro de descenso',
     emoji: '⚠️',
     texto: 'text-orange-300',
     linea: 'from-orange-400/60 via-orange-400/15 to-transparent',
