@@ -85,7 +85,6 @@ export default async function Page() {
         <SeasonHero
           seasonNumber={season.id}
           seasonName={season.name}
-          tagline={season.tagline}
           dayNumber={getSeasonDay(season)}
           matches={summary.matches}
           totalKills={summary.totalKills}

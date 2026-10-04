@@ -12,7 +12,11 @@ type Props = {
   previousSeasonName: string | null
 }
 
-/** Barra de bienvenida a la temporada, arriba de todo el sitio. Se puede cerrar. */
+/**
+ * Barra de bienvenida a la temporada, arriba de todo el sitio. Se puede cerrar.
+ * No está montada: se saca del layout cuando la temporada deja de ser novedad y
+ * se vuelve a poner (arriba de la Navbar en app/layout.tsx) al arrancar la próxima.
+ */
 export function SeasonBanner({ seasonSlug, seasonNumber, previousSeasonSlug, previousSeasonName }: Props) {
   const storageKey = `season-banner-dismissed:${seasonSlug}`
   // Visible desde el servidor para no mover el layout al hidratar; se oculta si ya lo cerraron.

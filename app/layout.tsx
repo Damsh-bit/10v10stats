@@ -7,9 +7,8 @@ import { Navbar } from '@/components/layout/navbar'
 import { MapBackdrop } from '@/components/layout/map-backdrop'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
-import { SeasonBanner } from '@/components/season/season-banner'
 import { MotionProvider } from '@/components/motion/motion-provider'
-import { getCurrentSeason, getPreviousSeason, getSeasons } from '@/lib/seasons'
+import { getCurrentSeason, getSeasons } from '@/lib/seasons'
 import { getApuestasConfig } from '@/lib/apuestas/config'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import pkg from '../package.json'
@@ -49,7 +48,6 @@ export default async function RootLayout({
 }>) {
   const seasons = await getSeasons()
   const currentSeason = getCurrentSeason(seasons)
-  const previousSeason = getPreviousSeason(seasons, currentSeason)
 
   return (
     <html
@@ -59,12 +57,6 @@ export default async function RootLayout({
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <MotionProvider>
           <MapBackdrop />
-          <SeasonBanner
-            seasonSlug={currentSeason.slug}
-            seasonNumber={currentSeason.id}
-            previousSeasonSlug={previousSeason?.slug ?? null}
-            previousSeasonName={previousSeason?.name ?? null}
-          />
           <Navbar seasonNumber={currentSeason.id} apuestas={getApuestasConfig().visibles} />
           <CuriositiesBanner />
           <div className="flex-1">{children}</div>
