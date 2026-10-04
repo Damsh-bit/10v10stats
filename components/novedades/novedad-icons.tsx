@@ -4,6 +4,7 @@ import {
   Crown,
   Flame,
   Gauge,
+  Heart,
   History,
   Image as ImageIcon,
   ListOrdered,
@@ -11,9 +12,12 @@ import {
   Megaphone,
   Palette,
   Scale,
+  ShieldCheck,
+  Signpost,
   Smartphone,
   Sparkles,
   Swords,
+  Target,
   Trophy,
   UserRound,
   Wallet,
@@ -41,6 +45,9 @@ const HIGHLIGHT_ICONS: Record<Exclude<NovedadIcon, 'faceit'>, { icon: LucideIcon
   list: { icon: ListOrdered, className: 'text-sky-300' },
   medal: { icon: Medal, className: 'text-amber-300' },
   megaphone: { icon: Megaphone, className: 'text-brand' },
+  shield: { icon: ShieldCheck, className: 'text-emerald-300' },
+  target: { icon: Target, className: 'text-rose-300' },
+  heart: { icon: Heart, className: 'text-pink-400' },
 }
 
 export function HighlightIcon({ icon }: { icon: NovedadIcon }) {
@@ -58,6 +65,7 @@ export const TAG_STYLES: Record<NovedadTag, { icon: LucideIcon; chip: string; no
   Perfiles: { icon: UserRound, chip: 'border-violet-400/40 bg-violet-400/10 text-violet-300', node: 'bg-violet-400/15 text-violet-300 ring-violet-400/40' },
   FACEIT: { icon: Gauge, chip: 'border-orange-500/40 bg-orange-500/10 text-orange-400', node: 'bg-orange-500/15 text-orange-400 ring-orange-500/40' },
   'Generador de equipos': { icon: Scale, chip: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300', node: 'bg-emerald-400/15 text-emerald-300 ring-emerald-400/40' },
+  Cartel: { icon: Signpost, chip: 'border-orange-400/40 bg-orange-400/10 text-orange-300', node: 'bg-orange-400/15 text-orange-300 ring-orange-400/40' },
   Apuestas: { icon: Coins, chip: 'border-amber-400/40 bg-amber-400/10 text-amber-300', node: 'bg-amber-400/15 text-amber-300 ring-amber-400/40' },
   'Diseño': { icon: Palette, chip: 'border-pink-400/40 bg-pink-400/10 text-pink-300', node: 'bg-pink-400/15 text-pink-300 ring-pink-400/40' },
   Celular: { icon: Smartphone, chip: 'border-teal-400/40 bg-teal-400/10 text-teal-300', node: 'bg-teal-400/15 text-teal-300 ring-teal-400/40' },

@@ -590,6 +590,8 @@ export async function procesarNotificacionPago(pagoId: string) {
 
 async function aplicarPago(pago: PagoMP) {
   const posicionId = pago.external_reference
+  // Donaciones del cartel (si comparte la cuenta de la banca): las procesa /api/cartel/webhook.
+  if (posicionId?.startsWith('cartel:')) return
   if (!esUuid(posicionId)) {
     await registrar('pago_desconocido', {}, { pago: pago.id, status: pago.status, external_reference: posicionId })
     return

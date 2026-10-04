@@ -24,6 +24,8 @@ import { Reveal } from '@/components/motion/reveal'
 import { FaceitLadder } from '@/components/faceit/faceit-ladder'
 import { WhatsNewModal } from '@/components/novedades/whats-new-modal'
 import { getFaceitEntries, toLadderRows } from '@/lib/faceit'
+import { getCartelEstado } from '@/lib/cartel/servicio'
+import { CartelVivo } from '@/components/cartel/cartel-vivo'
 
 export const revalidate = 60
 // Margen para refrescar FACEIT (los pedidos van de a uno).
@@ -32,7 +34,7 @@ export const maxDuration = 60
 const RECENT_MATCH_COUNT = 30
 
 export default async function Page() {
-  const [league, nelsonData] = await Promise.all([getLeagueData(), getNelsonData()])
+  const [league, nelsonData, cartel] = await Promise.all([getLeagueData(), getNelsonData(), getCartelEstado()])
   const faceitRows = toLadderRows(await getFaceitEntries(league.players))
   const season = league.currentSeason
   const previousSeason = getPreviousSeason(league.seasons, season)
@@ -73,6 +75,13 @@ export default async function Page() {
     <main className="cs-grid min-h-screen overflow-x-hidden">
       <WhatsNewModal />
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-2 py-5 sm:px-4 sm:py-8">
+        {cartel && (
+          <CartelVivo
+            inicial={cartel}
+            jugadores={league.players.map((player) => ({ id: player.id, name: player.name, photoUrl: player.photoUrl ?? null }))}
+          />
+        )}
+
         <SeasonHero
           seasonNumber={season.id}
           seasonName={season.name}

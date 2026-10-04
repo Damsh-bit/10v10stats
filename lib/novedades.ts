@@ -18,6 +18,8 @@
  * - `{ kind: 'image', src, alt }`: una captura en /public/novedades.
  */
 
+import { NOVEDAD_CARTEL_ID } from '@/lib/cartel/tipos'
+
 export type NovedadIcon =
   | 'faceit'
   | 'flame'
@@ -37,6 +39,9 @@ export type NovedadIcon =
   | 'list'
   | 'medal'
   | 'megaphone'
+  | 'shield'
+  | 'target'
+  | 'heart'
 
 export type NovedadTag =
   | 'Reglas'
@@ -47,12 +52,13 @@ export type NovedadTag =
   | 'FACEIT'
   | 'Generador de equipos'
   | 'Apuestas'
+  | 'Cartel'
   | 'Diseño'
   | 'Celular'
   | 'Arreglos'
   | 'Sitio'
 
-export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp'
+export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel'
 
 export type Novedad = {
   /** Único y estable: si cambia, todos la vuelven a ver. */
@@ -73,6 +79,24 @@ export type Novedad = {
 export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
+  {
+    id: NOVEDAD_CARTEL_ID,
+    date: '2026-10-03',
+    tag: 'Cartel',
+    title: 'El Cartel: comprate la home',
+    summary:
+      'Arriba de todo en el inicio hay un cartel. Donás con Mercado Pago y ponés lo que quieras: un mensaje, una foto y a quién va dirigido. Queda ahí hasta que alguien ponga más plata que vos.',
+    highlights: [
+      { icon: 'target', text: 'Tu mensaje, una foto o GIF y a quién se lo dedicás (sale su cara). Firmás con tu nombre o anónimo.' },
+      { icon: 'flame', text: 'Arranca en $10 y cada uno tiene que superar al anterior: el que pone más, te lo saca.' },
+      { icon: 'shield', text: 'Si ponés de más, el próximo tiene que superar eso. Cuanto más ponés, más dura tu cartel.' },
+      { icon: 'history', text: 'Todos los carteles quedan en el historial: quién lo puso, cuánto y cuánto aguantó arriba.' },
+      { icon: 'heart', text: 'La plata es una donación para bancar la página. Si alguien te gana de mano mientras pagás, te la devolvemos.' },
+    ],
+    cta: { label: 'Ver el cartel', href: '/cartel' },
+    popup: true,
+    visual: { kind: 'demo', name: 'cartel' },
+  },
   {
     id: '2026-10-03-mvp-equipo-ganador',
     date: '2026-10-03',

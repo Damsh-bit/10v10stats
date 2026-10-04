@@ -30,9 +30,16 @@ export class MercadoPagoError extends Error {
   }
 }
 
-async function mp<T>(path: string, init: RequestInit & { idempotencyKey?: string } = {}): Promise<T> {
-  const token = getMercadoPagoToken()
-  if (!token) throw new MercadoPagoError('Falta MERCADOPAGO_ACCESS_TOKEN', 500, null)
+export type MpInit = RequestInit & { idempotencyKey?: string }
+
+/** Las apuestas cobran con la cuenta de la banca. */
+function mp<T>(path: string, init: MpInit = {}): Promise<T> {
+  return mpRequest<T>(getMercadoPagoToken(), 'MERCADOPAGO_ACCESS_TOKEN', path, init)
+}
+
+/** Llamada a la API con el token de una cuenta (también la usa el cartel, que cobra en otra). */
+export async function mpRequest<T>(token: string | null, variable: string, path: string, init: MpInit = {}): Promise<T> {
+  if (!token) throw new MercadoPagoError(`Falta ${variable}`, 500, null)
 
   const { idempotencyKey, headers, ...rest } = init
   const response = await fetch(`${API}${path}`, {
@@ -162,8 +169,10 @@ export function reembolsarPago(pagoId: string | number) {
  * avisos de `notification_url` pueden llegar sin firma): igual es seguro,
  * porque el pago siempre se vuelve a consultar con el token.
  */
-export function firmaWebhookValida(params: { xSignature: string | null; xRequestId: string | null; dataId: string | null }): boolean | null {
-  const secret = getMercadoPagoWebhookSecret()
+export function firmaWebhookValida(
+  params: { xSignature: string | null; xRequestId: string | null; dataId: string | null },
+  secret = getMercadoPagoWebhookSecret(),
+): boolean | null {
   if (!secret || !params.xSignature) return null
 
   const partes = Object.fromEntries(

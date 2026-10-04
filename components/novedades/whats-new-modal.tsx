@@ -10,6 +10,7 @@ import { NOVEDADES, NOVEDADES_MAX_AGE_DAYS, NOVEDADES_POPUP, type Novedad, type 
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
 import { ApuestasDemo } from './apuestas-demo'
+import { CartelDemo } from './cartel-demo'
 import { MvpDemo } from './mvp-demo'
 import { TeamGeneratorDemo } from './team-generator-demo'
 import { HighlightIcon } from './novedad-icons'
@@ -19,6 +20,7 @@ const DEMOS: Record<NovedadDemo, ComponentType> = {
   'team-generator': TeamGeneratorDemo,
   apuestas: ApuestasDemo,
   mvp: MvpDemo,
+  cartel: CartelDemo,
 }
 
 const STORAGE_KEY = 'novedades-vistas'

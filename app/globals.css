@@ -402,3 +402,32 @@
     animation: none;
   }
 }
+
+/* ─── El Cartel: lamparitas de marquesina ─────────────────────────────────── */
+@keyframes cartel-bulb {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cartel-bulbs > span {
+  animation: cartel-bulb 1.4s ease-in-out infinite;
+  box-shadow: 0 0 6px 1px currentColor;
+}
+
+.cartel-bulbs > span:nth-child(2n) {
+  animation-delay: 0.7s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartel-bulbs > span {
+    animation: none;
+    opacity: 0.8;
+  }
+}

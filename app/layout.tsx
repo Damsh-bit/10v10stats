@@ -84,6 +84,10 @@ export default async function RootLayout({
                 Novedades
               </Link>
               <span aria-hidden="true">·</span>
+              <Link href="/cartel" className="uppercase transition-colors hover:text-foreground">
+                El cartel
+              </Link>
+              <span aria-hidden="true">·</span>
               <span title="Versión de la aplicación">v{pkg.version}</span>
             </p>
           </footer>
