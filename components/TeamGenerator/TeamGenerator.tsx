@@ -14,9 +14,6 @@ import { BetPanel } from './BetPanel'
 import type { ApuestasPublicConfig } from '@/lib/apuestas/config'
 import { Copy, RefreshCw, Users, Map as MapIcon } from 'lucide-react'
 import { SeasonTabs } from '@/components/season/season-tabs'
-import { MagneticButton } from '@/components/amicro/magnetic-button'
-import { useWebHaptics } from '@/components/amicro/hooks/use-web-haptics'
-import { cn } from '@/lib/utils'
 
 const MAP_POOL = ['Mirage', 'Inferno', 'Nuke', 'Overpass', 'Vertigo', 'Ancient', 'Anubis', 'Dust II']
 const TEAM_SIZE = 5
@@ -78,7 +75,6 @@ export function TeamGenerator({
   const [optionIndex, setOptionIndex] = useState(0)
   const [recommendedMap, setRecommendedMap] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
-  const haptics = useWebHaptics()
 
   const source = sources.find((s) => s.key === sourceKey) ?? sources[0]
   const sourceLabel = source?.label ?? 'Carrera'
@@ -179,20 +175,14 @@ export function TeamGenerator({
       </div>
 
       <div className="flex justify-center">
-        <MagneticButton
-          onClick={() => {
-            haptics.trigger('light')
-            mainAction()
-          }}
+        <button
+          onClick={mainAction}
           disabled={!ready}
-          range={90}
-          strength={0.25}
-          className={cn(
-            'h-auto gap-2 px-8 py-3 text-[14px] font-bold uppercase tracking-widest',
+          className={`flex items-center gap-2 rounded-full px-8 py-3 text-[14px] font-bold uppercase tracking-widest transition-all ${
             ready
-              ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 hover:bg-primary/90 dark:bg-primary dark:text-white dark:hover:bg-primary/90'
-              : 'cursor-not-allowed bg-muted text-muted-foreground opacity-50 hover:scale-100 dark:bg-muted dark:text-muted-foreground',
-          )}
+              ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 hover:bg-primary/90'
+              : 'cursor-not-allowed bg-muted text-muted-foreground opacity-50'
+          }`}
         >
           {generated && ready ? (
             <>
@@ -205,7 +195,7 @@ export function TeamGenerator({
               Generar Equipos
             </>
           )}
-        </MagneticButton>
+        </button>
       </div>
 
       {option && result && (

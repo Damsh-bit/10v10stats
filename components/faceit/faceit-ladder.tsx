@@ -7,7 +7,6 @@ import { ArrowRight, ExternalLink, Flame, Gauge, Snowflake } from 'lucide-react'
 import type { FaceitLadderRow } from '@/lib/faceit'
 import { EloDelta, EloSparkline, FaceitAvatar, FaceitForm, FaceitLevel } from '@/components/faceit/faceit-bits'
 import { cn } from '@/lib/utils'
-import { Spotlight } from '@/components/amicro/spotlight'
 
 type SortKey = 'elo' | 'trend' | 'activity'
 
@@ -47,7 +46,7 @@ export function FaceitLadder({
   const activeSort = SORTS.find((s) => s.key === sortKey)!
 
   return (
-    <Spotlight as="section" glowColor="rgba(255, 92, 141, 0.08)" className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] p-0">
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/15 text-orange-400">
@@ -118,7 +117,7 @@ export function FaceitLadder({
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </Link>
       )}
-    </Spotlight>
+    </section>
   )
 }
 

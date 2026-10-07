@@ -6,7 +6,6 @@ import { es } from "date-fns/locale"
 import { MessageSquarePlus, X } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useDropdownTransition } from "@/components/ui/dropdown"
-import { useWebHaptics } from "@/components/amicro/hooks/use-web-haptics"
 
 type Recommendation = {
   id: string
@@ -17,7 +16,6 @@ type Recommendation = {
 export function RecommendationsWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownState = useDropdownTransition(isOpen)
-  const haptics = useWebHaptics()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [content, setContent] = useState("")
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
@@ -72,10 +70,8 @@ export function RecommendationsWidget() {
     if (error) {
       console.error("Error inserting recommendation:", error)
       setStatus('error')
-      haptics.trigger('error')
     } else {
       setStatus('success')
-      haptics.trigger('success')
       setContent('')
       setTimeout(() => setStatus('idle'), 3000)
     }

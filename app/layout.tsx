@@ -8,7 +8,6 @@ import { MapBackdrop } from '@/components/layout/map-backdrop'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
 import { MotionProvider } from '@/components/motion/motion-provider'
-import { ProgressIndicator } from '@/components/amicro/progress-indicator'
 import { getCurrentSeason, getSeasons } from '@/lib/seasons'
 import { getApuestasConfig } from '@/lib/apuestas/config'
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -57,7 +56,6 @@ export default async function RootLayout({
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <MotionProvider>
-          <ProgressIndicator color="bg-brand" height={2} />
           <MapBackdrop />
           <Navbar seasonNumber={currentSeason.id} apuestas={getApuestasConfig().visibles} />
           <CuriositiesBanner />

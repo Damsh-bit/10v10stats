@@ -10,7 +10,6 @@ import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { KDaBadges } from '@/components/players/kda-badges'
 import { RecordBadge } from '@/components/players/record-badges'
 import { cn } from '@/lib/utils'
-import { Spotlight } from '@/components/amicro/spotlight'
 
 type LadderView = 'season' | 'recent'
 
@@ -158,7 +157,7 @@ export function SeasonLadder({
   const maxKda = Math.max(...stats.map((s) => s.kda), 0.01)
 
   return (
-    <Spotlight as="section" glowColor="rgba(255, 92, 141, 0.08)" className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] p-0">
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-brand">
@@ -259,7 +258,7 @@ export function SeasonLadder({
           </ul>
         </div>
       )}
-    </Spotlight>
+    </section>
   )
 }
 

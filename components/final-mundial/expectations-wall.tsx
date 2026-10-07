@@ -6,7 +6,6 @@ import { es } from 'date-fns/locale'
 import { SmilePlus, X } from 'lucide-react'
 import EmojiPicker, { EmojiClickData, EmojiStyle, Theme } from 'emoji-picker-react'
 import { getSupabaseClient } from '@/lib/supabase'
-import { Skeleton } from '@/components/amicro/skeleton'
 
 type Expectation = {
   id: string
@@ -221,7 +220,7 @@ export function ExpectationsWall() {
       {loading ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-lg border border-border/50 bg-card dark:bg-card" />
+            <div key={i} className="h-28 animate-pulse rounded-lg border border-border/50 bg-card" />
           ))}
         </div>
       ) : expectations.length === 0 ? (

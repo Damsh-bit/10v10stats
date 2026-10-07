@@ -6,7 +6,6 @@ import type { Match } from '@/types'
 import { formatDate, mapImageUrl } from '@/lib/format'
 import { getTeamColorClass, cn } from '@/lib/utils'
 import { Stagger, StaggerItem } from '@/components/motion/reveal'
-import { BlurText } from '@/components/amicro/blur-text'
 
 export function RecentMatches({
   matches,
@@ -24,7 +23,7 @@ export function RecentMatches({
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300">
             <History className="h-4 w-4" aria-hidden="true" />
           </span>
-          <h2 className="font-heading text-base font-bold uppercase tracking-widest text-foreground"><BlurText text="Últimas partidas" /></h2>
+          <h2 className="font-heading text-base font-bold uppercase tracking-widest text-foreground">Últimas partidas</h2>
         </div>
         <Link href={href} className="group flex items-center gap-1 text-[12px] font-medium text-brand hover:underline">
           Ver todas <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />

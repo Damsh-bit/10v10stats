@@ -2,8 +2,6 @@ import { Skull } from 'lucide-react'
 import { type NelsonEntry } from '@/types'
 import { Stagger, StaggerItem } from '@/components/motion/reveal'
 import { cn } from '@/lib/utils'
-import { Spotlight } from '@/components/amicro/spotlight'
-import { BlurText } from '@/components/amicro/blur-text'
 
 export function NelsonLeague({
   entries,
@@ -21,14 +19,14 @@ export function NelsonLeague({
   const visible = entries.filter((e) => e.points > 0)
 
   return (
-    <Spotlight as="section" glowColor="rgba(255, 92, 141, 0.08)" className="overflow-hidden rounded-xl border border-border bg-card p-0">
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
       <header className="flex items-center gap-2.5 border-b border-border px-4 py-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-brand">
           <Skull className="h-4 w-4" aria-hidden="true" />
         </span>
         <div>
           <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
-            <BlurText text="Nelson League" />
+            Nelson League
           </h2>
           <span className="text-[11px] text-muted-foreground">{subtitle}</span>
         </div>
@@ -85,6 +83,6 @@ export function NelsonLeague({
           })}
         </Stagger>
       )}
-    </Spotlight>
+    </section>
   )
 }
