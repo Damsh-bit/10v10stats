@@ -59,7 +59,7 @@ export type NovedadTag =
   | 'Arreglos'
   | 'Sitio'
 
-export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano'
+export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano' | 'perfil'
 
 export type Novedad = {
   /** Único y estable: si cambia, todos la vuelven a ver. */
@@ -80,6 +80,23 @@ export type Novedad = {
 export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
+  {
+    id: '2026-10-07-perfil-jugador',
+    date: '2026-10-07',
+    tag: 'Perfiles',
+    title: 'Perfiles mucho más completos',
+    summary:
+      'El perfil de cada jugador ahora tiene pestañas con todo: forma reciente, curiosidades, mapas, compañeros y rivales, mejores marcas y FACEIT. Y le podés dejar un me gusta o una recomendación anónima.',
+    highlights: [
+      { icon: 'user', text: 'Todo se puede ver por temporada o de toda la carrera.' },
+      { icon: 'sparkles', text: 'Curiosidades: su día y su mapa favorito, con quién gana más, su némesis y su estilo de juego.' },
+      { icon: 'swords', text: 'Compañeros y rivales: con quién le va mejor en el equipo y a quién le tiene tomada la mano.' },
+      { icon: 'heart', text: 'Me gusta y recomendaciones anónimas. Si una se zarpa, con 3 reportes se oculta sola.' },
+    ],
+    cta: { label: 'Elegí un jugador', href: '/' },
+    popup: true,
+    visual: { kind: 'demo', name: 'perfil' },
+  },
   {
     id: '2026-10-07-sitio-fluido',
     date: '2026-10-07',

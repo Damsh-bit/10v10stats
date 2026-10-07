@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { ApuestasDemo } from './apuestas-demo'
 import { CartelDemo } from './cartel-demo'
 import { ModoLivianoDemo } from './modo-liviano-demo'
+import { PerfilDemo } from './perfil-demo'
 import { MvpDemo } from './mvp-demo'
 import { TeamGeneratorDemo } from './team-generator-demo'
 import { HighlightIcon } from './novedad-icons'
@@ -24,6 +25,7 @@ const DEMOS: Record<NovedadDemo, ComponentType> = {
   mvp: MvpDemo,
   cartel: CartelDemo,
   'modo-liviano': ModoLivianoDemo,
+  perfil: PerfilDemo,
 }
 
 const STORAGE_KEY = 'novedades-vistas'
