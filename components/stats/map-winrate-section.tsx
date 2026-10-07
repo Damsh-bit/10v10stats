@@ -9,8 +9,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import AnimatedNumber from '@/components/ui/animated-number'
-import { Reveal } from '@/components/motion/reveal'
 import type { MapWinrateRow } from '@/lib/season-stats'
 
 // ─── Team identifier configuration ───────────────────────────────────────────
@@ -162,6 +160,7 @@ function TeamRadarCard({
               fill={color}
               fillOpacity={0.25}
               dot={false}
+              isAnimationActive={false}
             />
             <Tooltip content={<CustomTooltip />} />
           </RadarChart>
@@ -201,10 +200,10 @@ function TeamRadarCard({
                       className="px-3 py-1.5 text-right font-mono font-bold"
                       style={{ color: row.winrate >= 50 ? color : '#6b7280' }}
                     >
-                      {s?.played ? <AnimatedNumber value={row.winrate} decimals={0} suffix="%" /> : '—'}
+                      {s?.played ? `${row.winrate}%` : '—'}
                     </td>
                     <td className="px-3 py-1.5 text-right font-mono text-muted-foreground">
-                      {s?.played ? (<><AnimatedNumber value={s.won} />W <AnimatedNumber value={losses} direction="down" />L</>) : 'Sin partidas'}
+                      {s?.played ? `${s.won}W ${losses}L` : 'Sin partidas'}
                     </td>
                   </tr>
                 )
@@ -247,12 +246,8 @@ export function MapWinrateSection({ rows }: { rows: MapWinrateRow[] }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Reveal>
-          <TeamRadarCard title="Equipo Papi" color={TEAM_PAPI_COLOR} maps={maps} stats={papiStats} />
-        </Reveal>
-        <Reveal delay={0.1}>
-          <TeamRadarCard title="Equipo Viejo" color={TEAM_VIEJO_COLOR} maps={maps} stats={viejoStats} />
-        </Reveal>
+        <TeamRadarCard title="Equipo Papi" color={TEAM_PAPI_COLOR} maps={maps} stats={papiStats} />
+        <TeamRadarCard title="Equipo Viejo" color={TEAM_VIEJO_COLOR} maps={maps} stats={viejoStats} />
       </div>
     </section>
   )

@@ -145,19 +145,16 @@ function NovedadCard({ item, isNew, immediate }: { item: Novedad; isNew: boolean
 
   return (
     <Reveal immediate={immediate} className="grid grid-cols-[36px_minmax(0,1fr)] gap-3 sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-4">
-      <span
-        className={cn(
-          'relative z-10 flex h-9 w-9 items-center justify-center rounded-xl ring-1 backdrop-blur sm:h-11 sm:w-11',
-          style.node,
-        )}
-        aria-hidden="true"
-      >
-        <TagIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+      {/* Fondo opaco abajo del color de la sección: tapa la línea de tiempo sin usar blur. */}
+      <span className="relative z-10 h-fit rounded-xl bg-card" aria-hidden="true">
+        <span className={cn('flex h-9 w-9 items-center justify-center rounded-xl ring-1 sm:h-11 sm:w-11', style.node)}>
+          <TagIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+        </span>
       </span>
 
       <article
         className={cn(
-          'min-w-0 rounded-2xl border bg-card/85 p-4 shadow-lg shadow-black/20 backdrop-blur-sm sm:p-5',
+          'min-w-0 rounded-2xl border bg-card/95 p-4 shadow-lg shadow-black/20 sm:p-5',
           item.popup ? 'border-amber-300/25 shadow-[0_0_45px_-22px_rgba(245,180,60,0.55)]' : 'border-border',
           isNew && 'border-brand/40',
         )}

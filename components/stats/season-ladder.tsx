@@ -385,11 +385,9 @@ function LadderRow({
             {s.kda.toFixed(2)}
           </span>
           <span className="h-1 w-full overflow-hidden rounded-full bg-muted/60" aria-hidden="true">
-            <motion.span
+            <span
               className={cn('block h-full rounded-full', barraClase)}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.max(6, (s.kda / maxKda) * 100)}%` }}
-              transition={{ duration: 0.8, delay: 0.15 + Math.min(i * 0.035, 0.4), ease: [0.22, 1, 0.36, 1] }}
+              style={{ width: `${Math.max(6, (s.kda / maxKda) * 100)}%` }}
             />
           </span>
         </div>

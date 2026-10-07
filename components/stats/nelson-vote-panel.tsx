@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import confetti from 'canvas-confetti'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
+import { isMotionOff } from '@/components/motion/motion-preference'
 
 type PlayerOption = {
   id: string
@@ -71,6 +72,7 @@ export function NelsonVotePanel({ initialPlayers, initialVoteState }: NelsonVote
     const duration = 3000
     const end = Date.now() + duration
     const frame = () => {
+      if (isMotionOff()) return
       confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#8B4513', '#A0522D', '#D2691E'] })
       confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#8B4513', '#A0522D', '#D2691E'] })
       if (Date.now() < end) requestAnimationFrame(frame)

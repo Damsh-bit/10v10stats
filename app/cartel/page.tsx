@@ -25,7 +25,7 @@ const PASOS = [
 
 function Tarjeta({ titulo, icono, children }: { titulo: string; icono: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-border bg-card/80 p-4 backdrop-blur-sm">
+    <section className="flex flex-col gap-3 rounded-xl border border-border bg-card/95 p-4">
       <h2 className="flex items-center gap-2 font-heading text-[15px] font-bold uppercase tracking-[0.16em] text-foreground">
         {icono}
         {titulo}
@@ -75,7 +75,7 @@ export default async function CartelPage() {
 
         <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-border bg-card/80 px-3 py-2.5 backdrop-blur-sm">
+            <div key={stat.label} className="rounded-xl border border-border bg-card/95 px-3 py-2.5">
               <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{stat.label}</dt>
               <dd className="font-mono text-[20px] font-black tabular-nums text-foreground sm:text-[24px]">{stat.valor}</dd>
             </div>
@@ -85,7 +85,7 @@ export default async function CartelPage() {
         <Reveal>
           <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {PASOS.map((paso, i) => (
-              <li key={paso.titulo} className="flex gap-3 rounded-xl border border-border bg-card/60 p-3 backdrop-blur-sm">
+              <li key={paso.titulo} className="flex gap-3 rounded-xl border border-border bg-card/90 p-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-white/10">
                   <paso.icon className={`h-4 w-4 ${paso.color}`} aria-hidden="true" />
                 </span>

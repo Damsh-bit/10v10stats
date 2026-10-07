@@ -8,6 +8,7 @@ import { Menu, Megaphone, X, Sparkles } from 'lucide-react'
 import { useUnreadNovedades } from '@/components/novedades/novedades-state'
 import { useDropdownTransition } from '@/components/ui/dropdown'
 import { cn } from '@/lib/utils'
+import { MotionToggle } from '@/components/motion/motion-toggle'
 
 const LINKS = [
   { href: '/', label: 'Dashboard' },
@@ -68,15 +69,13 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
   }, [isOpen])
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
+    <header ref={headerRef} className="sticky top-0 z-50 border-b border-border bg-background/95">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2">
-          <motion.img
+          <img
             src="/logo.png"
             alt="10v10 Stats"
-            className="h-8 w-8 rounded-sm object-cover"
-            whileHover={{ rotate: -8, scale: 1.08 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            className="h-8 w-8 rounded-sm object-cover transition-transform duration-200 group-hover:-rotate-[8deg] group-hover:scale-[1.08]"
           />
           <span className="font-heading text-[15px] font-bold uppercase tracking-[0.25em] text-foreground">
             10v10 <span className="text-brand">STATS</span>
@@ -141,9 +140,11 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             Season {seasonNumber}
           </Link>
+          <MotionToggle className="ml-2" />
         </nav>
 
         <div className="flex items-center gap-1 lg:hidden">
+          <MotionToggle className="mr-1" />
           <Link
             href={NOVEDADES_HREF}
             aria-current={novedadesActive ? 'page' : undefined}

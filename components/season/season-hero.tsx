@@ -1,7 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'motion/react'
 import { ArrowRight, Crown, History, Swords, Target, Trophy, Users } from 'lucide-react'
 import type { PlayerStats } from '@/types'
 import AnimatedNumber from '@/components/ui/animated-number'
@@ -34,18 +31,10 @@ export function SeasonHero({
 
   return (
     <section className="season-hero relative isolate overflow-hidden rounded-2xl border border-white/10 px-4 py-4 sm:px-6 sm:py-5">
-      {/* Fondo: glows, grilla y la marca de agua de la temporada */}
+      {/* Fondo: glows, grilla y la marca de agua de la temporada. Quietos: un blur animado se repinta en cada frame. */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <motion.div
-          className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/40 blur-3xl"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.55, 0.8, 0.55] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-amber-500/25 blur-3xl"
-          animate={{ scale: [1.1, 1, 1.1], opacity: [0.5, 0.75, 0.5] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/40 opacity-70 blur-3xl" />
+        <div className="absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-amber-500/25 opacity-60 blur-3xl" />
         <div className="cs-grid absolute inset-0 opacity-60 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
         <span className="season-watermark absolute -right-4 top-1/2 -translate-y-1/2 select-none font-heading text-[6rem] font-black leading-none sm:text-[8rem]">
           S{seasonNumber}

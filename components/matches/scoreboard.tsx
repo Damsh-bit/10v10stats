@@ -84,11 +84,11 @@ export function Scoreboard({
                     </Link>
                   )}
                 </td>
-                <Cell><AnimatedNumber value={kills} /></Cell>
-                <Cell><AnimatedNumber value={deaths} direction="down" /></Cell>
-                <Cell><AnimatedNumber value={assists} /></Cell>
-                <Cell className="text-yellow-500/80"><AnimatedNumber value={hsPct} decimals={0} suffix="%" /></Cell>
-                <Cell><AnimatedNumber value={damage} /></Cell>
+                <Cell>{kills}</Cell>
+                <Cell>{deaths}</Cell>
+                <Cell>{assists}</Cell>
+                <Cell className="text-yellow-500/80">{Math.round(hsPct)}%</Cell>
+                <Cell>{damage}</Cell>
               </tr>
             )
           })}

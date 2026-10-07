@@ -55,7 +55,7 @@ export function ApuestasDemo() {
   const duelState = DUEL_STATES[count < 2 ? 0 : count < 4 ? 1 : 2]
 
   return (
-    <div className="relative w-full max-w-[340px] overflow-hidden rounded-xl border border-white/10 bg-[#011b2c]/85 p-3 shadow-2xl shadow-black/50 backdrop-blur-md">
+    <div className="relative w-full max-w-[340px] overflow-hidden rounded-xl border border-white/10 bg-[#011b2c]/95 p-3 shadow-2xl shadow-black/50">
       <motion.span
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent"

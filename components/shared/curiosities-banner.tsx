@@ -2,8 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, Dices } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
 import type { Insight } from '@/lib/insights'
+
+// Fondo opaco y sin blur: el blur se recalculaba sobre el fondo de mapas en cada frame.
+const BANNER_CLASS =
+  'relative z-40 w-full border-b border-border/50 bg-background bg-gradient-to-r from-[#950c42]/10 via-background to-emerald-500/10'
+const LINE_CLASS = 'h-[2px] w-full bg-gradient-to-r from-[#950c42] via-amber-500/50 to-emerald-500'
 
 interface CuriositiesBannerProps {
   initialInsights?: Insight[]
@@ -79,7 +83,17 @@ export function CuriositiesBanner({ initialInsights }: CuriositiesBannerProps) {
     return () => clearInterval(timer)
   }, [isPaused, insights.length, nextInsight])
 
-  if (loading || insights.length === 0) {
+  // Mientras carga se reserva el lugar: si aparecía después, empujaba toda la página para abajo.
+  if (loading) {
+    return (
+      <div className={BANNER_CLASS} aria-hidden="true">
+        <div className={LINE_CLASS} />
+        <div className="h-10" />
+      </div>
+    )
+  }
+
+  if (insights.length === 0) {
     return null
   }
 
@@ -87,18 +101,18 @@ export function CuriositiesBanner({ initialInsights }: CuriositiesBannerProps) {
 
   return (
     <div
-      className="relative z-40 w-full border-b border-border/50 bg-gradient-to-r from-[#950c42]/10 via-background to-emerald-500/10 backdrop-blur-md transition-all"
+      className={BANNER_CLASS}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Top micro glowing line */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-[#950c42] via-amber-500/50 to-emerald-500" />
+      <div className={LINE_CLASS} />
 
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 text-xs sm:text-sm">
         {/* Left Badge */}
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand border border-primary/20 shadow-sm">
-            <span className="animate-pulse">{current.icon || '💡'}</span>
+            <span>{current.icon || '💡'}</span>
             <span className="hidden sm:inline">Dato curioso</span>
             <span className="sm:hidden">Dato</span>
           </span>
@@ -111,17 +125,12 @@ export function CuriositiesBanner({ initialInsights }: CuriositiesBannerProps) {
 
         {/* Center Content */}
         <div className="flex flex-1 items-center justify-center overflow-hidden text-center min-h-[24px]">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={current.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
-              className="line-clamp-2 font-normal leading-tight text-foreground/90 sm:line-clamp-1"
-              dangerouslySetInnerHTML={{ __html: current.highlightedText || current.text }}
-            />
-          </AnimatePresence>
+          {/* La key remonta el párrafo y la entrada corre por CSS. */}
+          <p
+            key={current.id}
+            className="insight-in line-clamp-2 font-normal leading-tight text-foreground/90 sm:line-clamp-1"
+            dangerouslySetInnerHTML={{ __html: current.highlightedText || current.text }}
+          />
         </div>
 
         {/* Right Controls */}

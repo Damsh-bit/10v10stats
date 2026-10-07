@@ -138,7 +138,7 @@ export function HistorialCarteles({ entradas, actualId }: { entradas: EntradaHis
               <li
                 key={entrada.id}
                 className={cn(
-                  'relative flex gap-3 overflow-hidden rounded-xl border bg-card/80 p-3 backdrop-blur-sm',
+                  'relative flex gap-3 overflow-hidden rounded-xl border bg-card/95 p-3',
                   actual ? cn('border-2', estilo.marco) : 'border-border',
                 )}
               >

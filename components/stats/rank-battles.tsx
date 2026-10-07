@@ -1,7 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'motion/react'
 import { Swords } from 'lucide-react'
 import type { RankBattle } from '@/lib/season-stats'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
@@ -37,13 +34,11 @@ export function RankBattles({ battles }: { battles: RankBattle[] }) {
             <StaggerItem key={`${battle.chaser.player.id}-${battle.target.player.id}`} className="bg-card p-4">
               <div className="flex items-center justify-between gap-2">
                 <BattlePlayer rank={battle.chaserRank} id={battle.chaser.player.id} name={battle.chaser.player.name} player={battle.chaser.player} />
-                <motion.span
-                  className="shrink-0 font-heading text-[11px] font-bold uppercase tracking-widest text-muted-foreground"
-                  animate={tight ? { scale: [1, 1.15, 1] } : undefined}
-                  transition={{ duration: 1.2, repeat: Infinity }}
+                <span
+                  className={`shrink-0 font-heading text-[11px] font-bold uppercase tracking-widest ${tight ? 'text-rose-400' : 'text-muted-foreground'}`}
                 >
                   vs
-                </motion.span>
+                </span>
                 <BattlePlayer rank={battle.targetRank} id={battle.target.player.id} name={battle.target.player.name} player={battle.target.player} alignRight />
               </div>
               <p className="mt-3 text-center text-[12px] text-muted-foreground">

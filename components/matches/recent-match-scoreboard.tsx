@@ -1,7 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
 import type { Match, MatchPlayer, Player } from '@/types'
 import { formatShortDate, mapImageUrl } from '@/lib/format'
@@ -15,18 +12,11 @@ type TeamProps = {
   won: boolean
   accentClass: string
   borderClass: string
-  delay: number
 }
 
-function ScoreboardTeam({ players, names, teamName, score, won, accentClass, borderClass, delay }: TeamProps) {
+function ScoreboardTeam({ players, names, teamName, score, won, accentClass, borderClass }: TeamProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={cn('flex flex-col overflow-hidden rounded-xl border bg-card', borderClass)}
-    >
+    <div className={cn('flex flex-col overflow-hidden rounded-xl border bg-card', borderClass)}>
       <div className={cn('flex items-center justify-between px-3 py-2', accentClass)}>
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white drop-shadow">{teamName}</span>
@@ -84,7 +74,7 @@ function ScoreboardTeam({ players, names, teamName, score, won, accentClass, bor
           )
         })}
       </ol>
-    </motion.div>
+    </div>
   )
 }
 
@@ -133,7 +123,6 @@ export function RecentMatchScoreboard({ match, players }: { match: Match; player
           won={wonA}
           accentClass="bg-gradient-to-r from-sky-700 to-sky-600"
           borderClass="border-sky-700/50"
-          delay={0}
         />
         <ScoreboardTeam
           players={playersB}
@@ -143,7 +132,6 @@ export function RecentMatchScoreboard({ match, players }: { match: Match; player
           won={!isDraw && !wonA}
           accentClass="bg-gradient-to-r from-orange-700 to-orange-600"
           borderClass="border-orange-700/50"
-          delay={0.1}
         />
       </div>
     </section>

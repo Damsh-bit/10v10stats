@@ -1,76 +1,31 @@
-'use client'
-
-import { motion, type HTMLMotionProps, type Variants } from 'motion/react'
 import { cn } from '@/lib/utils'
 
-export const EASE_OUT = [0.22, 1, 0.36, 1] as const
-
-type RevealProps = HTMLMotionProps<'div'> & {
+type RevealProps = React.ComponentProps<'div'> & {
   delay?: number
-  y?: number
   /**
-   * Para contenido visible al cargar: usa una animación CSS, que corre apenas se
-   * pinta la página. Con Motion quedaría invisible hasta que hidrate React, y en
-   * un celular con red lenta eso son segundos de pantalla vacía.
+   * Para contenido visible al cargar: entra con una animación CSS, que corre
+   * apenas se pinta la página (sin esperar a que hidrate React).
    */
   immediate?: boolean
 }
 
-/** Aparece con un fade + desplazamiento cuando entra en pantalla. */
-export function Reveal({ delay = 0, y = 16, immediate = false, children, ...props }: RevealProps) {
-  if (immediate) {
-    return (
-      <div id={props.id} className={cn('enter', props.className as string | undefined)} style={{ animationDelay: `${delay}s` }}>
-        {children as React.ReactNode}
-      </div>
-    )
-  }
+/**
+ * Entrada suave para lo que se ve al cargar. Lo que está más abajo aparece sin
+ * animación: animar al scrollear competía con el propio scroll y lo trababa.
+ */
+export function Reveal({ delay = 0, immediate = false, className, style, ...props }: RevealProps) {
+  if (!immediate) return <div className={className} style={style} {...props} />
 
-  const target = { opacity: 1, y: 0, transition: { duration: 0.5, delay, ease: EASE_OUT } }
-  return (
-    <motion.div initial={{ opacity: 0, y }} whileInView={target} viewport={{ once: true, margin: '-40px' }} {...props}>
-      {children}
-    </motion.div>
-  )
+  return <div className={cn('enter', className)} style={{ animationDelay: `${delay}s`, ...style }} {...props} />
 }
 
-const containerVariants: Variants = {
-  hidden: {},
-  show: (stagger: number = 0.06) => ({ transition: { staggerChildren: stagger } }),
+type StaggerProps = React.ComponentProps<'div'> & { stagger?: number; immediate?: boolean }
+
+/** Contenedor que escalona por CSS la entrada de sus hijos (sólo con `immediate`). */
+export function Stagger({ stagger: _stagger, immediate = false, className, ...props }: StaggerProps) {
+  return <div className={cn(immediate && 'enter-stagger', className)} {...props} />
 }
 
-export const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE_OUT } },
-}
-
-type StaggerProps = HTMLMotionProps<'div'> & { stagger?: number; immediate?: boolean }
-
-/** Contenedor que escalona la entrada de sus `StaggerItem`. */
-export function Stagger({ stagger = 0.06, immediate = false, children, ...props }: StaggerProps) {
-  if (immediate) {
-    // Igual que Reveal: sin depender de la hidratación. Los hijos se escalonan por CSS.
-    return <motion.div className={cn('enter-stagger', props.className as string | undefined)}>{children}</motion.div>
-  }
-
-  return (
-    <motion.div
-      variants={containerVariants}
-      custom={stagger}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '-40px' }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-export function StaggerItem({ children, ...props }: HTMLMotionProps<'div'>) {
-  return (
-    <motion.div variants={itemVariants} {...props}>
-      {children}
-    </motion.div>
-  )
+export function StaggerItem(props: React.ComponentProps<'div'>) {
+  return <div {...props} />
 }

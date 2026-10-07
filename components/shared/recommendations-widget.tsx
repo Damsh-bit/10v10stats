@@ -82,7 +82,7 @@ export function RecommendationsWidget() {
       {/* Mobile: botón redondo en la esquina, para no tapar el contenido. */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-emerald-500/40 bg-background/95 text-emerald-400 shadow-lg shadow-black/40 backdrop-blur transition-colors hover:bg-muted sm:hidden"
+        className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-emerald-500/40 bg-background text-emerald-400 shadow-lg shadow-black/40 transition-colors hover:bg-muted sm:hidden"
         aria-label="Recomendaciones"
         aria-expanded={isOpen}
       >

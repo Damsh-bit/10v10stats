@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import { ArrowRight, Archive } from 'lucide-react'
 import type { PlayerStats } from '@/types'

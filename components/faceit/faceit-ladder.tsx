@@ -226,11 +226,9 @@ function FaceitRow({ row, index: i, compact }: { row: FaceitLadderRow; index: nu
               className="h-1 w-full overflow-hidden rounded-full bg-muted/60"
               title={`Faltan ${row.nextLevel.eloNeeded} de elo para nivel ${row.nextLevel.level}`}
             >
-              <motion.span
+              <span
                 className="block h-full rounded-full bg-orange-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.max(6, row.nextLevel.progress * 100)}%` }}
-                transition={{ duration: 0.8, delay: 0.15 + Math.min(i * 0.035, 0.4), ease: [0.22, 1, 0.36, 1] }}
+                style={{ width: `${Math.max(6, row.nextLevel.progress * 100)}%` }}
               />
             </span>
           )}

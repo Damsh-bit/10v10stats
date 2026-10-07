@@ -8,9 +8,11 @@ import confetti from 'canvas-confetti'
 import { ArrowRight, Sparkles, X } from 'lucide-react'
 import { NOVEDADES, NOVEDADES_MAX_AGE_DAYS, NOVEDADES_POPUP, type Novedad, type NovedadDemo } from '@/lib/novedades'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
+import { isMotionOff } from '@/components/motion/motion-preference'
 import { cn } from '@/lib/utils'
 import { ApuestasDemo } from './apuestas-demo'
 import { CartelDemo } from './cartel-demo'
+import { ModoLivianoDemo } from './modo-liviano-demo'
 import { MvpDemo } from './mvp-demo'
 import { TeamGeneratorDemo } from './team-generator-demo'
 import { HighlightIcon } from './novedad-icons'
@@ -21,6 +23,7 @@ const DEMOS: Record<NovedadDemo, ComponentType> = {
   apuestas: ApuestasDemo,
   mvp: MvpDemo,
   cartel: CartelDemo,
+  'modo-liviano': ModoLivianoDemo,
 }
 
 const STORAGE_KEY = 'novedades-vistas'
@@ -171,6 +174,7 @@ function NovedadDialog({
     markSeen([item.id])
     const timer = window.setTimeout(() => {
       ctaRef.current?.focus({ preventScroll: true })
+      if (isMotionOff()) return
       const base = { particleCount: 45, spread: 60, startVelocity: 42, ticks: 160, zIndex: 130, colors: CONFETTI_COLORS, disableForReducedMotion: true, scalar: 0.9 }
       confetti({ ...base, angle: 60, origin: { x: 0.18, y: 0.7 } })
       confetti({ ...base, angle: 120, origin: { x: 0.82, y: 0.7 } })
@@ -192,7 +196,7 @@ function NovedadDialog({
       <button
         type="button"
         onClick={onClose}
-        className="absolute right-3 top-3 z-20 rounded-full bg-black/40 p-1.5 text-white/70 backdrop-blur transition-colors hover:bg-black/60 hover:text-white"
+        className="absolute right-3 top-3 z-20 rounded-full bg-black/50 p-1.5 text-white/70 transition-colors hover:bg-black/70 hover:text-white"
         aria-label={hasNext ? 'Cerrar y ver la siguiente novedad' : 'Cerrar novedades'}
       >
         <X className="h-4 w-4" />
@@ -240,11 +244,9 @@ function NovedadDialog({
             onClick={onCta}
             className="group relative flex items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full bg-primary px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white shadow-lg shadow-primary/40 outline-none transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.98]"
           >
-            <motion.span
+            <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              animate={{ x: ['0%', '320%'] }}
-              transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.2, ease: 'easeInOut' }}
+              className="cta-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent"
             />
             <span className="relative">{cta.label}</span>
             <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -255,10 +257,11 @@ function NovedadDialog({
   )
 }
 
+// Quietas: mover un blur obliga a repintarlo en cada frame.
 const ORBS = [
-  { className: 'left-[8%] top-[10%] h-28 w-28 bg-primary/50', x: [0, 18, 0], y: [0, 12, 0], duration: 7 },
-  { className: 'right-[6%] bottom-[8%] h-32 w-32 bg-sky-500/30', x: [0, -16, 0], y: [0, -10, 0], duration: 8 },
-  { className: 'right-[30%] top-[4%] h-16 w-16 bg-amber-400/25', x: [0, 10, 0], y: [0, 14, 0], duration: 6 },
+  'left-[8%] top-[10%] h-28 w-28 bg-primary/50',
+  'right-[6%] bottom-[8%] h-32 w-32 bg-sky-500/30',
+  'right-[30%] top-[4%] h-16 w-16 bg-amber-400/25',
 ]
 
 const SPARKS = [
@@ -276,23 +279,15 @@ function NovedadVisual({ item }: { item: Novedad }) {
     <div className="relative flex h-[262px] items-center justify-center overflow-hidden px-4 pb-3 pt-6 sm:h-[280px]">
       <div className="absolute inset-0 bg-[radial-gradient(120%_95%_at_10%_0%,rgba(149,12,66,0.6),transparent_62%),radial-gradient(110%_90%_at_100%_100%,rgba(56,189,248,0.25),transparent_58%)]" />
       <div className="cs-grid absolute inset-0 opacity-60" aria-hidden="true" />
-      {ORBS.map((orb, i) => (
-        <motion.span
-          key={i}
-          aria-hidden="true"
-          className={cn('pointer-events-none absolute rounded-full blur-2xl', orb.className)}
-          animate={{ x: orb.x, y: orb.y }}
-          transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
-        />
+      {ORBS.map((orb) => (
+        <span key={orb} aria-hidden="true" className={cn('pointer-events-none absolute rounded-full blur-2xl', orb)} />
       ))}
       {SPARKS.map((spark, i) => (
-        <motion.span
+        <span
           key={i}
           aria-hidden="true"
-          className="pointer-events-none absolute h-1 w-1 rounded-full bg-white"
-          style={{ left: spark.left, top: spark.top }}
-          animate={{ opacity: [0, 1, 0], scale: [0.4, 1.4, 0.4] }}
-          transition={{ duration: 2.4, repeat: Infinity, delay: spark.delay, ease: 'easeInOut' }}
+          className="spark pointer-events-none absolute h-1 w-1 rounded-full bg-white"
+          style={{ left: spark.left, top: spark.top, animationDelay: `${spark.delay}s` }}
         />
       ))}
 

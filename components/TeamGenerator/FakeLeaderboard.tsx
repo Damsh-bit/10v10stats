@@ -196,11 +196,9 @@ export function FakeLeaderboard({ archived }: { archived?: ArchivedFakeEntry[] }
                       {entry.player_name}
                     </span>
                     <span className="h-1 w-full overflow-hidden rounded-full bg-muted/50" aria-hidden="true">
-                      <motion.span
+                      <span
                         className="block h-full rounded-full bg-purple-400/70"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(entry.fake_count / maxCount) * 100}%` }}
-                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                        style={{ width: `${(entry.fake_count / maxCount) * 100}%` }}
                       />
                     </span>
                   </span>

@@ -8,6 +8,7 @@ import { MapBackdrop } from '@/components/layout/map-backdrop'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
 import { MotionProvider } from '@/components/motion/motion-provider'
+import { motionPreferenceScript } from '@/components/motion/motion-preference'
 import { getCurrentSeason, getSeasons } from '@/lib/seasons'
 import { getApuestasConfig } from '@/lib/apuestas/config'
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -54,13 +55,17 @@ export default async function RootLayout({
       lang="es"
       className={`dark ${geistSans.variable} ${geistMono.variable} ${oswald.variable} bg-background`}
     >
+      <head>
+        {/* Modo liviano antes del primer pintado: así no arranca ninguna animación. */}
+        <script dangerouslySetInnerHTML={{ __html: motionPreferenceScript }} />
+      </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <MotionProvider>
           <MapBackdrop />
           <Navbar seasonNumber={currentSeason.id} apuestas={getApuestasConfig().visibles} />
           <CuriositiesBanner />
           <div className="flex-1">{children}</div>
-          <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background/80 py-8 text-sm text-muted-foreground backdrop-blur-md">
+          <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background/90 py-8 text-sm text-muted-foreground">
             <p className="flex items-center justify-center gap-1.5">
               Desarrollado con <span className="text-rose-500">❤️</span> por
               <span className="font-heading font-bold uppercase tracking-widest text-brand">

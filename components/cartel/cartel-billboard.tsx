@@ -42,12 +42,25 @@ export function FotoCartel({ src, alt, sizes, className }: { src: string; alt: s
   return <Image src={src} alt={alt} fill sizes={sizes} className={cn('object-cover', className)} />
 }
 
+/**
+ * Dos filas superpuestas (pares e impares) que titilan alternadas: así se animan
+ * dos capas en vez de una por lamparita, que en una PC floja se notaba.
+ */
 function Lamparitas({ className }: { className: string }) {
   return (
-    <div className={cn('cartel-bulbs pointer-events-none flex justify-between px-3', className)} aria-hidden="true">
-      {Array.from({ length: BULBS }, (_, i) => (
-        <span key={i} className="h-1.5 w-1.5 rounded-full bg-current" />
-      ))}
+    <div className={cn('pointer-events-none', className)} aria-hidden="true">
+      <div className="relative h-1.5">
+        {[0, 1].map((fila) => (
+          <div
+            key={fila}
+            className={cn('cartel-bulbs-fila absolute inset-x-3 inset-y-0 flex justify-between', fila === 1 && 'cartel-bulbs-fila-b')}
+          >
+            {Array.from({ length: BULBS }, (_, i) => (
+              <span key={i} className={cn('h-1.5 w-1.5 rounded-full bg-current', i % 2 !== fila && 'invisible')} />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

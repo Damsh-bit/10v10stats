@@ -22,6 +22,7 @@ import {
   UserRound,
   Wallet,
   Wrench,
+  Zap,
   type LucideIcon,
 } from 'lucide-react'
 import type { NovedadIcon, NovedadTag } from '@/lib/novedades'
@@ -48,6 +49,7 @@ const HIGHLIGHT_ICONS: Record<Exclude<NovedadIcon, 'faceit'>, { icon: LucideIcon
   shield: { icon: ShieldCheck, className: 'text-emerald-300' },
   target: { icon: Target, className: 'text-rose-300' },
   heart: { icon: Heart, className: 'text-pink-400' },
+  zap: { icon: Zap, className: 'text-amber-300' },
 }
 
 export function HighlightIcon({ icon }: { icon: NovedadIcon }) {

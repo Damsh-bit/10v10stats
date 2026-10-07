@@ -42,6 +42,7 @@ export type NovedadIcon =
   | 'shield'
   | 'target'
   | 'heart'
+  | 'zap'
 
 export type NovedadTag =
   | 'Reglas'
@@ -58,7 +59,7 @@ export type NovedadTag =
   | 'Arreglos'
   | 'Sitio'
 
-export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel'
+export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano'
 
 export type Novedad = {
   /** Único y estable: si cambia, todos la vuelven a ver. */
@@ -79,6 +80,21 @@ export type Novedad = {
 export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
+  {
+    id: '2026-10-07-sitio-fluido',
+    date: '2026-10-07',
+    tag: 'Sitio',
+    title: 'El sitio anda más fluido',
+    summary:
+      'Sacamos las animaciones que más pesaban y el scroll quedó mucho más suave. Y si tu PC igual sufre, ahora podés apagar todas las animaciones con un botón.',
+    highlights: [
+      { icon: 'zap', text: 'Botón del rayito arriba de todo: apagalo y el sitio queda en modo liviano, sin animaciones.' },
+      { icon: 'chart', text: 'El fondo de mapas ya no se mueve con el scroll y las tablas aparecen al toque.' },
+      { icon: 'sparkles', text: 'Se acuerda de tu elección la próxima vez que entres.' },
+    ],
+    popup: true,
+    visual: { kind: 'demo', name: 'modo-liviano' },
+  },
   {
     id: '2026-10-03-zonas-ladder',
     date: '2026-10-03',

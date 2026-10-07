@@ -16,6 +16,7 @@ import {
 import type { EloChartPoint, EloRaceDay, EloRaceSeries } from '@/lib/faceit'
 import { formatEloDelta, levelFloorsBetween } from '@/lib/faceit-format'
 import { cn } from '@/lib/utils'
+import { useMotionEnabled } from '@/components/motion/motion-provider'
 
 /** Línea destacada (dorado de la temporada) y líneas de contexto. Validados para daltonismo sobre la card. */
 const FOCUS = '#f5b43c'
@@ -51,6 +52,7 @@ function LevelLines({ domain }: { domain: [number, number] }) {
 export function FaceitEloChart({ points, height = 220 }: { points: EloChartPoint[]; height?: number }) {
   const data = useMemo(() => points.map((p, i) => ({ ...p, n: i + 1 })), [points])
   const domain = useMemo(() => eloDomain(points.map((p) => p.elo)), [points])
+  const motionEnabled = useMotionEnabled()
 
   if (points.length < 2) {
     return (
@@ -89,7 +91,7 @@ export function FaceitEloChart({ points, height = 220 }: { points: EloChartPoint
               const point = active ? (payload?.[0]?.payload as (EloChartPoint & { n: number }) | undefined) : undefined
               if (!point) return null
               return (
-                <div className="rounded-lg border border-border bg-popover/95 px-3 py-2 text-[11px] shadow-xl backdrop-blur">
+                <div className="rounded-lg border border-border bg-popover px-3 py-2 text-[11px] shadow-xl">
                   <p className="font-mono text-base font-black text-foreground">{point.elo}</p>
                   <p className="text-muted-foreground">
                     {point.label} ·{' '}
@@ -115,6 +117,7 @@ export function FaceitEloChart({ points, height = 220 }: { points: EloChartPoint
             fill="url(#faceit-elo-fill)"
             activeDot={{ r: 5, stroke: '#022942', strokeWidth: 2, fill: FOCUS }}
             dot={false}
+            isAnimationActive={motionEnabled}
             animationDuration={900}
           />
         </AreaChart>
@@ -195,7 +198,7 @@ export function FaceitEloRace({
                   .filter((v): v is { s: EloRaceSeries; elo: number } => typeof v.elo === 'number')
                   .sort((a, b) => b.elo - a.elo)
                 return (
-                  <div className="min-w-[150px] rounded-lg border border-border bg-popover/95 px-3 py-2 text-[11px] shadow-xl backdrop-blur">
+                  <div className="min-w-[150px] rounded-lg border border-border bg-popover px-3 py-2 text-[11px] shadow-xl">
                     <p className="mb-1 text-muted-foreground">{label}</p>
                     <ul className="flex flex-col gap-0.5">
                       {values.map(({ s, elo }) => (

@@ -18,7 +18,7 @@ export function TopDonadores({ donadores, max = 5 }: { donadores: RankingDonador
   return (
     <section
       aria-label="Top donadores"
-      className="flex flex-col gap-2 rounded-xl border border-amber-300/20 bg-card/75 px-3 py-2 backdrop-blur-sm sm:flex-row sm:items-center sm:gap-x-3"
+      className="flex flex-col gap-2 rounded-xl border border-amber-300/20 bg-card/95 px-3 py-2 sm:flex-row sm:items-center sm:gap-x-3"
     >
       {/* En el celu título y link van arriba y la lista abajo; desde sm, todo en una fila. */}
       <div className="flex items-center justify-between gap-3 sm:contents">

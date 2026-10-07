@@ -1,7 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'motion/react'
 import { Crown } from 'lucide-react'
 import type { PlayerStats } from '@/types'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
@@ -35,14 +32,9 @@ export function SeasonPodium({ top, compact = false }: { top: PlayerStats[]; com
           >
             <div className="podium-drop relative flex flex-col items-center" style={{ animationDelay: `${place.delay + 0.25}s` }}>
               {isFirst && (
-                <motion.span
-                  className="absolute -top-5 text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.7)]"
-                  animate={{ y: [0, -3, 0], rotate: [-6, 6, -6] }}
-                  transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                  aria-hidden="true"
-                >
+                <span className="absolute -top-5 -rotate-6 text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.7)]" aria-hidden="true">
                   <Crown className="h-5 w-5 fill-amber-300/40" />
-                </motion.span>
+                </span>
               )}
               <span className={cn('rounded-full ring-2 ring-offset-2 ring-offset-card transition-transform group-hover:scale-105', place.ring)}>
                 <PlayerAvatar player={stats.player} size={avatarSize} />

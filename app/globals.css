@@ -91,40 +91,11 @@
   background-size: 32px 32px;
 }
 
-@keyframes gold-glow-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 8px 1px rgba(250, 204, 21, 0.55),
-      0 0 20px 4px rgba(250, 204, 21, 0.25);
-  }
-  50% {
-    box-shadow:
-      0 0 16px 4px rgba(250, 204, 21, 0.9),
-      0 0 34px 10px rgba(250, 204, 21, 0.45);
-  }
-}
-
-.btn-gold-glow {
-  animation: gold-glow-pulse 2.1s ease-in-out infinite;
-}
-
-@keyframes gold-text-glow {
-  0%,
-  100% {
-    text-shadow:
-      0 0 12px rgba(250, 204, 21, 0.6),
-      0 0 28px rgba(250, 204, 21, 0.3);
-  }
-  50% {
-    text-shadow:
-      0 0 20px rgba(250, 204, 21, 0.9),
-      0 0 46px rgba(250, 204, 21, 0.5);
-  }
-}
-
+/* Brillo fijo: animar text-shadow obliga a repintar el texto en cada frame. */
 .text-gold-glow {
-  animation: gold-text-glow 2.4s ease-in-out infinite;
+  text-shadow:
+    0 0 16px rgba(250, 204, 21, 0.75),
+    0 0 36px rgba(250, 204, 21, 0.4);
 }
 
 @keyframes fade-in-up {
@@ -215,29 +186,17 @@
   --season-gold-soft: #ffe29a;
 }
 
-@keyframes season-gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
-}
-
+/* Degradés fijos: animar background-position repinta en cada frame y el chip vive en la navbar. */
 .season-chip {
-  background-image: linear-gradient(90deg, #fbbf24, #ffe29a, #f59e0b, #ffe29a, #fbbf24);
-  background-size: 200% 100%;
-  animation: season-gradient-shift 4s linear infinite;
+  background-image: linear-gradient(90deg, #fbbf24, #ffe29a 45%, #f59e0b);
   box-shadow: 0 0 18px -4px rgba(245, 180, 60, 0.7);
 }
 
 .season-gradient-text {
-  background-image: linear-gradient(100deg, #ffffff 0%, #ffe29a 25%, #f5b43c 45%, #e0457b 65%, #ffffff 90%);
-  background-size: 200% 100%;
+  background-image: linear-gradient(100deg, #ffffff 0%, #ffe29a 40%, #f5b43c 75%, #e0457b 115%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: season-gradient-shift 6s linear infinite;
   filter: drop-shadow(0 4px 24px rgba(149, 12, 66, 0.45));
 }
 
@@ -359,33 +318,18 @@
 
 /* ─── Fondo de mapas ─────────────────────────────────────────────────────── */
 
-.map-backdrop-img {
-  transform-origin: center;
-  animation-duration: 13s;
-  animation-timing-function: linear;
-  animation-fill-mode: both;
-  will-change: transform;
+/* Sólo opacidad: corre en la GPU sin tocar el layout ni repintar. */
+@keyframes backdrop-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-.kb-a { animation-name: kb-a; }
-.kb-b { animation-name: kb-b; }
-.kb-c { animation-name: kb-c; }
-.kb-d { animation-name: kb-d; }
 
-@keyframes kb-a {
-  from { transform: scale(1.06) translate(-1.5%, 1%); }
-  to { transform: scale(1.2) translate(1.5%, -1%); }
+.map-backdrop-fade {
+  animation: backdrop-fade 2.4s ease-in-out both;
 }
-@keyframes kb-b {
-  from { transform: scale(1.22) translate(1.5%, -1%); }
-  to { transform: scale(1.06) translate(-1%, 1%); }
-}
-@keyframes kb-c {
-  from { transform: scale(1.08) translate(1.5%, 1.5%); }
-  to { transform: scale(1.24) translate(-2%, -1%); }
-}
-@keyframes kb-d {
-  from { transform: scale(1.2) translate(-2%, -1.5%); }
-  to { transform: scale(1.07) translate(1.5%, 1%); }
+
+.map-backdrop-label {
+  animation: backdrop-fade 0.6s ease-out both;
 }
 
 /* Tinte con los colores de la marca: el mapa se ve, pero el texto sigue leyéndose. */
@@ -400,50 +344,93 @@
   background: radial-gradient(ellipse 120% 90% at 50% 35%, transparent 45%, rgba(1, 14, 24, 0.75) 100%);
 }
 
-@keyframes dust-rise {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  50% {
-    transform: translate3d(22px, -55lvh, 0);
-  }
-  88% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate3d(-14px, calc(-100lvh - 340px), 0);
-    opacity: 0;
-  }
+/* Cambio de dato curioso en el banner. */
+@keyframes insight-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
-.map-dust {
-  background: rgba(255, 226, 154, 0.55);
-  box-shadow: 0 0 6px 1px rgba(245, 180, 60, 0.35);
-  animation-name: dust-rise;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: transform, opacity;
+.insight-in {
+  animation: insight-in 0.3s ease-out both;
+}
+
+/* ─── Pop-up de novedades ────────────────────────────────────────────────── */
+
+/* Por CSS (transform/opacity): corren en la GPU, sin JavaScript por frame. */
+@keyframes cta-shine {
+  0% { transform: translateX(0); }
+  40%, 100% { transform: translateX(320%); }
+}
+
+.cta-shine {
+  animation: cta-shine 3.8s ease-in-out infinite;
+}
+
+@keyframes spark {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+.spark {
+  animation: spark 2.4s ease-in-out infinite both;
+}
+
+/* Demo del modo liviano: el botón "se aprieta" y las barras brillan mientras está prendido. */
+@keyframes demo-press {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.demo-press {
+  animation: demo-press 0.35s ease-out;
+}
+
+@keyframes demo-sweep {
+  from { transform: translateX(0); }
+  to { transform: translateX(400%); }
+}
+
+.demo-sweep {
+  animation: demo-sweep 1.2s ease-in-out infinite;
+}
+
+/* ─── Modo liviano (botón "Animaciones" de la navbar) ───────────────────── */
+
+/* Todo salta al estado final: duración casi cero en vez de "none" para que lo que
+   entra con opacidad 0 igual termine visible. Los spinners de carga siguen girando. */
+html[data-motion='off'] *:not(.animate-spin),
+html[data-motion='off'] *::before,
+html[data-motion='off'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+}
+
+.motion-toggle-off {
+  display: none;
+}
+html[data-motion='off'] .motion-toggle-on {
+  display: none;
+}
+html[data-motion='off'] .motion-toggle-off {
+  display: block;
+}
+html[data-motion='off'] .motion-toggle {
+  border-color: rgba(252, 211, 77, 0.45);
+  background-color: rgba(252, 211, 77, 0.1);
+  color: #fcd34d;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-backdrop-img {
-    animation: none;
-    transform: scale(1.06);
-  }
-  .map-dust {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .season-chip,
-  .season-gradient-text,
-  .btn-gold-glow,
-  .text-gold-glow,
+  .map-backdrop-label,
+  .insight-in,
+  .cta-shine,
+  .spark,
+  .demo-press,
+  .demo-sweep,
   .page-enter,
   .enter,
   .enter-letter,
@@ -476,8 +463,32 @@
   animation-delay: 0.7s;
 }
 
+/* Cartel de la home: anima la fila entera (pares o impares), no cada lamparita. */
+@keyframes cartel-bulb-fila {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.cartel-bulbs-fila {
+  animation: cartel-bulb-fila 1.4s ease-in-out infinite;
+}
+
+.cartel-bulbs-fila-b {
+  animation-delay: 0.7s;
+}
+
+.cartel-bulbs-fila > span {
+  box-shadow: 0 0 6px 1px currentColor;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .cartel-bulbs > span {
+  .cartel-bulbs > span,
+  .cartel-bulbs-fila {
     animation: none;
     opacity: 0.8;
   }
