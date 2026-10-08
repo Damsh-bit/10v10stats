@@ -1,7 +1,7 @@
 # El Cartel (donaciones)
 
 Arriba de todo en la home hay un cartel. Cualquiera dona con Mercado Pago y pone lo que quiera (mensaje, foto o GIF, a
-quién va dirigido y un estilo). Queda ahí hasta que otro ponga **más** plata. El historial está en `/cartel`.
+quién o quiénes va dirigido y un estilo). Queda ahí hasta que otro ponga **más** plata. El historial está en `/cartel`.
 
 ## Reglas
 
@@ -33,6 +33,8 @@ donador ──Checkout Pro──▶ cuenta de Mercado Pago dueña de CARTEL_MP_A
 
 1. **Base**: `supabase/migrations/20261003200000_cartel.sql` (ya aplicada en el proyecto 10v10stats, con el cartel de
    ejemplo). Tablas `carteles` y `carteles_log` con RLS sin políticas: sólo el servidor las toca.
+   `20261008120000_cartel_varios_objetivos.sql` (también aplicada) agrega `objetivo_player_ids` para dedicarlo a varios;
+   `objetivo_player_id` queda como legado con el primero de la lista.
 2. **Mercado Pago** (con la cuenta que va a recibir la plata): en
    [developers](https://www.mercadopago.com.ar/developers/panel/app) crear una aplicación de **Checkout Pro**, y en
    "Credenciales de producción" copiar el **Access Token** (`APP_USR-…`).
@@ -81,7 +83,8 @@ muestra ni las cuenta para el precio. Para limpiarlas: `delete from carteles whe
 
 ## Límites
 
-- Mensaje hasta 160 caracteres, firma hasta 24. Imagen JPG/PNG/WEBP/GIF de hasta 3 MB (las fotos se achican a 1200 px
+- Mensaje hasta 160 caracteres, firma hasta 24. Se le puede dedicar a varios jugadores a la vez (hasta 30, en la práctica
+  todos): en el cartel salen sus caras en collage y en "Los más bardeados" a cada uno le cuenta el cartel entero. Imagen JPG/PNG/WEBP/GIF de hasta 3 MB (las fotos se achican a 1200 px
   en el navegador; los GIF van tal cual). Se valida el tipo real del archivo, no lo que dice el navegador.
 - Si hay más de 20 checkouts sin pagar en 10 minutos, se frena un rato. Las fotos de checkouts sin pagar se borran a las
   24 h.

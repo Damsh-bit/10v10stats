@@ -11,6 +11,7 @@ import {
   IMAGEN_MAX_BYTES,
   MENSAJE_MAX,
   MINUTOS_CHECKOUT,
+  OBJETIVOS_MAX,
   VOLVER_A,
   esEstilo,
   precioMinimo,
@@ -46,7 +47,7 @@ export class CartelError extends Error {
 }
 
 const BUCKET = process.env.SUPABASE_TABULADOR_BUCKET ?? 'tabulador'
-const COLUMNAS = 'id, autor, autor_player_id, objetivo_player_id, mensaje, imagen_url, estilo, monto, proveedor, estado, oculto, pagado_at'
+const COLUMNAS = 'id, autor, autor_player_id, objetivo_player_id, objetivo_player_ids, mensaje, imagen_url, estilo, monto, proveedor, estado, oculto, pagado_at'
 /** El entorno local usa la misma base: los pagos simulados de `next dev` no salen en producción. */
 const SIN_PRUEBAS = process.env.NODE_ENV === 'production'
 /** Freno a los que abren checkouts (y suben fotos) sin pagar. */
@@ -56,7 +57,9 @@ type Fila = {
   id: string
   autor: string
   autor_player_id: string | null
+  /** Legado (un solo destinatario): sólo se lee si la lista viene vacía. */
   objetivo_player_id: string | null
+  objetivo_player_ids: string[] | null
   mensaje: string
   imagen_url: string | null
   estilo: string
@@ -115,13 +118,19 @@ async function jugadoresPorId(ids: (string | null)[]): Promise<Record<string, Ju
   )
 }
 
+/** A quiénes va dirigido (los carteles de antes tienen uno solo, en la columna vieja). */
+function objetivoIds(row: Pick<Fila, 'objetivo_player_id' | 'objetivo_player_ids'>) {
+  if (row.objetivo_player_ids?.length) return row.objetivo_player_ids
+  return row.objetivo_player_id ? [row.objetivo_player_id] : []
+}
+
 function toCartel(row: Fila, jugadores: Record<string, JugadorMini>): Cartel {
   const oculto = Boolean(row.oculto)
   return {
     id: row.id,
     autor: row.autor,
     autorJugador: row.autor_player_id ? (jugadores[row.autor_player_id] ?? null) : null,
-    objetivo: oculto || !row.objetivo_player_id ? null : (jugadores[row.objetivo_player_id] ?? null),
+    objetivos: oculto ? [] : objetivoIds(row).flatMap((id) => (jugadores[id] ? [jugadores[id]] : [])),
     // Un cartel bajado por la moderación no muestra nada de lo que decía.
     mensaje: oculto ? '' : row.mensaje,
     imagenUrl: oculto ? null : row.imagen_url,
@@ -145,7 +154,7 @@ async function leerEstado(): Promise<CartelEstado> {
   const rows = check(await pagados().order('monto', { ascending: false }).order('pagado_at', { ascending: true }).limit(15), 'No se pudo leer el cartel') as Fila[] | null
   const lista = rows ?? []
   const actualRow = lista.find((row) => !row.oculto) ?? null
-  const jugadores = actualRow ? await jugadoresPorId([actualRow.autor_player_id, actualRow.objetivo_player_id]) : {}
+  const jugadores = actualRow ? await jugadoresPorId([actualRow.autor_player_id, ...objetivoIds(actualRow)]) : {}
   return {
     actual: actualRow ? toCartel(actualRow, jugadores) : null,
     precioMinimo: precioMinimo(Number(lista[0]?.monto ?? 0), config),
@@ -171,7 +180,7 @@ export async function getCartelHistorial(): Promise<CartelHistorial | null> {
       leerEstado(),
       pagados().order('pagado_at', { ascending: true }).limit(500).then((r) => (check(r, 'No se pudo leer el historial') ?? []) as unknown as Fila[]),
     ])
-    const jugadores = await jugadoresPorId(rows.flatMap((row) => [row.autor_player_id, row.objetivo_player_id]))
+    const jugadores = await jugadoresPorId(rows.flatMap((row) => [row.autor_player_id, ...objetivoIds(row)]))
     const ahora = Date.now()
 
     // Cada uno estuvo arriba hasta que pagó el siguiente (los pagados suben siempre de precio).
@@ -197,8 +206,8 @@ export async function getCartelHistorial(): Promise<CartelHistorial | null> {
       donador.tiempoMs += (entrada.hastaAt ? Date.parse(entrada.hastaAt) : ahora) - Date.parse(entrada.pagadoAt)
       donadores.set(clave, donador)
 
-      const objetivo = row.objetivo_player_id ? jugadores[row.objetivo_player_id] : null
-      if (objetivo && !row.oculto) {
+      // Si va para varios, a cada uno le cuenta el cartel entero.
+      for (const objetivo of entrada.objetivos) {
         const actual = objetivos.get(objetivo.id) ?? { jugador: objetivo, carteles: 0, plata: 0 }
         actual.carteles += 1
         actual.plata += monto
@@ -284,10 +293,11 @@ export async function crearCartel(form: FormData, requestUrl: string): Promise<{
   if (largo(mensaje) > MENSAJE_MAX) throw new CartelError(`El mensaje puede tener hasta ${MENSAJE_MAX} caracteres`)
 
   const autorPlayerId = esUuid(campo(form, 'autorPlayerId')) ? campo(form, 'autorPlayerId') : null
-  const objetivoPlayerId = esUuid(campo(form, 'objetivoPlayerId')) ? campo(form, 'objetivoPlayerId') : null
-  const jugadores = await jugadoresPorId([autorPlayerId, objetivoPlayerId])
+  const objetivoPlayerIds = [...new Set(form.getAll('objetivoPlayerId').filter((id): id is string => typeof id === 'string' && esUuid(id)))]
+  if (objetivoPlayerIds.length > OBJETIVOS_MAX) throw new CartelError(`Se lo podés dedicar a ${OBJETIVOS_MAX} como mucho`)
+  const jugadores = await jugadoresPorId([autorPlayerId, ...objetivoPlayerIds])
   if (autorPlayerId && !jugadores[autorPlayerId]) throw new CartelError('No existe ese jugador')
-  if (objetivoPlayerId && !jugadores[objetivoPlayerId]) throw new CartelError('No existe el jugador al que va dirigido')
+  if (objetivoPlayerIds.some((id) => !jugadores[id])) throw new CartelError('No existe uno de los jugadores al que va dirigido')
   // Si firma un jugador, va su nombre tal cual está en la página.
   const autor = autorPlayerId ? jugadores[autorPlayerId].name : campo(form, 'autor').replace(/\s+/g, ' ').trim() || 'Anónimo'
   if (largo(autor) > AUTOR_MAX) throw new CartelError(`La firma puede tener hasta ${AUTOR_MAX} caracteres`)
@@ -329,7 +339,9 @@ export async function crearCartel(form: FormData, requestUrl: string): Promise<{
       id,
       autor,
       autor_player_id: autorPlayerId,
-      objetivo_player_id: objetivoPlayerId,
+      objetivo_player_ids: objetivoPlayerIds,
+      // La columna vieja (un solo destinatario) queda con el primero.
+      objetivo_player_id: objetivoPlayerIds[0] ?? null,
       mensaje,
       imagen_url: imagen?.url ?? null,
       imagen_path: imagen?.path ?? null,

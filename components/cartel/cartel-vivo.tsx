@@ -29,7 +29,7 @@ const ESPERA_MS = 2500
 const VACIO: CartelVista = {
   autor: 'Nadie todavía',
   autorJugador: null,
-  objetivo: null,
+  objetivos: [],
   mensaje: 'El cartel está libre. El primero que pone, lo tiene.',
   imagenUrl: null,
   estilo: 'oro',

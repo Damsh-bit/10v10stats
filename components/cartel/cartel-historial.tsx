@@ -7,7 +7,7 @@ import { formatPesos } from '@/lib/apuestas/cuotas'
 import { formatDuracion, type EntradaHistorial } from '@/lib/cartel/tipos'
 import { JugadorAvatar } from '@/components/apuestas/ui'
 import { cn } from '@/lib/utils'
-import { FotoCartel, useAhora } from './cartel-billboard'
+import { Destinatarios, FotoCartel, useAhora } from './cartel-billboard'
 import { ESTILOS } from './estilos'
 
 const CLAVE_KEY = 'cartel-admin-key'
@@ -48,7 +48,7 @@ function useClaveModeracion() {
 function Miniatura({ entrada }: { entrada: EntradaHistorial }) {
   const estilo = ESTILOS[entrada.estilo]
   const marco = cn('relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 bg-black/40 sm:h-16 sm:w-16', estilo.marco)
-  const foto = entrada.imagenUrl ?? entrada.objetivo?.photoUrl ?? null
+  const foto = entrada.imagenUrl ?? entrada.objetivos.find((objetivo) => objetivo.photoUrl)?.photoUrl ?? null
   if (foto) {
     return (
       <div className={marco}>
@@ -166,12 +166,7 @@ export function HistorialCarteles({ entradas, actualId }: { entradas: EntradaHis
                       —{entrada.autorJugador && <JugadorAvatar jugador={entrada.autorJugador} size={18} />}
                       <span className="truncate font-semibold text-foreground">{entrada.autor}</span>
                     </span>
-                    {entrada.objetivo && (
-                      <span className="inline-flex min-w-0 items-center gap-1.5">
-                        🎯 para <JugadorAvatar jugador={entrada.objetivo} size={18} />
-                        <span className="truncate font-semibold text-foreground">{entrada.objetivo.name}</span>
-                      </span>
-                    )}
+                    <Destinatarios jugadores={entrada.objetivos} size={18} />
                   </div>
 
                   <p className="text-[11px] text-muted-foreground">

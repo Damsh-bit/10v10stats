@@ -86,13 +86,56 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
   )
 }
 
-/** Recuadro de la izquierda: la foto que subió, o la cara del apuntado, o el emoji del estilo. */
+/** Lo que entra en el recuadro cuando va para varios: hasta 4 caras (la última, "+N" si son más). */
+const CARAS_MAX = 4
+
+/** Una cara del collage: la foto del jugador o sus iniciales en su color. */
+function Cara({ jugador, sizes, className }: { jugador: JugadorMini; sizes: string; className?: string }) {
+  if (jugador.photoUrl) {
+    return (
+      <div className={cn('relative overflow-hidden', className)}>
+        <FotoCartel src={jugador.photoUrl} alt={jugador.name} sizes={sizes} />
+      </div>
+    )
+  }
+  const hue = jugador.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+  return (
+    <div
+      className={cn('flex items-center justify-center font-mono text-[13px] font-bold text-background sm:text-[18px]', className)}
+      style={{ backgroundColor: `hsl(${hue} 65% 45%)` }}
+      aria-label={jugador.name}
+    >
+      {jugador.name.slice(0, 2).toUpperCase()}
+    </div>
+  )
+}
+
+/** Dos caras: mitad y mitad. Tres: la primera alta y dos a la derecha. Cuatro o más: 2×2. */
+function Collage({ jugadores, sizes }: { jugadores: JugadorMini[]; sizes: string }) {
+  const sobran = jugadores.length > CARAS_MAX ? jugadores.length - (CARAS_MAX - 1) : 0
+  const caras = jugadores.slice(0, sobran ? CARAS_MAX - 1 : CARAS_MAX)
+  return (
+    <div className={cn('grid h-full w-full gap-px bg-black/60', jugadores.length === 2 ? 'grid-cols-2' : 'grid-cols-2 grid-rows-2')}>
+      {caras.map((jugador, i) => (
+        <Cara key={jugador.id} jugador={jugador} sizes={sizes} className={cn(jugadores.length === 3 && i === 0 && 'row-span-2')} />
+      ))}
+      {sobran > 0 && (
+        <div className="flex items-center justify-center bg-black/70 font-mono text-[13px] font-black text-white sm:text-[18px]" aria-label={`y ${sobran} más`}>
+          +{sobran}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Recuadro de la izquierda: la foto que subió, la cara del apuntado (o las caras, si son varios) o el emoji del estilo. */
 function Recuadro({ cartel, variante }: { cartel: CartelVista; variante: Variante }) {
   const [abierta, setAbierta] = useState(false)
   const estilo = ESTILOS[cartel.estilo]
   const tamaño = variante === 'home' ? 'h-[84px] w-[84px] sm:h-[132px] sm:w-[132px]' : 'h-[72px] w-[72px]'
   const sizes = variante === 'home' ? '(min-width: 640px) 132px, 84px' : '72px'
   const marco = cn('relative shrink-0 overflow-hidden rounded-xl border-2 bg-black/40', estilo.marco, tamaño)
+  const unico = cartel.objetivos.length === 1 ? cartel.objetivos[0] : null
 
   if (cartel.imagenUrl) {
     return (
@@ -105,10 +148,14 @@ function Recuadro({ cartel, variante }: { cartel: CartelVista; variante: Variant
     )
   }
 
-  if (cartel.objetivo?.photoUrl) {
+  if (cartel.objetivos.length > 1 || unico?.photoUrl) {
     return (
       <div className={marco}>
-        <FotoCartel src={cartel.objetivo.photoUrl} alt={cartel.objetivo.name} sizes={sizes} />
+        {unico?.photoUrl ? (
+          <FotoCartel src={unico.photoUrl} alt={unico.name} sizes={sizes} />
+        ) : (
+          <Collage jugadores={cartel.objetivos} sizes={variante === 'home' ? '(min-width: 640px) 66px, 42px' : '36px'} />
+        )}
         <span className="absolute bottom-1 right-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[12px] leading-none" aria-hidden="true">
           🎯
         </span>
@@ -123,11 +170,50 @@ function Recuadro({ cartel, variante }: { cartel: CartelVista; variante: Variant
   )
 }
 
-function Persona({ jugador, nombre }: { jugador: JugadorMini | null; nombre: string }) {
+function Persona({ jugador, nombre, size = 20 }: { jugador: JugadorMini | null; nombre: string; size?: number }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
-      {jugador && <JugadorAvatar jugador={jugador} size={20} />}
+      {jugador && <JugadorAvatar jugador={jugador} size={size} />}
       <span className="truncate font-semibold text-foreground">{nombre}</span>
+    </span>
+  )
+}
+
+/** Hasta acá se nombra a cada uno con su cara; con más, van las caras apiladas y "A, B y N más". */
+const NOMBRES_MAX = 3
+
+/** "🎯 para A, B y C" (también en el historial). */
+export function Destinatarios({ jugadores, size = 20 }: { jugadores: JugadorMini[]; size?: number }) {
+  if (jugadores.length === 0) return null
+  const nombres = jugadores.map((jugador) => jugador.name)
+
+  return (
+    <span className="inline-flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+      <span aria-hidden="true">🎯</span>
+      <span className="opacity-75">para</span>
+      {jugadores.length <= NOMBRES_MAX ? (
+        jugadores.map((jugador, i) => (
+          <span key={jugador.id} className="inline-flex min-w-0 items-center gap-1.5">
+            {i > 0 && i === jugadores.length - 1 && <span className="opacity-75">y</span>}
+            <Persona jugador={jugador} nombre={jugador.name} size={size} />
+            {i < jugadores.length - 2 && <span className="-ml-1.5 opacity-75">,</span>}
+          </span>
+        ))
+      ) : (
+        <span className="inline-flex min-w-0 items-center gap-1.5" title={nombres.join(', ')}>
+          <span className="flex shrink-0">
+            {jugadores.slice(0, 5).map((jugador, i) => (
+              <span key={jugador.id} className={cn('rounded-full ring-2 ring-black/70', i > 0 && '-ml-1.5')}>
+                <JugadorAvatar jugador={jugador} size={size} />
+              </span>
+            ))}
+          </span>
+          <span className="truncate">
+            <strong className="font-semibold text-foreground">{nombres.slice(0, 2).join(', ')}</strong> y{' '}
+            <strong className="font-semibold text-foreground">{jugadores.length - 2} más</strong>
+          </span>
+        </span>
+      )}
     </span>
   )
 }
@@ -210,13 +296,7 @@ export function CartelBillboard({
               <span aria-hidden="true">—</span>
               <Persona jugador={cartel.autorJugador} nombre={cartel.autor || 'Anónimo'} />
             </span>
-            {cartel.objetivo && (
-              <span className="inline-flex min-w-0 items-center gap-1.5">
-                <span aria-hidden="true">🎯</span>
-                <span className="text-white/50">para</span>
-                <Persona jugador={cartel.objetivo} nombre={cartel.objetivo.name} />
-              </span>
-            )}
+            <Destinatarios jugadores={cartel.objetivos} />
           </div>
         </div>
 

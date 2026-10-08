@@ -15,6 +15,8 @@ export type EstiloCartel = (typeof ESTILOS_CARTEL)[number]
 
 export const AUTOR_MAX = 24
 export const MENSAJE_MAX = 160
+/** A cuántos se le puede dedicar un mismo cartel (freno anti-abuso: alcanza para todos los jugadores). */
+export const OBJETIVOS_MAX = 30
 /** Las fotos se achican en el navegador antes de subir; los GIF van tal cual. */
 export const IMAGEN_MAX_BYTES = 3 * 1024 * 1024
 export const IMAGEN_TIPOS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
@@ -30,8 +32,8 @@ export type Cartel = {
   /** Cómo firma: el nombre de un jugador, uno libre o "Anónimo". */
   autor: string
   autorJugador: JugadorMini | null
-  /** A quién va dirigido (opcional). */
-  objetivo: JugadorMini | null
+  /** A quiénes va dirigido (puede no ir para nadie). */
+  objetivos: JugadorMini[]
   mensaje: string
   imagenUrl: string | null
   estilo: EstiloCartel

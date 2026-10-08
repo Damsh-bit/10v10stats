@@ -13,7 +13,8 @@ export async function GET() {
 
 /**
  * Abre el checkout de una donación (multipart: mensaje, autor, autorPlayerId,
- * objetivoPlayerId, estilo, monto, volverA, imagen). Devuelve a dónde ir a pagar.
+ * objetivoPlayerId (uno por cada destinatario), estilo, monto, volverA, imagen).
+ * Devuelve a dónde ir a pagar.
  */
 export async function POST(request: Request) {
   try {

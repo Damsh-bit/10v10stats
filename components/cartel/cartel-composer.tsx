@@ -26,14 +26,18 @@ const LADO_MAX = 1200
 
 type Firma = { modo: 'anonimo' } | { modo: 'jugador'; id: string } | { modo: 'otro'; nombre: string }
 
-type Borrador = { mensaje: string; firma: Firma; objetivoId: string | null; estilo: EstiloCartel }
+type Borrador = { mensaje: string; firma: Firma; objetivoIds: string[]; estilo: EstiloCartel }
 
 type Imagen = { blob: Blob; url: string; ext: string }
 
 function leerBorrador(): Partial<Borrador> {
   try {
     const raw = localStorage.getItem(BORRADOR_KEY)
-    return raw ? (JSON.parse(raw) as Partial<Borrador>) : {}
+    if (!raw) return {}
+    const borrador = JSON.parse(raw) as Partial<Borrador> & { objetivoId?: string | null }
+    // Los borradores de antes tenían un solo destinatario.
+    if (!Array.isArray(borrador.objetivoIds)) borrador.objetivoIds = borrador.objetivoId ? [borrador.objetivoId] : undefined
+    return borrador
   } catch {
     return {}
   }
@@ -132,7 +136,7 @@ export function CartelComposer({
 
   const [mensaje, setMensaje] = useState('')
   const [firma, setFirma] = useState<Firma>({ modo: 'anonimo' })
-  const [objetivoId, setObjetivoId] = useState<string | null>(null)
+  const [objetivoIds, setObjetivoIds] = useState<string[]>([])
   const [estilo, setEstilo] = useState<EstiloCartel>('fuego')
   const [monto, setMonto] = useState(String(precio))
   const [imagen, setImagen] = useState<Imagen | null>(null)
@@ -151,7 +155,7 @@ export function CartelComposer({
       const borrador = leerBorrador()
       if (typeof borrador.mensaje === 'string') setMensaje(borrador.mensaje)
       if (borrador.firma) setFirma(borrador.firma)
-      if (borrador.objetivoId !== undefined) setObjetivoId(borrador.objetivoId)
+      if (borrador.objetivoIds) setObjetivoIds(borrador.objetivoIds.filter((id) => typeof id === 'string'))
       if (borrador.estilo && (ESTILOS_CARTEL as readonly string[]).includes(borrador.estilo)) setEstilo(borrador.estilo)
     }
     setMonto((actual) => (Number(actual) >= precio ? actual : String(precio)))
@@ -170,11 +174,11 @@ export function CartelComposer({
   useEffect(() => {
     if (!cargado.current) return
     try {
-      localStorage.setItem(BORRADOR_KEY, JSON.stringify({ mensaje, firma, objetivoId, estilo } satisfies Borrador))
+      localStorage.setItem(BORRADOR_KEY, JSON.stringify({ mensaje, firma, objetivoIds, estilo } satisfies Borrador))
     } catch {
       // sin storage: no se guarda el borrador
     }
-  }, [mensaje, firma, objetivoId, estilo])
+  }, [mensaje, firma, objetivoIds, estilo])
 
   useEffect(() => () => {
     if (imagen) URL.revokeObjectURL(imagen.url)
@@ -183,14 +187,15 @@ export function CartelComposer({
   const porId = useMemo(() => new Map(jugadores.map((j) => [j.id, j])), [jugadores])
   const autorJugador = firma.modo === 'jugador' ? (porId.get(firma.id) ?? null) : null
   const autor = autorJugador?.name ?? (firma.modo === 'otro' ? firma.nombre.trim() || 'Alguien' : 'Anónimo')
-  const objetivo = objetivoId ? (porId.get(objetivoId) ?? null) : null
+  // Sólo los que siguen existiendo (el borrador pudo quedar con alguno viejo).
+  const objetivos = objetivoIds.flatMap((id) => porId.get(id) ?? [])
   const montoNum = Number(monto)
   const montoValido = Number.isInteger(montoNum) && montoNum >= precio && montoNum <= config.montoMax
 
   const borrador: CartelVista = {
     autor,
     autorJugador,
-    objetivo,
+    objetivos,
     mensaje: mensaje.replace(/\s+/g, ' ').trim(),
     imagenUrl: imagen?.url ?? null,
     estilo,
@@ -202,6 +207,9 @@ export function CartelComposer({
   const opciones = [...new Set([precio, redondearArriba(precio + 50, 100), redondearArriba(precio + 400, 500), redondearArriba(precio + 1500, 1000)])].filter(
     (valor) => valor <= config.montoMax,
   )
+
+  const alternarObjetivo = (id: string) =>
+    setObjetivoIds((actuales) => (actuales.includes(id) ? actuales.filter((otro) => otro !== id) : [...actuales, id]))
 
   const elegirImagen = async (file: File | undefined) => {
     if (!file) return
@@ -239,7 +247,7 @@ export function CartelComposer({
       form.set('volverA', volverA)
       if (firma.modo === 'jugador') form.set('autorPlayerId', firma.id)
       else form.set('autor', firma.modo === 'otro' ? firma.nombre.trim() : 'Anónimo')
-      if (objetivoId) form.set('objetivoPlayerId', objetivoId)
+      for (const objetivoJugador of objetivos) form.append('objetivoPlayerId', objetivoJugador.id)
       if (imagen) form.set('imagen', imagen.blob, `cartel.${imagen.ext}`)
 
       const response = await fetch('/api/cartel', { method: 'POST', body: form })
@@ -349,14 +357,17 @@ export function CartelComposer({
                   )}
                 </Seccion>
 
-                <Seccion titulo="¿Para quién?" ayuda="Opcional · sale su foto">
+                <Seccion
+                  titulo="¿Para quién?"
+                  ayuda={objetivos.length > 1 ? `Para ${objetivos.length} · salen sus caras` : 'Opcional · podés elegir varios'}
+                >
                   <div className="flex flex-wrap gap-1.5">
-                    <Pildora activa={objetivoId === null} onClick={() => setObjetivoId(null)}>
+                    <Pildora activa={objetivos.length === 0} onClick={() => setObjetivoIds([])}>
                       <IconoPildora>—</IconoPildora>
                       Para nadie
                     </Pildora>
                     {jugadores.map((jugador) => (
-                      <Pildora key={jugador.id} activa={objetivoId === jugador.id} onClick={() => setObjetivoId(jugador.id)}>
+                      <Pildora key={jugador.id} activa={objetivoIds.includes(jugador.id)} onClick={() => alternarObjetivo(jugador.id)}>
                         <JugadorAvatar jugador={jugador} size={20} />
                         <span className="truncate">{jugador.name}</span>
                       </Pildora>

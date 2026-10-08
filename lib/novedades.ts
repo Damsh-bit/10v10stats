@@ -81,6 +81,20 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-08-cartel-varios',
+    date: '2026-10-08',
+    tag: 'Cartel',
+    title: 'El cartel ahora se le puede dedicar a varios',
+    summary:
+      'Ya no hace falta elegir a uno solo: en "¿Para quién?" marcá a todos los que quieras bardear y salen todas sus caras en el cartel.',
+    highlights: [
+      { icon: 'target', text: 'Tocá a cada jugador para sumarlo o sacarlo de la dedicatoria.' },
+      { icon: 'image', text: 'Si no subís foto, el cartel arma un collage con las caras de todos.' },
+      { icon: 'list', text: 'En "Los más bardeados" a cada uno le cuenta el cartel.' },
+    ],
+    cta: { label: 'Ver el cartel', href: '/cartel' },
+  },
+  {
     id: '2026-10-07-perfil-jugador',
     date: '2026-10-07',
     tag: 'Perfiles',
