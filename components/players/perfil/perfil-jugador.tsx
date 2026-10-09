@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Gauge, LayoutDashboard, Map as MapIcon, Medal, MessageSquareHeart, Swords, Users, type LucideIcon } from 'lucide-react'
+import { Gauge, LayoutDashboard, Map as MapIcon, Medal, Swords, Users, type LucideIcon } from 'lucide-react'
 import { SeasonTabs } from '@/components/season/season-tabs'
 import { PlayerMatchHistory, type MatchEntry } from '@/components/players/player-match-history'
 import { cn } from '@/lib/utils'
@@ -15,7 +15,10 @@ import { Companeros } from './companeros'
 import { Marcas } from './marcas'
 import { Recomendaciones, type Recomendacion } from './recomendaciones'
 
-type TabKey = 'resumen' | 'partidas' | 'mapas' | 'companeros' | 'marcas' | 'faceit' | 'recomendaciones'
+type TabKey = 'resumen' | 'partidas' | 'mapas' | 'companeros' | 'marcas' | 'faceit'
+
+/** Las recomendaciones van al pie del resumen, como los comentarios del perfil. */
+const ANCLA_RECOMENDACIONES = 'recomendaciones'
 
 type Tab = { key: TabKey; label: string; icon: LucideIcon; porTemporada: boolean }
 
@@ -26,7 +29,6 @@ const TABS: Tab[] = [
   { key: 'companeros', label: 'Compañeros', icon: Users, porTemporada: true },
   { key: 'marcas', label: 'Marcas', icon: Medal, porTemporada: true },
   { key: 'faceit', label: 'FACEIT', icon: Gauge, porTemporada: false },
-  { key: 'recomendaciones', label: 'Recomendaciones', icon: MessageSquareHeart, porTemporada: false },
 ]
 
 function rankLabel(alcance: AlcancePerfil) {
@@ -37,7 +39,8 @@ function rankLabel(alcance: AlcancePerfil) {
 
 /**
  * Cuerpo del perfil: pestañas (la elegida queda en la URL, ej. #mapas) y, para
- * las que dependen de la temporada, el selector de temporada o carrera.
+ * las que dependen de la temporada, el selector de temporada o carrera. Al pie
+ * del resumen, las recomendaciones (#recomendaciones lleva directo ahí).
  */
 export function PerfilJugador({
   playerId,
@@ -62,7 +65,6 @@ export function PerfilJugador({
   const [tab, setTab] = useState<TabKey>('resumen')
   // Arranca en la temporada más reciente donde jugó (al inicio de temporada la actual está vacía).
   const [alcanceKey, setAlcanceKey] = useState(() => (alcances.find((a) => (a.stats?.matches ?? 0) > 0) ?? alcances[0])?.key ?? '')
-  const [totalRecomendaciones, setTotalRecomendaciones] = useState<number | null>(recomendacionesIniciales?.length ?? null)
   const tablistRef = useRef<HTMLDivElement>(null)
   const baseId = useId()
 
@@ -85,15 +87,21 @@ export function PerfilJugador({
 
   // La pestaña sale del hash: links compartidos y el chip de FACEIT del encabezado (#faceit).
   useEffect(() => {
+    const irARecomendaciones = () => {
+      elegir('resumen', { desdeHash: true })
+      requestAnimationFrame(() => document.getElementById(ANCLA_RECOMENDACIONES)?.scrollIntoView({ block: 'start' }))
+    }
     const leer = () => {
-      const key = window.location.hash.slice(1) as TabKey
-      if (tabs.some((t) => t.key === key)) {
-        elegir(key, { desdeHash: true })
+      const key = window.location.hash.slice(1)
+      if (key === ANCLA_RECOMENDACIONES) irARecomendaciones()
+      else if (tabs.some((t) => t.key === key)) {
+        elegir(key as TabKey, { desdeHash: true })
         tablistRef.current?.scrollIntoView({ block: 'start' })
       }
     }
-    const inicial = window.location.hash.slice(1) as TabKey
-    if (tabs.some((t) => t.key === inicial)) elegir(inicial, { desdeHash: true })
+    const inicial = window.location.hash.slice(1)
+    if (inicial === ANCLA_RECOMENDACIONES) irARecomendaciones()
+    else if (tabs.some((t) => t.key === inicial)) elegir(inicial as TabKey, { desdeHash: true })
     window.addEventListener('hashchange', leer)
     return () => window.removeEventListener('hashchange', leer)
   }, [tabs, elegir])
@@ -150,9 +158,6 @@ export function PerfilJugador({
             >
               <Icono className="h-4 w-4" aria-hidden="true" />
               {t.label}
-              {t.key === 'recomendaciones' && totalRecomendaciones !== null && totalRecomendaciones > 0 && (
-                <span className="rounded-full bg-rose-500/20 px-1.5 font-mono text-[10px] text-rose-200">{totalRecomendaciones}</span>
-              )}
             </button>
           )
         })}
@@ -181,44 +186,43 @@ export function PerfilJugador({
         </div>
       )}
 
-      <div
-        id={panelId}
-        role="tabpanel"
-        aria-labelledby={`${baseId}-tab-${actual.key}`}
-        key={actual.porTemporada ? `${actual.key}-${alcance.key}` : actual.key}
-        className="perfil-panel min-w-0"
-      >
-        {actual.key === 'resumen' && (
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="flex min-w-0 flex-col gap-4">
-              <Cifras alcance={alcance} />
-              <FormaReciente forma={alcance.perfil.forma} />
-              <Curiosidades curiosidades={alcance.perfil.curiosidades} nombre={nombre} />
+      <div id={panelId} role="tabpanel" aria-labelledby={`${baseId}-tab-${actual.key}`} className="flex min-w-0 flex-col gap-4">
+        <div key={actual.porTemporada ? `${actual.key}-${alcance.key}` : actual.key} className="perfil-panel min-w-0">
+          {actual.key === 'resumen' && (
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="flex min-w-0 flex-col gap-4">
+                <Cifras alcance={alcance} />
+                <FormaReciente forma={alcance.perfil.forma} />
+                <Curiosidades curiosidades={alcance.perfil.curiosidades} nombre={nombre} />
+              </div>
+              <aside className="flex min-w-0 flex-col gap-4">
+                {comparacion}
+                <Posiciones posiciones={alcance.perfil.posiciones} estilo={alcance.perfil.estilo} />
+              </aside>
             </div>
-            <aside className="flex min-w-0 flex-col gap-4">
-              {comparacion}
-              <Posiciones posiciones={alcance.perfil.posiciones} estilo={alcance.perfil.estilo} />
-            </aside>
+          )}
+
+          {actual.key === 'partidas' && (
+            <section>
+              <h2 className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Historial · {alcance.label}</h2>
+              <PlayerMatchHistory key={alcance.key} matches={scopedHistory} />
+            </section>
+          )}
+
+          {actual.key === 'mapas' && <Mapas mapas={alcance.perfil.mapas} />}
+
+          {actual.key === 'companeros' && <Companeros companeros={alcance.perfil.companeros} nombre={nombre} />}
+
+          {actual.key === 'marcas' && <Marcas marcas={alcance.perfil.mejoresMarcas} records={alcance.records} />}
+
+          {actual.key === 'faceit' && faceit}
+        </div>
+
+        {/* Fuera del bloque de arriba: cambiar de temporada no las vuelve a cargar. */}
+        {actual.key === 'resumen' && (
+          <div id={ANCLA_RECOMENDACIONES} className="perfil-panel min-w-0 scroll-mt-20">
+            <Recomendaciones playerId={playerId} nombre={nombre} iniciales={recomendacionesIniciales} />
           </div>
-        )}
-
-        {actual.key === 'partidas' && (
-          <section>
-            <h2 className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Historial · {alcance.label}</h2>
-            <PlayerMatchHistory key={alcance.key} matches={scopedHistory} />
-          </section>
-        )}
-
-        {actual.key === 'mapas' && <Mapas mapas={alcance.perfil.mapas} />}
-
-        {actual.key === 'companeros' && <Companeros companeros={alcance.perfil.companeros} nombre={nombre} />}
-
-        {actual.key === 'marcas' && <Marcas marcas={alcance.perfil.mejoresMarcas} records={alcance.records} />}
-
-        {actual.key === 'faceit' && faceit}
-
-        {actual.key === 'recomendaciones' && (
-          <Recomendaciones playerId={playerId} nombre={nombre} iniciales={recomendacionesIniciales} onTotal={setTotalRecomendaciones} />
         )}
       </div>
     </div>

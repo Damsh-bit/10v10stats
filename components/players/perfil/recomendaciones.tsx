@@ -39,18 +39,19 @@ function hace(fecha: string) {
   return Number.isNaN(d.getTime()) ? '' : formatDistanceToNow(d, { addSuffix: true, locale: es })
 }
 
-/** Recomendaciones anónimas para el jugador: cualquiera escribe, con 3 reportes se ocultan. */
+/**
+ * Recomendaciones anónimas para el jugador, al pie del resumen como los
+ * comentarios del perfil: cualquiera escribe, con 3 reportes se ocultan.
+ */
 export function Recomendaciones({
   playerId,
   nombre,
   iniciales,
-  onTotal,
 }: {
   playerId: string
   nombre: string
   /** Las del render del servidor (null si la base no respondió). */
   iniciales: Recomendacion[] | null
-  onTotal?: (total: number) => void
 }) {
   const [lista, setLista] = useState<Recomendacion[] | null>(iniciales)
   const [texto, setTexto] = useState('')
@@ -61,7 +62,7 @@ export function Recomendaciones({
   const [cargaFallo, setCargaFallo] = useState(false)
   const campoId = useId()
 
-  // La página se cachea un minuto: al abrir la pestaña se traen las últimas.
+  // La página se cachea un minuto: al montarse se traen las últimas.
   useEffect(() => {
     setReportadas(leerReportadas())
     let vivo = true
@@ -77,10 +78,6 @@ export function Recomendaciones({
       vivo = false
     }
   }, [playerId])
-
-  useEffect(() => {
-    if (lista) onTotal?.(lista.length)
-  }, [lista, onTotal])
 
   const largo = texto.trim().length
   const valido = largo >= MIN && largo <= MAX
@@ -133,6 +130,13 @@ export function Recomendaciones({
       tono="rose"
       titulo="Recomendaciones"
       subtitulo={`Consejos anónimos para ${nombre}`}
+      extra={
+        lista && lista.length > 0 ? (
+          <span className="rounded-full bg-rose-500/20 px-2 py-0.5 font-mono text-[11px] font-semibold text-rose-200">
+            {lista.length}
+          </span>
+        ) : undefined
+      }
     >
       <form onSubmit={enviar} className="flex flex-col gap-2 border-b border-border px-4 py-3">
         <label htmlFor={campoId} className="text-[12px] text-muted-foreground">
