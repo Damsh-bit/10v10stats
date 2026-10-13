@@ -354,11 +354,17 @@ function rankStats(data: LiveData, lastNPerPlayer?: number, minMatches = 0, conS
     .filter((s): s is PlayerStats => s !== null && s.matches >= minMatches)
   if (!conStrikes) return stats.sort((a, b) => b.kda - a.kda)
 
-  // Ladder con strikes: se ordena por el KDA con el descuento; a igual KDA, arriba el que tiene menos strikes.
-  const strikes = contarStrikes(data.matches)
+  // Ladder con strikes: se ordena por el KDA con el descuento; a igual KDA, arriba el que faltó menos.
+  const estados = contarStrikes(data.matches)
   return stats
-    .map((s) => ({ ...s, strikes: strikes.get(s.player.id) ?? 0 }))
-    .sort((a, b) => valorLadder(b) - valorLadder(a) || a.strikes - b.strikes || b.kda - a.kda)
+    .map((s) => {
+      const estado = estados.get(s.player.id)
+      return { ...s, strikes: estado?.strikes ?? 0, descuentoStrikes: estado?.descuento ?? 0 }
+    })
+    .sort(
+      (a, b) =>
+        valorLadder(b) - valorLadder(a) || a.descuentoStrikes - b.descuentoStrikes || a.strikes - b.strikes || b.kda - a.kda,
+    )
 }
 
 function buildAllPlayerStatsForData(

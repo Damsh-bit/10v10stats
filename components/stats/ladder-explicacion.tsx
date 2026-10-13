@@ -19,21 +19,23 @@ const redondear = (v: number) => Math.round(v * 100) / 100
 const kdaDe = (ka: number, deaths: number) => redondear(deaths === 0 ? ka : ka / deaths)
 const porPartida = (v: number, partidas: number) => (partidas > 0 ? v / partidas : 0).toFixed(1)
 const killsOAsistencias = (n: number) => (n === 1 ? '1 kill o asistencia' : `${n} kills o asistencias`)
-const diasFaltados = (n: number) => (n === 1 ? 'al último día' : `a los últimos ${n} días`)
+const perdido = (s: PlayerStats) => s.descuentoStrikes ?? 0
 
 /** Ejemplos de la escalera de strikes: los primeros avisan, desde STRIKES_PARA_DESCUENTO descuentan (y uno más). */
 const ESCALERA = Array.from({ length: STRIKES_PARA_DESCUENTO + 1 }, (_, i) => i + 1)
 
 /**
- * Kills o asistencias (sin morir) que le faltan a `abajo` para superar `kdaObjetivo`.
- * Se cuenta con su KDA real: para sumarlas tiene que jugar, y jugar le borra los strikes.
+ * Kills o asistencias (sin morir) que le faltan a `abajo` para superar `objetivo`.
+ * Lo perdido por faltar no se devuelve: lo tiene que compensar con su KDA real.
  */
-function faltanParaPasar(abajo: PlayerStats, kdaObjetivo: number) {
+function faltanParaPasar(abajo: PlayerStats, objetivo: number) {
   const ka = abajo.kills + abajo.assists
   const d = abajo.deaths
+  const valorCon = (extra: number) => Math.max(0, redondear(kdaDe(ka + extra, d) - perdido(abajo)))
+  const kdaObjetivo = objetivo + perdido(abajo)
   let x = Math.max(1, Math.floor(d === 0 ? kdaObjetivo - ka : kdaObjetivo * d - ka))
-  while (x > 1 && kdaDe(ka + x - 1, d) > kdaObjetivo) x--
-  while (kdaDe(ka + x, d) <= kdaObjetivo) x++
+  while (x > 1 && valorCon(x - 1) > objetivo) x--
+  while (valorCon(x) <= objetivo) x++
   return x
 }
 
@@ -55,18 +57,15 @@ function motivo(arriba: PlayerStats, abajo: PlayerStats) {
   return `hace menos kills y asistencias (${ka} por partida), pero muere menos (${d}).`
 }
 
-/** El motivo sumando los strikes: si sólo lo explican los strikes de abajo, o si encima alguno tiene descuento. */
+/** El motivo sumando lo perdido por faltar: si sólo lo explica eso, o si encima alguno perdió KDA. */
 function motivoConStrikes(arriba: PlayerStats, abajo: PlayerStats) {
-  const descuentoArriba = descuentoPorStrikes(arriba.strikes ?? 0)
-  const descuentoAbajo = descuentoPorStrikes(abajo.strikes ?? 0)
-
   if (abajo.kda >= arriba.kda) {
-    return `${abajo.player.name} faltó ${diasFaltados(abajo.strikes ?? 0)} de partidas y se le descuentan ${descuentoAbajo.toFixed(2)} de KDA (${abajo.kda.toFixed(2)} → ${valorLadder(abajo).toFixed(2)}).`
+    return `${abajo.player.name} perdió ${perdido(abajo).toFixed(2)} de KDA por faltar días de partidas (${abajo.kda.toFixed(2)} → ${valorLadder(abajo).toFixed(2)}).`
   }
 
   let texto = motivo(arriba, abajo)
-  if (descuentoAbajo > 0) texto += ` Encima, ${abajo.player.name} tiene ${abajo.strikes} strikes y se le descuentan ${descuentoAbajo.toFixed(2)}.`
-  if (descuentoArriba > 0) texto += ` Y eso que ${arriba.player.name} tiene ${arriba.strikes} strikes y se le descuentan ${descuentoArriba.toFixed(2)}.`
+  if (perdido(abajo) > 0) texto += ` Encima, ${abajo.player.name} perdió ${perdido(abajo).toFixed(2)} de KDA por faltar.`
+  if (perdido(arriba) > 0) texto += ` Y eso que ${arriba.player.name} perdió ${perdido(arriba).toFixed(2)} por faltar.`
   return texto
 }
 
@@ -90,21 +89,15 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
   const abajo = stats[Math.max(iA, iB)]
   const conStrikes = stats[0]?.strikes !== undefined
   const empatados = arriba && abajo && valorLadder(arriba) === valorLadder(abajo)
-  // Con strikes y mejor KDA real, le alcanza con volver a jugar: eso le borra los strikes.
-  const vuelveYPasa = arriba && abajo && (abajo.strikes ?? 0) > 0 && abajo.kda > valorLadder(arriba)
 
-  const comoPasarlo = !arriba || !abajo ? null : vuelveYPasa ? (
-    <>
-      Si {abajo.player.name} <span className="font-semibold text-foreground">vuelve a jugar</span>, se le borran los strikes y,
-      con su KDA de {abajo.kda.toFixed(2)}, lo pasa.
-    </>
-  ) : (
-    <>
-      A {abajo.player.name} le faltan{' '}
-      <span className="font-semibold text-foreground">{killsOAsistencias(faltanParaPasar(abajo, valorLadder(arriba)))}</span> sin
-      morir para pasarlo.
-    </>
-  )
+  const comoPasarlo =
+    arriba && abajo ? (
+      <>
+        A {abajo.player.name} le faltan{' '}
+        <span className="font-semibold text-foreground">{killsOAsistencias(faltanParaPasar(abajo, valorLadder(arriba)))}</span> sin
+        morir para pasarlo{perdido(abajo) > 0 ? ': lo que perdió por faltar se lo tiene que volver a ganar.' : '.'}
+      </>
+    ) : null
 
   return (
     <div
@@ -150,8 +143,7 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
               </p>
               <p>
                 Cada <span className="font-semibold text-foreground">día de partidas</span> que faltás seguido es un strike. Desde el{' '}
-                {STRIKES_PARA_DESCUENTO}.º se te descuenta KDA en la ladder, y{' '}
-                <span className="font-semibold text-foreground">apenas volvés a jugar se borran</span>.
+                {STRIKES_PARA_DESCUENTO}.º, cada día que faltás te saca {DESCUENTO_POR_STRIKE.toFixed(2)} de KDA en la ladder.
               </p>
               <ol className="flex flex-wrap items-center gap-1.5" aria-label="Cuánto descuenta cada strike">
                 {ESCALERA.map((n) => {
@@ -171,6 +163,10 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
                 })}
                 <li className="text-[11px]">y {DESCUENTO_POR_STRIKE.toFixed(2)} más por cada día que siga faltando.</li>
               </ol>
+              <p>
+                Si volvés a jugar, los strikes vuelven a 0, pero{' '}
+                <span className="font-semibold text-foreground">lo que perdiste no vuelve: te lo tenés que ganar de nuevo jugando</span>.
+              </p>
               <p>
                 Es sólo para el orden de la ladder: tu KDA real no cambia, y el perfil y el generador de equipos lo usan tal cual.
               </p>
@@ -199,7 +195,7 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
                 </thead>
                 <tbody>
                   {[arriba, abajo].map((s) => {
-                    const descuento = descuentoPorStrikes(s.strikes ?? 0)
+                    const descuento = perdido(s)
                     return (
                       <tr key={s.player.id} className="text-foreground">
                         <td className="max-w-28 truncate py-0.5 pr-2 font-sans text-[12px] font-semibold">
@@ -211,7 +207,7 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
                         <td className="py-0.5 text-right">{s.deaths}</td>
                         <td className={cn('py-0.5 text-right font-bold', s === arriba && !empatados && 'text-emerald-300')}>
                           {descuento > 0 && (
-                            <s className="mr-1 font-normal text-muted-foreground" title={`KDA real; ${s.strikes} strikes le descuentan ${descuento.toFixed(2)}`}>
+                            <s className="mr-1 font-normal text-muted-foreground" title={`KDA real; perdió ${descuento.toFixed(2)} por faltar`}>
                               {s.kda.toFixed(2)}
                             </s>
                           )}
@@ -226,7 +222,9 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
               {empatados ? (
                 <p>
                   Están <span className="font-semibold text-foreground">empatados en KDA</span>
-                  {(arriba.strikes ?? 0) !== (abajo.strikes ?? 0) ? ': queda arriba el que tiene menos strikes.' : ': da lo mismo quién vaya primero.'}{' '}
+                  {perdido(arriba) !== perdido(abajo) || (arriba.strikes ?? 0) !== (abajo.strikes ?? 0)
+                    ? ': queda arriba el que faltó menos.'
+                    : ': da lo mismo quién vaya primero.'}{' '}
                   {comoPasarlo}
                 </p>
               ) : (

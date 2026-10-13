@@ -81,6 +81,8 @@ export type PlayerStats = {
   trend?: 'up' | 'down' | 'same' | 'new'
   /** Ladder desde la Season 2: días de partidas seguidos que faltó (ver lib/ladder.ts). Sin él, no hay strikes. */
   strikes?: number
+  /** KDA perdido en la temporada por faltar (no se devuelve al volver a jugar). */
+  descuentoStrikes?: number
   currentStreak: number
   currentLossStreak: number
 }
