@@ -10,6 +10,8 @@ export type Player = {
   faceitNickname?: string
   /** Lleva el badge "💩 Menuda mierda" (se marca a mano en la base). */
   menudaMierda?: boolean
+  /** No aparece en la ladder; sus partidas siguen contando para lo demás (se marca a mano en la base). */
+  inactivo?: boolean
 }
 
 export type MatchPlayer = {

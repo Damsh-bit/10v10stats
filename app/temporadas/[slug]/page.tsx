@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft, Archive, Crown } from 'lucide-react'
-import { getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
+import { getLadderStats, getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
 import { findSeasonBySlug, formatSeasonDate, getSeasons } from '@/lib/seasons'
 import { computeMatchRecords, computeSeasonSummary, toMapWinrateRows } from '@/lib/season-stats'
@@ -38,10 +38,10 @@ export default async function SeasonArchivePage({ params }: { params: Promise<{ 
   if (season.isCurrent) redirect('/')
 
   const data = getSeasonData(league, season.id)
-  const standings = getPlayerStatsForData(data, { minMatches: 1 })
+  const standings = getLadderStats(data, { minMatches: 1 })
   const summary = computeSeasonSummary(data)
   const records = computeMatchRecords(data)
-  const playerRecords = getPlayerRecords(data, standings)
+  const playerRecords = getPlayerRecords(data, getPlayerStatsForData(data, { minMatches: 1 }))
   const champion = standings[0]
   const topFakador = [...data.players].filter((p) => (p.fakes ?? 0) > 0).sort((a, b) => (b.fakes ?? 0) - (a.fakes ?? 0))[0]
 

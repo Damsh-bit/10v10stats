@@ -1,4 +1,4 @@
-import { getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
+import { getLadderData, getLadderStats, getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
 import { getNelsonData } from '@/lib/nelson'
 import { formatSeasonDate, getPreviousSeason, getSeasonDay } from '@/lib/seasons'
@@ -41,15 +41,16 @@ export default async function Page() {
   const previousSeason = getPreviousSeason(league.seasons, season)
 
   const data = getSeasonData(league, season.id)
-  // Todos suman desde su primera partida de la temporada.
-  const ranked = getPlayerStatsForData(data, { minMatches: 1 })
+  // Todos suman desde su primera partida de la temporada. Los inactivos no van en
+  // la ladder, pero sus partidas siguen contando para los récords.
+  const ranked = getLadderStats(data, { minMatches: 1 })
   const playedIds = new Set(data.matches.flatMap((m) => m.players.map((p) => p.playerId)))
-  const unplayed = data.players.filter((p) => !playedIds.has(p.id))
+  const unplayed = getLadderData(data).players.filter((p) => !playedIds.has(p.id))
 
   const recent =
     data.matches.length > RECENT_MATCH_COUNT
       ? {
-          stats: getPlayerStatsForData(data, { lastNMatches: RECENT_MATCH_COUNT, minMatches: 1 }),
+          stats: getLadderStats(data, { lastNMatches: RECENT_MATCH_COUNT, minMatches: 1 }),
           matchCount: RECENT_MATCH_COUNT,
         }
       : null
@@ -57,13 +58,13 @@ export default async function Page() {
   const summary = computeSeasonSummary(data)
   const records = computeMatchRecords(data)
   const battles = computeRankBattles(ranked)
-  const playerRecords = getPlayerRecords(data, ranked)
+  const playerRecords = getPlayerRecords(data, getPlayerStatsForData(data, { minMatches: 1 }))
   const topFakador = [...data.players].filter((p) => (p.fakes ?? 0) > 0).sort((a, b) => (b.fakes ?? 0) - (a.fakes ?? 0))[0]
 
   const previousData = previousSeason ? getSeasonData(league, previousSeason.id) : null
   const previousStandings =
     previousSeason && previousData
-      ? getPlayerStatsForData(previousData, { minMatches: 1 })
+      ? getLadderStats(previousData, { minMatches: 1 })
       : []
   const previousChampion =
     previousSeason && previousStandings[0]

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import {
   getCareerData,
+  getLadderStats,
   getLeagueData,
   getPlayerStatsForData,
   getSeasonData,
@@ -64,7 +65,8 @@ export default async function PlayerProfile({
     data: LiveData,
     options: { seasonId: number | null; isCurrent: boolean },
   ): AlcancePerfil => {
-    const ranked = getPlayerStatsForData(data, { minMatches: 1 })
+    // El puesto es el de la ladder (sin inactivos); los récords cuentan a todos.
+    const ranked = getLadderStats(data, { minMatches: 1 })
     const rankIndex = ranked.findIndex((s) => s.player.id === id)
     return {
       key,
@@ -74,8 +76,9 @@ export default async function PlayerProfile({
       stats: getSinglePlayerStats(data, id),
       rank: rankIndex >= 0 ? rankIndex + 1 : null,
       rankedCount: ranked.length,
-      records: getPlayerRecords(data, ranked)[id] ?? [],
+      records: getPlayerRecords(data, getPlayerStatsForData(data, { minMatches: 1 }))[id] ?? [],
       menudaMierda: !!player.menudaMierda,
+      inactivo: !!player.inactivo,
       nelsons: data.players.find((p) => p.id === id)?.nelsons ?? 0,
       perfil: buildPerfilAlcance(data, id, options.seasonId === null ? 'carrera' : 'temporada'),
     }

@@ -14,6 +14,8 @@ export type AlcancePerfil = {
   rankedCount: number
   records: RecordType[]
   menudaMierda: boolean
+  /** Fuera de la ladder: no tiene puesto aunque haya jugado. */
+  inactivo: boolean
   nelsons: number
   perfil: PerfilAlcance
 }

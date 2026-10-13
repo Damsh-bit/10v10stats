@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { getCareerData, getLeagueData, getPlayerStatsForData, getSeasonData } from '@/lib/api'
+import { getCareerData, getLadderStats, getLeagueData, getPlayerStatsForData, getSeasonData } from '@/lib/api'
 import { computeMatchRecords, computeSeasonSummary, type MatchRecord } from '@/lib/season-stats'
 import { mapImageUrl } from '@/lib/format'
 import { HallOfFameView, type HallCard, type HallScope } from '@/components/stats/hall-of-fame-view'
@@ -26,7 +26,8 @@ function buildCards(data: LiveData, leaderTitle: string): HallCard[] {
   const standings = getPlayerStatsForData(data, { minMatches: 1 })
   const byWins = [...standings].sort((a, b) => b.wins - a.wins)[0]
   const byLosses = [...standings].sort((a, b) => b.losses - a.losses)[0]
-  const leader = standings[0]
+  // El líder sale de la ladder (sin inactivos); los récords cuentan a todos.
+  const leader = getLadderStats(data, { minMatches: 1 })[0]
   const damage = (v: number) => v.toLocaleString('es-AR')
 
   return [

@@ -183,7 +183,7 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
       supabase.from('players').select('id, name, photo_url, badge, contador_nelson').order('name'),
       supabase.from('fake_leaderboard').select('player_name, fake_count'),
       // Aparte: si estas columnas no existen, el resto de la app sigue andando sin ellas.
-      supabase.from('players').select('id, faceit_nickname, menuda_mierda'),
+      supabase.from('players').select('id, faceit_nickname, menuda_mierda, inactivo'),
     ])
 
     const fakesByName = new Map<string, number>(
@@ -191,6 +191,9 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
     )
     const menudaMierdaIds = new Set(
       (faceitResult.data ?? []).filter((row) => row.menuda_mierda === true).map((row) => String(row.id)),
+    )
+    const inactivoIds = new Set(
+      (faceitResult.data ?? []).filter((row) => row.inactivo === true).map((row) => String(row.id)),
     )
     const faceitById = new Map<string, string>(
       (faceitResult.data ?? [])
@@ -210,6 +213,7 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
         fakes: fakesByName.get(name.toLowerCase()) ?? 0,
         faceitNickname: faceitById.get(String(row.id)),
         menudaMierda: menudaMierdaIds.has(String(row.id)),
+        inactivo: inactivoIds.has(String(row.id)),
       }
     })
 
@@ -383,6 +387,22 @@ export function getPlayerStatsForData(
   }
 
   return buildAllPlayerStatsForData(filteredData, options?.lastNMatchesPerPlayer, options?.minMatches ?? 0)
+}
+
+/** Los jugadores que van en la ladder: todos menos los inactivos. */
+export function getLadderData(data: LiveData): LiveData {
+  return { ...data, players: data.players.filter((p) => !p.inactivo) }
+}
+
+/**
+ * La ladder: como getPlayerStatsForData pero sin los inactivos, así los puestos
+ * y las flechitas de tendencia sólo cuentan a los que se ven en la tabla.
+ */
+export function getLadderStats(
+  data: LiveData,
+  options?: { minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
+): PlayerStats[] {
+  return getPlayerStatsForData(getLadderData(data), options)
 }
 
 export function getSinglePlayerStats(data: LiveData, playerId: string): PlayerStats | null {
