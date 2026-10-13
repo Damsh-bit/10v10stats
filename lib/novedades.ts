@@ -81,6 +81,22 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-13-ladder-strikes',
+    date: '2026-10-13',
+    tag: 'Reglas',
+    title: 'Strikes: si faltás, bajás',
+    summary:
+      'Regla nueva en la ladder: si faltás 3 días de partidas seguidos, se te empieza a descontar KDA. Así nadie se queda arriba (o sube) sin jugar.',
+    highlights: [
+      { icon: 'history', text: 'Cada día de partidas que faltás seguido es un strike. Al lado de tu nombre ves cuántos llevás.' },
+      { icon: 'chart', text: 'Con 3 strikes se te descuenta 0.10 de KDA, y 0.10 más por cada día que sigas faltando.' },
+      { icon: 'zap', text: 'Apenas volvés a jugar, los strikes se borran y recuperás tu KDA.' },
+      { icon: 'shield', text: 'Tu KDA real no cambia: el perfil y el generador de equipos lo usan tal cual.' },
+    ],
+    cta: { label: 'Ver la ladder', href: '/' },
+    popup: true,
+  },
+  {
     id: '2026-10-13-ladder-explicacion',
     date: '2026-10-13',
     tag: 'Estadísticas',

@@ -5,6 +5,7 @@ import { getLadderStats, getLeagueData, getSeasonData } from '@/lib/api'
 import { formatSeasonDate, getSeasonDay } from '@/lib/seasons'
 import { computeSeasonSummary } from '@/lib/season-stats'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
+import { valorLadder } from '@/lib/ladder'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion/reveal'
 import { cn } from '@/lib/utils'
 
@@ -101,7 +102,7 @@ export default async function SeasonsPage() {
                             {season.isCurrent ? 'Líder actual' : 'Campeón'}
                           </span>
                           <span className="block truncate text-[14px] font-semibold text-foreground">
-                            {top.player.name} <span className="font-mono text-[12px] text-muted-foreground">· {top.kda.toFixed(2)} KDA</span>
+                            {top.player.name} <span className="font-mono text-[12px] text-muted-foreground">· {valorLadder(top).toFixed(2)} KDA</span>
                           </span>
                         </span>
                       </span>

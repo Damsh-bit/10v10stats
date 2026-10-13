@@ -79,6 +79,8 @@ export type PlayerStats = {
   positiveGames: number
   negativeGames: number
   trend?: 'up' | 'down' | 'same' | 'new'
+  /** Ladder desde la Season 2: días de partidas seguidos que faltó (ver lib/ladder.ts). Sin él, no hay strikes. */
+  strikes?: number
   currentStreak: number
   currentLossStreak: number
 }

@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { getCareerData, getLadderStats, getLeagueData, getPlayerStatsForData, getSeasonData } from '@/lib/api'
 import { computeMatchRecords, computeSeasonSummary, type MatchRecord } from '@/lib/season-stats'
 import { mapImageUrl } from '@/lib/format'
+import { valorLadder } from '@/lib/ladder'
 import { HallOfFameView, type HallCard, type HallScope } from '@/components/stats/hall-of-fame-view'
 import { Reveal } from '@/components/motion/reveal'
 import type { LiveData } from '@/types'
@@ -33,7 +34,7 @@ function buildCards(data: LiveData, leaderTitle: string): HallCard[] {
   return [
     {
       title: leaderTitle,
-      value: leader ? leader.kda.toFixed(2) : '—',
+      value: leader ? valorLadder(leader).toFixed(2) : '—',
       subtitle: leader ? `${leader.player.name} · KDA` : 'Vacante',
       color: 'text-amber-300',
       playerId: leader?.player.id,

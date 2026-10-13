@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
-import { Flame, Info, Snowflake, Trophy, UserPlus } from 'lucide-react'
+import { CalendarX, Flame, Info, Snowflake, Trophy, UserPlus } from 'lucide-react'
 import type { Player, PlayerStats } from '@/types'
 import type { PlayerRecordMap } from '@/lib/records'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { KDaBadges } from '@/components/players/kda-badges'
 import { RecordBadge } from '@/components/players/record-badges'
 import { LadderExplicacion } from '@/components/stats/ladder-explicacion'
+import { descuentoPorStrikes, STRIKES_PARA_DESCUENTO, valorLadder } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 type LadderView = 'season' | 'recent'
@@ -156,7 +157,9 @@ export function SeasonLadder({
   const [infoOpen, setInfoOpen] = useState(false)
   const showingRecent = view === 'recent' && !!recent
   const stats = showingRecent ? recent.stats : ranked
-  const maxKda = Math.max(...stats.map((s) => s.kda), 0.01)
+  const maxKda = Math.max(...stats.map(valorLadder), 0.01)
+  // Desde la Season 2 la ladder lleva strikes por faltar.
+  const conStrikes = stats[0]?.strikes !== undefined
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
@@ -176,13 +179,17 @@ export function SeasonLadder({
                 onClick={() => setInfoOpen((open) => !open)}
                 aria-expanded={infoOpen}
                 aria-controls="ladder-explicacion"
-                title="¿Cómo se calcula el KDA y por qué uno está arriba del otro?"
+                title={
+                  conStrikes
+                    ? '¿Cómo se calcula el KDA, qué son los strikes y por qué uno está arriba del otro?'
+                    : '¿Cómo se calcula el KDA y por qué uno está arriba del otro?'
+                }
                 className={cn(
                   'inline-flex items-center gap-1 underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground',
                   infoOpen && 'text-foreground',
                 )}
               >
-                por KDA
+                {conStrikes ? 'por KDA y strikes' : 'por KDA'}
                 <Info className="h-3 w-3" aria-hidden="true" />
               </button>
               {showingRecent && ` · últimas ${recent.matchCount} partidas`}
@@ -309,6 +316,8 @@ function LadderRow({
   const kdaClase = zona?.puesto ?? (medal ? medal.rank : inDangerZone ? 'text-brand' : 'text-foreground')
   const barraClase = zona?.barra ?? (medal ? 'bg-amber-300' : inDangerZone ? 'bg-primary' : 'bg-sky-400/80')
   const winrate = s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0
+  const valor = valorLadder(s)
+  const descuento = descuentoPorStrikes(s.strikes ?? 0)
 
   return (
     <motion.li
@@ -349,6 +358,7 @@ function LadderRow({
                 Nuevo
               </span>
             )}
+            {!!s.strikes && <StrikesChip strikes={s.strikes} descuento={descuento} />}
             {s.currentStreak >= 3 && (
               <Chip className="border-orange-500/40 text-orange-400" title={`Racha de ${s.currentStreak} victorias`}>
                 <Flame className="h-3 w-3" aria-hidden="true" /> {s.currentStreak}W
@@ -403,16 +413,21 @@ function LadderRow({
         <div className="flex w-16 shrink-0 flex-col items-end gap-1 sm:w-20">
           <span
             className={cn('font-mono text-[15px] font-black tabular-nums sm:text-base', kdaClase)}
-            title="KDA"
+            title={descuento > 0 ? `KDA ${s.kda.toFixed(2)} menos ${descuento.toFixed(2)} por strikes` : 'KDA'}
           >
-            {s.kda.toFixed(2)}
+            {valor.toFixed(2)}
           </span>
           <span className="h-1 w-full overflow-hidden rounded-full bg-muted/60" aria-hidden="true">
             <span
               className={cn('block h-full rounded-full', barraClase)}
-              style={{ width: `${Math.max(6, (s.kda / maxKda) * 100)}%` }}
+              style={{ width: `${Math.max(6, (valor / maxKda) * 100)}%` }}
             />
           </span>
+          {descuento > 0 && (
+            <span className="font-mono text-[9px] leading-none tabular-nums text-muted-foreground" title="KDA real, sin el descuento">
+              <s>{s.kda.toFixed(2)}</s> <span className="text-rose-400">−{descuento.toFixed(2)}</span>
+            </span>
+          )}
         </div>
       </Link>
     </motion.li>
@@ -444,6 +459,26 @@ function TrendMark({ trend }: { trend?: PlayerStats['trend'] }) {
   if (trend === 'down') return <span className="mt-0.5 text-[9px] text-rose-400" title="Bajó de puesto en la última partida">▼</span>
   if (trend === 'new') return <span className="mt-0.5 text-[9px] text-sky-300" title="Entró al ranking">●</span>
   return <span className="mt-0.5 text-[9px] text-muted-foreground/40" title="Mantuvo el puesto">=</span>
+}
+
+/** Días de partidas seguidos que faltó: con 1 y 2 es un aviso; desde el 3.º descuenta KDA. */
+function StrikesChip({ strikes, descuento }: { strikes: number; descuento: number }) {
+  const dias = strikes === 1 ? 'al último día' : `a los últimos ${strikes} días`
+  return descuento > 0 ? (
+    <Chip
+      className="border-rose-500/50 text-rose-400"
+      title={`Faltó ${dias} de partidas: se le descuentan ${descuento.toFixed(2)} de KDA hasta que vuelva a jugar.`}
+    >
+      <CalendarX className="h-3 w-3" aria-hidden="true" /> {strikes} strikes −{descuento.toFixed(2)}
+    </Chip>
+  ) : (
+    <Chip
+      className="border-amber-400/40 text-amber-300"
+      title={`Faltó ${dias} de partidas. Con ${STRIKES_PARA_DESCUENTO} strikes se le empieza a descontar KDA.`}
+    >
+      <CalendarX className="h-3 w-3" aria-hidden="true" /> Strike {strikes}/{STRIKES_PARA_DESCUENTO}
+    </Chip>
+  )
 }
 
 function Chip({ children, className, title }: { children: React.ReactNode; className?: string; title?: string }) {

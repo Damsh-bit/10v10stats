@@ -11,6 +11,7 @@ import {
 import type { Player, CSMap, Match, PlayerStats, LiveData, NelsonEntry } from '@/types'
 import { computeKDRecord } from '@/lib/utils'
 import { mvpWinnersOnly, pickMvp } from '@/lib/mvp'
+import { contarStrikes, ladderConStrikes, valorLadder } from '@/lib/ladder'
 
 export { formatDate } from '@/lib/format'
 
@@ -347,19 +348,30 @@ function buildPlayerStatsForData(data: LiveData, playerId: string, lastN?: numbe
   }
 }
 
-function rankStats(data: LiveData, lastNPerPlayer?: number, minMatches = 0) {
-  return data.players
+function rankStats(data: LiveData, lastNPerPlayer?: number, minMatches = 0, conStrikes = false) {
+  const stats = data.players
     .map((p) => buildPlayerStatsForData(data, p.id, lastNPerPlayer))
     .filter((s): s is PlayerStats => s !== null && s.matches >= minMatches)
-    .sort((a, b) => b.kda - a.kda)
+  if (!conStrikes) return stats.sort((a, b) => b.kda - a.kda)
+
+  // Ladder con strikes: se ordena por el KDA con el descuento; a igual KDA, arriba el que tiene menos strikes.
+  const strikes = contarStrikes(data.matches)
+  return stats
+    .map((s) => ({ ...s, strikes: strikes.get(s.player.id) ?? 0 }))
+    .sort((a, b) => valorLadder(b) - valorLadder(a) || a.strikes - b.strikes || b.kda - a.kda)
 }
 
-function buildAllPlayerStatsForData(data: LiveData, lastNPerPlayer?: number, minMatches = 0): PlayerStats[] {
-  const currentStats = rankStats(data, lastNPerPlayer, minMatches)
+function buildAllPlayerStatsForData(
+  data: LiveData,
+  lastNPerPlayer?: number,
+  minMatches = 0,
+  conStrikes = false,
+): PlayerStats[] {
+  const currentStats = rankStats(data, lastNPerPlayer, minMatches, conStrikes)
   if (data.matches.length === 0) return currentStats
 
   // Tendencia: posición actual vs. posición antes de la última partida.
-  const prevStats = rankStats({ ...data, matches: data.matches.slice(1) }, lastNPerPlayer, minMatches)
+  const prevStats = rankStats({ ...data, matches: data.matches.slice(1) }, lastNPerPlayer, minMatches, conStrikes)
 
   currentStats.forEach((stat, currentIndex) => {
     const prevIndex = prevStats.findIndex((p) => p.player.id === stat.player.id)
@@ -377,16 +389,20 @@ function buildAllPlayerStatsForData(data: LiveData, lastNPerPlayer?: number, min
   return currentStats
 }
 
-export function getPlayerStatsForData(
-  data: LiveData,
-  options?: { minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
-): PlayerStats[] {
+type StatsOptions = { minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number }
+
+function statsForData(data: LiveData, options: StatsOptions | undefined, conStrikes: boolean): PlayerStats[] {
   let filteredData = data
   if (options?.lastNMatches) {
     filteredData = { ...filteredData, matches: filteredData.matches.slice(0, options.lastNMatches) }
   }
 
-  return buildAllPlayerStatsForData(filteredData, options?.lastNMatchesPerPlayer, options?.minMatches ?? 0)
+  return buildAllPlayerStatsForData(filteredData, options?.lastNMatchesPerPlayer, options?.minMatches ?? 0, conStrikes)
+}
+
+/** Stats de todos ordenadas por KDA real (récords, perfiles, generador de equipos...). */
+export function getPlayerStatsForData(data: LiveData, options?: StatsOptions): PlayerStats[] {
+  return statsForData(data, options, false)
 }
 
 /** Los jugadores que van en la ladder: todos menos los inactivos. */
@@ -397,12 +413,11 @@ export function getLadderData(data: LiveData): LiveData {
 /**
  * La ladder: como getPlayerStatsForData pero sin los inactivos, así los puestos
  * y las flechitas de tendencia sólo cuentan a los que se ven en la tabla.
+ * Desde la Season 2 suma los strikes por faltar (ver lib/ladder.ts).
  */
-export function getLadderStats(
-  data: LiveData,
-  options?: { minMatches?: number; lastNMatches?: number; lastNMatchesPerPlayer?: number },
-): PlayerStats[] {
-  return getPlayerStatsForData(getLadderData(data), options)
+export function getLadderStats(data: LiveData, options?: StatsOptions): PlayerStats[] {
+  const conStrikes = !options?.lastNMatchesPerPlayer && ladderConStrikes(data.matches)
+  return statsForData(getLadderData(data), options, conStrikes)
 }
 
 export function getSinglePlayerStats(data: LiveData, playerId: string): PlayerStats | null {

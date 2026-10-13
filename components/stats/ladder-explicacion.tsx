@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { CalendarX, X } from 'lucide-react'
 import type { PlayerStats } from '@/types'
+import { DESCUENTO_POR_STRIKE, descuentoPorStrikes, STRIKES_PARA_DESCUENTO, valorLadder } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -18,8 +19,15 @@ const redondear = (v: number) => Math.round(v * 100) / 100
 const kdaDe = (ka: number, deaths: number) => redondear(deaths === 0 ? ka : ka / deaths)
 const porPartida = (v: number, partidas: number) => (partidas > 0 ? v / partidas : 0).toFixed(1)
 const killsOAsistencias = (n: number) => (n === 1 ? '1 kill o asistencia' : `${n} kills o asistencias`)
+const diasFaltados = (n: number) => (n === 1 ? 'al último día' : `a los últimos ${n} días`)
 
-/** Kills o asistencias (sin morir) que le faltan a `abajo` para superar `kdaObjetivo`. */
+/** Ejemplos de la escalera de strikes: los primeros avisan, desde STRIKES_PARA_DESCUENTO descuentan (y uno más). */
+const ESCALERA = Array.from({ length: STRIKES_PARA_DESCUENTO + 1 }, (_, i) => i + 1)
+
+/**
+ * Kills o asistencias (sin morir) que le faltan a `abajo` para superar `kdaObjetivo`.
+ * Se cuenta con su KDA real: para sumarlas tiene que jugar, y jugar le borra los strikes.
+ */
 function faltanParaPasar(abajo: PlayerStats, kdaObjetivo: number) {
   const ka = abajo.kills + abajo.assists
   const d = abajo.deaths
@@ -47,6 +55,21 @@ function motivo(arriba: PlayerStats, abajo: PlayerStats) {
   return `hace menos kills y asistencias (${ka} por partida), pero muere menos (${d}).`
 }
 
+/** El motivo sumando los strikes: si sólo lo explican los strikes de abajo, o si encima alguno tiene descuento. */
+function motivoConStrikes(arriba: PlayerStats, abajo: PlayerStats) {
+  const descuentoArriba = descuentoPorStrikes(arriba.strikes ?? 0)
+  const descuentoAbajo = descuentoPorStrikes(abajo.strikes ?? 0)
+
+  if (abajo.kda >= arriba.kda) {
+    return `${abajo.player.name} faltó ${diasFaltados(abajo.strikes ?? 0)} de partidas y se le descuentan ${descuentoAbajo.toFixed(2)} de KDA (${abajo.kda.toFixed(2)} → ${valorLadder(abajo).toFixed(2)}).`
+  }
+
+  let texto = motivo(arriba, abajo)
+  if (descuentoAbajo > 0) texto += ` Encima, ${abajo.player.name} tiene ${abajo.strikes} strikes y se le descuentan ${descuentoAbajo.toFixed(2)}.`
+  if (descuentoArriba > 0) texto += ` Y eso que ${arriba.player.name} tiene ${arriba.strikes} strikes y se le descuentan ${descuentoArriba.toFixed(2)}.`
+  return texto
+}
+
 export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) {
   const [elegidos, setElegidos] = useState<[string, string] | null>(null)
 
@@ -65,7 +88,23 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
   const iB = ids.indexOf(idB)
   const arriba = stats[Math.min(iA, iB)]
   const abajo = stats[Math.max(iA, iB)]
-  const empatados = arriba && abajo && arriba.kda === abajo.kda
+  const conStrikes = stats[0]?.strikes !== undefined
+  const empatados = arriba && abajo && valorLadder(arriba) === valorLadder(abajo)
+  // Con strikes y mejor KDA real, le alcanza con volver a jugar: eso le borra los strikes.
+  const vuelveYPasa = arriba && abajo && (abajo.strikes ?? 0) > 0 && abajo.kda > valorLadder(arriba)
+
+  const comoPasarlo = !arriba || !abajo ? null : vuelveYPasa ? (
+    <>
+      Si {abajo.player.name} <span className="font-semibold text-foreground">vuelve a jugar</span>, se le borran los strikes y,
+      con su KDA de {abajo.kda.toFixed(2)}, lo pasa.
+    </>
+  ) : (
+    <>
+      A {abajo.player.name} le faltan{' '}
+      <span className="font-semibold text-foreground">{killsOAsistencias(faltanParaPasar(abajo, valorLadder(arriba)))}</span> sin
+      morir para pasarlo.
+    </>
+  )
 
   return (
     <div
@@ -103,6 +142,41 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
             </ul>
           </div>
 
+          {conStrikes && (
+            <div className="flex flex-col gap-1.5 border-t border-border/60 pt-3">
+              <p className="flex items-center gap-1.5 font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                <CalendarX className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />
+                Strikes por faltar
+              </p>
+              <p>
+                Cada <span className="font-semibold text-foreground">día de partidas</span> que faltás seguido es un strike. Desde el{' '}
+                {STRIKES_PARA_DESCUENTO}.º se te descuenta KDA en la ladder, y{' '}
+                <span className="font-semibold text-foreground">apenas volvés a jugar se borran</span>.
+              </p>
+              <ol className="flex flex-wrap items-center gap-1.5" aria-label="Cuánto descuenta cada strike">
+                {ESCALERA.map((n) => {
+                  const descuento = descuentoPorStrikes(n)
+                  return (
+                    <li
+                      key={n}
+                      className={cn(
+                        'flex items-center gap-1 rounded border bg-black/30 px-1.5 py-0.5 font-mono text-[10px] font-semibold',
+                        descuento > 0 ? 'border-rose-500/50 text-rose-400' : 'border-amber-400/40 text-amber-300',
+                      )}
+                    >
+                      {n} {n === 1 ? 'strike' : 'strikes'}
+                      <span className="font-normal opacity-80">→ {descuento > 0 ? `−${descuento.toFixed(2)} KDA` : 'aviso'}</span>
+                    </li>
+                  )
+                })}
+                <li className="text-[11px]">y {DESCUENTO_POR_STRIKE.toFixed(2)} más por cada día que siga faltando.</li>
+              </ol>
+              <p>
+                Es sólo para el orden de la ladder: tu KDA real no cambia, y el perfil y el generador de equipos lo usan tal cual.
+              </p>
+            </div>
+          )}
+
           {arriba && abajo && (
             <div className="flex flex-col gap-2 border-t border-border/60 pt-3">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -124,32 +198,41 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
                   </tr>
                 </thead>
                 <tbody>
-                  {[arriba, abajo].map((s) => (
-                    <tr key={s.player.id} className="text-foreground">
-                      <td className="max-w-28 truncate py-0.5 pr-2 font-sans text-[12px] font-semibold">
-                        <span className="mr-1 font-mono text-[10px] text-muted-foreground">#{ids.indexOf(s.player.id) + 1}</span>
-                        {s.player.name}
-                      </td>
-                      <td className="py-0.5 text-right">{s.kills}</td>
-                      <td className="py-0.5 text-right">{s.assists}</td>
-                      <td className="py-0.5 text-right">{s.deaths}</td>
-                      <td className={cn('py-0.5 text-right font-bold', s === arriba && !empatados && 'text-emerald-300')}>{s.kda.toFixed(2)}</td>
-                    </tr>
-                  ))}
+                  {[arriba, abajo].map((s) => {
+                    const descuento = descuentoPorStrikes(s.strikes ?? 0)
+                    return (
+                      <tr key={s.player.id} className="text-foreground">
+                        <td className="max-w-28 truncate py-0.5 pr-2 font-sans text-[12px] font-semibold">
+                          <span className="mr-1 font-mono text-[10px] text-muted-foreground">#{ids.indexOf(s.player.id) + 1}</span>
+                          {s.player.name}
+                        </td>
+                        <td className="py-0.5 text-right">{s.kills}</td>
+                        <td className="py-0.5 text-right">{s.assists}</td>
+                        <td className="py-0.5 text-right">{s.deaths}</td>
+                        <td className={cn('py-0.5 text-right font-bold', s === arriba && !empatados && 'text-emerald-300')}>
+                          {descuento > 0 && (
+                            <s className="mr-1 font-normal text-muted-foreground" title={`KDA real; ${s.strikes} strikes le descuentan ${descuento.toFixed(2)}`}>
+                              {s.kda.toFixed(2)}
+                            </s>
+                          )}
+                          {valorLadder(s).toFixed(2)}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
 
               {empatados ? (
                 <p>
-                  Están <span className="font-semibold text-foreground">empatados en KDA</span>: da lo mismo quién vaya primero. Con{' '}
-                  {killsOAsistencias(faltanParaPasar(abajo, arriba.kda))} más sin morir, {abajo.player.name} queda arriba.
+                  Están <span className="font-semibold text-foreground">empatados en KDA</span>
+                  {(arriba.strikes ?? 0) !== (abajo.strikes ?? 0) ? ': queda arriba el que tiene menos strikes.' : ': da lo mismo quién vaya primero.'}{' '}
+                  {comoPasarlo}
                 </p>
               ) : (
                 <p>
-                  <span className="font-semibold text-foreground">{arriba.player.name}</span> está arriba porque {motivo(arriba, abajo)}{' '}
-                  A {abajo.player.name} le faltan{' '}
-                  <span className="font-semibold text-foreground">{killsOAsistencias(faltanParaPasar(abajo, arriba.kda))}</span> sin morir
-                  para pasarlo.
+                  <span className="font-semibold text-foreground">{arriba.player.name}</span> está arriba porque{' '}
+                  {conStrikes ? motivoConStrikes(arriba, abajo) : motivo(arriba, abajo)} {comoPasarlo}
                 </p>
               )}
             </div>
