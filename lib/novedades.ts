@@ -90,7 +90,7 @@ export const NOVEDADES: Novedad[] = [
       'Regla nueva en la ladder: si faltás 3 días de partidas seguidos, empezás a perder KDA. Así nadie se queda arriba (o sube) sin jugar.',
     highlights: [
       { icon: 'history', text: 'Cada día de partidas que faltás seguido es un strike. Al lado de tu nombre ves cuántos llevás.' },
-      { icon: 'chart', text: 'Desde el 3.er strike, cada día que faltás te saca 0.10 de KDA en la ladder.' },
+      { icon: 'chart', text: 'Desde el 3.er strike, cada día que faltás te saca KDA, y cada vez más: 0.05, después 0.10, después 0.15…' },
       { icon: 'zap', text: 'Si volvés, los strikes vuelven a 0, pero lo que perdiste no vuelve: te lo tenés que ganar jugando.' },
       { icon: 'shield', text: 'Tu KDA real no cambia: el perfil y el generador de equipos lo usan tal cual.' },
     ],

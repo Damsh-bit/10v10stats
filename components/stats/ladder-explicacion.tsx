@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { CalendarX, X } from 'lucide-react'
 import type { PlayerStats } from '@/types'
-import { DESCUENTO_POR_STRIKE, descuentoPorStrikes, STRIKES_PARA_DESCUENTO, valorLadder } from '@/lib/ladder'
+import { DESCUENTO_POR_STRIKE, descuentoDelDia, descuentoPorStrikes, STRIKES_PARA_DESCUENTO, valorLadder } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -21,8 +21,8 @@ const porPartida = (v: number, partidas: number) => (partidas > 0 ? v / partidas
 const killsOAsistencias = (n: number) => (n === 1 ? '1 kill o asistencia' : `${n} kills o asistencias`)
 const perdido = (s: PlayerStats) => s.descuentoStrikes ?? 0
 
-/** Ejemplos de la escalera de strikes: los primeros avisan, desde STRIKES_PARA_DESCUENTO descuentan (y uno más). */
-const ESCALERA = Array.from({ length: STRIKES_PARA_DESCUENTO + 1 }, (_, i) => i + 1)
+/** Ejemplos de la escalera de strikes: los primeros avisan, desde STRIKES_PARA_DESCUENTO descuentan (y dos días más). */
+const ESCALERA = Array.from({ length: STRIKES_PARA_DESCUENTO + 2 }, (_, i) => i + 1)
 
 /**
  * Kills o asistencias (sin morir) que le faltan a `abajo` para superar `objetivo`.
@@ -143,11 +143,12 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
               </p>
               <p>
                 Cada <span className="font-semibold text-foreground">día de partidas</span> que faltás seguido es un strike. Desde el{' '}
-                {STRIKES_PARA_DESCUENTO}.º, cada día que faltás te saca {DESCUENTO_POR_STRIKE.toFixed(2)} de KDA en la ladder.
+                {STRIKES_PARA_DESCUENTO}.º, cada día que faltás te saca KDA en la ladder,{' '}
+                <span className="font-semibold text-foreground">y cada día un poco más</span>.
               </p>
               <ol className="flex flex-wrap items-center gap-1.5" aria-label="Cuánto descuenta cada strike">
                 {ESCALERA.map((n) => {
-                  const descuento = descuentoPorStrikes(n)
+                  const descuento = descuentoDelDia(n)
                   return (
                     <li
                       key={n}
@@ -157,14 +158,19 @@ export function LadderExplicacion({ open, onClose, stats, recentCount }: Props) 
                       )}
                     >
                       {n} {n === 1 ? 'strike' : 'strikes'}
-                      <span className="font-normal opacity-80">→ {descuento > 0 ? `−${descuento.toFixed(2)} KDA` : 'aviso'}</span>
+                      <span className="font-normal opacity-80">
+                        → {descuento > 0 ? `−${descuento.toFixed(2)}${n > STRIKES_PARA_DESCUENTO ? ' más' : ''}` : 'aviso'}
+                      </span>
                     </li>
                   )
                 })}
-                <li className="text-[11px]">y {DESCUENTO_POR_STRIKE.toFixed(2)} más por cada día que siga faltando.</li>
               </ol>
               <p>
-                Si volvés a jugar, los strikes vuelven a 0, pero{' '}
+                Cada día seguido pega {DESCUENTO_POR_STRIKE.toFixed(2)} más que el anterior: faltar {ESCALERA.length} días seguidos te
+                saca {descuentoPorStrikes(ESCALERA.length).toFixed(2)} de KDA en total.
+              </p>
+              <p>
+                Si volvés a jugar, los strikes vuelven a 0 (y la próxima vez arranca de nuevo en {DESCUENTO_POR_STRIKE.toFixed(2)}), pero{' '}
                 <span className="font-semibold text-foreground">lo que perdiste no vuelve: te lo tenés que ganar de nuevo jugando</span>.
               </p>
               <p>
