@@ -79,10 +79,6 @@ export type PlayerStats = {
   positiveGames: number
   negativeGames: number
   trend?: 'up' | 'down' | 'same' | 'new'
-  /** Ladder desde la Season 2: KDA × asistencia (ver lib/ladder.ts). Sin él, la ladder va por KDA. */
-  puntaje?: number
-  /** Partidas que hubo en el período de la ladder (para la asistencia: `matches` de `partidasTotales`). */
-  partidasTotales?: number
   currentStreak: number
   currentLossStreak: number
 }

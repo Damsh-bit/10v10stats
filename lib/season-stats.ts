@@ -1,5 +1,4 @@
 import type { LiveData, Match, PlayerStats } from '@/types'
-import { valorLadder } from '@/lib/ladder'
 
 export type MatchRecordKey =
   | 'maxKills'
@@ -119,7 +118,7 @@ export type RankBattle = {
   gap: number
 }
 
-/** Los puestos más peleados del ladder: pares consecutivos con menor diferencia de puntaje (o KDA). */
+/** Los puestos más peleados del ladder: pares consecutivos con menor diferencia de KDA. */
 export function computeRankBattles(ranked: PlayerStats[], limit = 3): RankBattle[] {
   const battles: RankBattle[] = []
   for (let i = 1; i < ranked.length; i++) {
@@ -128,7 +127,7 @@ export function computeRankBattles(ranked: PlayerStats[], limit = 3): RankBattle
       target: ranked[i - 1],
       chaserRank: i + 1,
       targetRank: i,
-      gap: Math.max(0, valorLadder(ranked[i - 1]) - valorLadder(ranked[i])),
+      gap: Math.max(0, ranked[i - 1].kda - ranked[i].kda),
     })
   }
   return battles.sort((a, b) => a.gap - b.gap || a.targetRank - b.targetRank).slice(0, limit)

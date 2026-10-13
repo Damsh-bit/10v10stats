@@ -15,7 +15,6 @@ import { MapWinrateSection } from '@/components/stats/map-winrate-section'
 import { RecentMatches } from '@/components/matches/recent-matches'
 import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
-import { unidadLadder, valorLadder } from '@/lib/ladder'
 import { Reveal } from '@/components/motion/reveal'
 
 export const revalidate = 300
@@ -95,7 +94,7 @@ export default async function SeasonArchivePage({ params }: { params: Promise<{ 
                       {champion.player.name}
                     </span>
                     <span className="block font-mono text-[11px] text-muted-foreground">
-                      {valorLadder(champion).toFixed(2)} {unidadLadder(champion)} · {champion.wins}W en {champion.matches} partidas
+                      {champion.kda.toFixed(2)} KDA · {champion.wins}W en {champion.matches} partidas
                     </span>
                   </span>
                 </Link>
