@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
-import { Flame, Snowflake, Trophy, UserPlus } from 'lucide-react'
+import { Flame, Info, Snowflake, Trophy, UserPlus } from 'lucide-react'
 import type { Player, PlayerStats } from '@/types'
 import type { PlayerRecordMap } from '@/lib/records'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { KDaBadges } from '@/components/players/kda-badges'
 import { RecordBadge } from '@/components/players/record-badges'
+import { LadderExplicacion } from '@/components/stats/ladder-explicacion'
 import { cn } from '@/lib/utils'
 
 type LadderView = 'season' | 'recent'
@@ -152,6 +153,7 @@ export function SeasonLadder({
   emptyAction,
 }: Props) {
   const [view, setView] = useState<LadderView>('season')
+  const [infoOpen, setInfoOpen] = useState(false)
   const showingRecent = view === 'recent' && !!recent
   const stats = showingRecent ? recent.stats : ranked
   const maxKda = Math.max(...stats.map((s) => s.kda), 0.01)
@@ -168,7 +170,21 @@ export function SeasonLadder({
               {archived ? 'Clasificación final' : 'Ladder'}
             </h2>
             <span className="text-[11px] text-muted-foreground">
-              {seasonName} · por KDA
+              {seasonName} ·{' '}
+              <button
+                type="button"
+                onClick={() => setInfoOpen((open) => !open)}
+                aria-expanded={infoOpen}
+                aria-controls="ladder-explicacion"
+                title="¿Cómo se calcula el KDA y por qué uno está arriba del otro?"
+                className={cn(
+                  'inline-flex items-center gap-1 underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground',
+                  infoOpen && 'text-foreground',
+                )}
+              >
+                por KDA
+                <Info className="h-3 w-3" aria-hidden="true" />
+              </button>
               {showingRecent && ` · últimas ${recent.matchCount} partidas`}
             </span>
           </div>
@@ -207,6 +223,13 @@ export function SeasonLadder({
           </div>
         )}
       </header>
+
+      <LadderExplicacion
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        stats={stats}
+        recentCount={showingRecent ? recent.matchCount : null}
+      />
 
       {stats.length === 0 ? (
         <EmptyLadder archived={archived} action={emptyAction} />

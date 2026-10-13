@@ -81,6 +81,20 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-13-ladder-explicacion',
+    date: '2026-10-13',
+    tag: 'Estadísticas',
+    title: '¿Por qué está arriba tuyo?',
+    summary:
+      'Tocá "por KDA" arriba de la ladder y se abre cómo se calcula el KDA. Elegí a dos jugadores y te dice por qué uno está arriba del otro.',
+    highlights: [
+      { icon: 'chart', text: 'KDA = (kills + asistencias) ÷ muertes, sumando todo lo de la temporada.' },
+      { icon: 'swords', text: 'Te dice si el de arriba hace más kills, muere menos o las dos cosas.' },
+      { icon: 'target', text: 'Y cuántas kills o asistencias te faltan para pasarlo.' },
+    ],
+    cta: { label: 'Ver la ladder', href: '/' },
+  },
+  {
     id: '2026-10-08-cartel-varios',
     date: '2026-10-08',
     tag: 'Cartel',
