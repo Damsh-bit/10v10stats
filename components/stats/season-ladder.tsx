@@ -10,6 +10,7 @@ import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { KDaBadges } from '@/components/players/kda-badges'
 import { RecordBadge } from '@/components/players/record-badges'
 import { LadderExplicacion } from '@/components/stats/ladder-explicacion'
+import { factorAsistencia, valorLadder } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 type LadderView = 'season' | 'recent'
@@ -156,7 +157,9 @@ export function SeasonLadder({
   const [infoOpen, setInfoOpen] = useState(false)
   const showingRecent = view === 'recent' && !!recent
   const stats = showingRecent ? recent.stats : ranked
-  const maxKda = Math.max(...stats.map((s) => s.kda), 0.01)
+  const maxValor = Math.max(...stats.map(valorLadder), 0.01)
+  // Desde la Season 2 la tabla va por puntaje (KDA × asistencia).
+  const porPuntaje = stats[0]?.puntaje !== undefined
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
@@ -176,13 +179,17 @@ export function SeasonLadder({
                 onClick={() => setInfoOpen((open) => !open)}
                 aria-expanded={infoOpen}
                 aria-controls="ladder-explicacion"
-                title="¿Cómo se calcula el KDA y por qué uno está arriba del otro?"
+                title={
+                  porPuntaje
+                    ? '¿Cómo se calcula el puntaje y por qué uno está arriba del otro?'
+                    : '¿Cómo se calcula el KDA y por qué uno está arriba del otro?'
+                }
                 className={cn(
                   'inline-flex items-center gap-1 underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground',
                   infoOpen && 'text-foreground',
                 )}
               >
-                por KDA
+                {porPuntaje ? 'por KDA y asistencia' : 'por KDA'}
                 <Info className="h-3 w-3" aria-hidden="true" />
               </button>
               {showingRecent && ` · últimas ${recent.matchCount} partidas`}
@@ -245,7 +252,7 @@ export function SeasonLadder({
                     stats={s}
                     index={i}
                     total={stats.length}
-                    maxKda={maxKda}
+                    maxValor={maxValor}
                     records={showingRecent ? undefined : records?.[s.player.id]}
                     isTopFakador={topFakadorId === s.player.id}
                     zona={zona}
@@ -289,7 +296,7 @@ function LadderRow({
   stats: s,
   index: i,
   total,
-  maxKda,
+  maxValor,
   records,
   isTopFakador,
   zona,
@@ -297,7 +304,7 @@ function LadderRow({
   stats: PlayerStats
   index: number
   total: number
-  maxKda: number
+  maxValor: number
   records?: PlayerRecordMap[string]
   isTopFakador: boolean
   /** Temporada en curso: la zona manda los colores. Archivo: medallas y zona roja. */
@@ -309,6 +316,9 @@ function LadderRow({
   const kdaClase = zona?.puesto ?? (medal ? medal.rank : inDangerZone ? 'text-brand' : 'text-foreground')
   const barraClase = zona?.barra ?? (medal ? 'bg-amber-300' : inDangerZone ? 'bg-primary' : 'bg-sky-400/80')
   const winrate = s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0
+  const valor = valorLadder(s)
+  const porPuntaje = s.puntaje !== undefined && s.partidasTotales !== undefined
+  const descuento = porPuntaje ? Math.round((1 - factorAsistencia(s.matches, s.partidasTotales!)) * 100) : 0
 
   return (
     <motion.li
@@ -390,6 +400,17 @@ function LadderRow({
             <span title="Victorias - Empates - Derrotas">
               {s.wins}W-{s.draws}D-{s.losses}L <span className={winrate >= 50 ? 'text-emerald-400' : 'text-rose-400/80'}>{winrate}%</span>
             </span>
+            {porPuntaje && (
+              <>
+                <span className="opacity-30">·</span>
+                <span
+                  title={`Jugó ${s.matches} de las ${s.partidasTotales} partidas${descuento > 0 ? `: la asistencia le descuenta un ${descuento}% del KDA` : ''}`}
+                >
+                  {s.matches}/{s.partidasTotales} PJ
+                  {descuento > 0 && <span className="text-rose-400/80"> −{descuento}%</span>}
+                </span>
+              </>
+            )}
             <span className="hidden opacity-30 sm:inline">·</span>
             <span className="hidden sm:inline" title="Daño promedio por partida">{s.adm} ADM</span>
             <span className="hidden opacity-30 sm:inline">·</span>
@@ -403,16 +424,21 @@ function LadderRow({
         <div className="flex w-16 shrink-0 flex-col items-end gap-1 sm:w-20">
           <span
             className={cn('font-mono text-[15px] font-black tabular-nums sm:text-base', kdaClase)}
-            title="KDA"
+            title={porPuntaje ? 'Puntaje: KDA × asistencia' : 'KDA'}
           >
-            {s.kda.toFixed(2)}
+            {valor.toFixed(2)}
           </span>
           <span className="h-1 w-full overflow-hidden rounded-full bg-muted/60" aria-hidden="true">
             <span
               className={cn('block h-full rounded-full', barraClase)}
-              style={{ width: `${Math.max(6, (s.kda / maxKda) * 100)}%` }}
+              style={{ width: `${Math.max(6, (valor / maxValor) * 100)}%` }}
             />
           </span>
+          {porPuntaje && (
+            <span className="font-mono text-[9px] leading-none text-muted-foreground tabular-nums" title="KDA">
+              KDA {s.kda.toFixed(2)}
+            </span>
+          )}
         </div>
       </Link>
     </motion.li>

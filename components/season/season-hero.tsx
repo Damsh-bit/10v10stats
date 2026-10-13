@@ -3,6 +3,7 @@ import { ArrowRight, Crown, History, Swords, Target, Trophy, Users } from 'lucid
 import type { PlayerStats } from '@/types'
 import AnimatedNumber from '@/components/ui/animated-number'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
+import { unidadLadder, valorLadder } from '@/lib/ladder'
 
 type Props = {
   seasonNumber: number
@@ -102,7 +103,7 @@ export function SeasonHero({
                 <PlayerAvatar player={leader.player} size={26} />
                 <span className="min-w-0">
                   <span className="block truncate text-[15px] leading-tight">{leader.player.name}</span>
-                  <span className="block font-mono text-[11px] font-semibold text-emerald-300">{leader.kda.toFixed(2)} KDA</span>
+                  <span className="block font-mono text-[11px] font-semibold text-emerald-300">{valorLadder(leader).toFixed(2)} {unidadLadder(leader)}</span>
                 </span>
               </Link>
             ) : (
@@ -119,7 +120,7 @@ export function SeasonHero({
                 <span className="min-w-0">
                   <span className="block truncate text-[15px] leading-tight">{previousChampion.stats.player.name}</span>
                   <span className="block font-mono text-[11px] font-semibold text-amber-300">
-                    {previousChampion.stats.kda.toFixed(2)} KDA
+                    {valorLadder(previousChampion.stats).toFixed(2)} {unidadLadder(previousChampion.stats)}
                   </span>
                 </span>
               </Link>

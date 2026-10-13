@@ -7,6 +7,8 @@ import { Stagger, StaggerItem } from '@/components/motion/reveal'
 /** Los puestos más peleados: quién está a un paso de pasar a quién. */
 export function RankBattles({ battles }: { battles: RankBattle[] }) {
   if (battles.length === 0) return null
+  // Desde la Season 2 la ladder va por puntaje (KDA × asistencia).
+  const medida = battles[0].target.puntaje !== undefined ? 'puntaje' : 'KDA'
 
   return (
     <section className="rounded-xl border border-border bg-card">
@@ -19,7 +21,7 @@ export function RankBattles({ battles }: { battles: RankBattle[] }) {
             <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
               Duelos por el puesto
             </h2>
-            <p className="text-[11px] text-muted-foreground">Las diferencias de KDA más chicas del ladder</p>
+            <p className="text-[11px] text-muted-foreground">Las diferencias de {medida} más chicas del ladder</p>
           </div>
         </div>
       </header>
@@ -45,7 +47,7 @@ export function RankBattles({ battles }: { battles: RankBattle[] }) {
                 <span className="font-semibold text-foreground">{battle.chaser.player.name}</span>
                 {battle.gap < 0.005 ? (
                   <>
-                    {' '}está <span className="font-bold text-rose-400">empatado en KDA</span> con el #{battle.targetRank}
+                    {' '}está <span className="font-bold text-rose-400">empatado en {medida}</span> con el #{battle.targetRank}
                   </>
                 ) : (
                   <>
@@ -53,7 +55,7 @@ export function RankBattles({ battles }: { battles: RankBattle[] }) {
                     <span className={tight ? 'font-mono font-bold text-rose-400' : 'font-mono font-bold text-amber-300'}>
                       {battle.gap.toFixed(2)}
                     </span>{' '}
-                    de KDA del #{battle.targetRank}
+                    de {medida} del #{battle.targetRank}
                   </>
                 )}
               </p>

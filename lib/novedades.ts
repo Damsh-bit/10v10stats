@@ -81,6 +81,22 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-13-ladder-asistencia',
+    date: '2026-10-13',
+    tag: 'Reglas',
+    title: 'La ladder ahora premia al que juega',
+    summary:
+      'Regla nueva: el puesto ya no sale sólo del KDA, también cuenta cuánto jugaste. Así el que no juega no sube solo cuando a los que juegan les baja el KDA.',
+    highlights: [
+      { icon: 'scale', text: 'Puntaje = KDA × asistencia. Si jugaste todas las partidas de la temporada, tu puntaje es tu KDA.' },
+      { icon: 'chart', text: 'Cada partida que faltás descuenta un poco: faltar a la mitad saca un 15%, y como mucho un 30%.' },
+      { icon: 'target', text: 'En la tabla ves cuántas jugaste y cuánto te descuenta. Tocá "por KDA y asistencia" para ver la cuenta.' },
+      { icon: 'trophy', text: 'La Season 1 queda tal cual terminó.' },
+    ],
+    cta: { label: 'Ver la ladder', href: '/' },
+    popup: true,
+  },
+  {
     id: '2026-10-13-ladder-explicacion',
     date: '2026-10-13',
     tag: 'Estadísticas',

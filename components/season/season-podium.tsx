@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Crown } from 'lucide-react'
 import type { PlayerStats } from '@/types'
 import { PlayerAvatar } from '@/components/shared/strike-ui'
+import { valorLadder } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 const PLACES = [
@@ -43,7 +44,7 @@ export function SeasonPodium({ top, compact = false }: { top: PlayerStats[]; com
                 {stats.player.name}
               </span>
               <span className={cn('font-mono text-[15px] font-black leading-tight sm:text-lg', place.text)}>
-                {stats.kda.toFixed(2)}
+                {valorLadder(stats).toFixed(2)}
               </span>
               {!compact && (
                 <span className="font-mono text-[10px] text-muted-foreground">
