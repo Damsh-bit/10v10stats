@@ -10,6 +10,7 @@ import { armarParticipantes } from './comun'
 import { TablaXplay } from './tabla-xplay'
 import { RondasXplay } from './rondas-xplay'
 import { DuelosXplay } from './duelos-xplay'
+import { ReplayScope } from './replay-scope'
 
 type Pestana = 'tabla' | 'rondas' | 'duelos' | 'replay'
 
@@ -96,15 +97,9 @@ export function PartidaXplay({
         {pestana === 'duelos' && <DuelosXplay detalle={detalle} participantes={participantes} nombres={nombres} />}
         {pestana === 'replay' && replayUrl && (
           <div className="overflow-hidden rounded-xl border border-border bg-card">
-            <iframe
-              src={replayUrl}
-              title="Replay 2D de la partida"
-              loading="lazy"
-              allow="fullscreen"
-              className="block h-[70vh] min-h-[420px] w-full bg-white"
-            />
+            <ReplayScope url={replayUrl} />
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 text-[12px] text-muted-foreground">
-              <span>Replay de SCOPE.GG: elegí la ronda en la barra de arriba y dale play.</span>
+              <span>Replay de SCOPE.GG: dale play y elegí la ronda en la barra de arriba.</span>
               <a href={replayUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground">
                 Pantalla completa <ExternalLink className="h-3 w-3" aria-hidden="true" />
               </a>
