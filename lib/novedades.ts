@@ -81,6 +81,20 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-15-ronda-bisagra',
+    date: '2026-10-15',
+    tag: 'Partidas',
+    title: 'La ronda bisagra',
+    summary:
+      'En las rondas de cada partida ahora ves cómo iban las chances de ganar de cada equipo, ronda por ronda, y cuál fue la ronda que dio vuelta la partida.',
+    highlights: [
+      { icon: 'zap', text: 'La ronda bisagra queda marcada con un rayo: desde ahí el que ganó ya no soltó el favoritismo.' },
+      { icon: 'chart', text: 'Las chances salen del marcador y de lo que compró cada equipo (un full contra un eco casi siempre gana).' },
+      { icon: 'list', text: 'Tocá cualquier ronda del gráfico para ver cómo cambiaron las chances y qué pasó.' },
+    ],
+    cta: { label: 'Ver las partidas', href: '/matches' },
+  },
+  {
     id: '2026-10-15-xplay',
     date: '2026-10-15',
     tag: 'Partidas',

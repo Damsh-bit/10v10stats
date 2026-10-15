@@ -1,12 +1,14 @@
 'use client'
 
 import { Fragment, useMemo, useState } from 'react'
-import { Bomb, Clock, Crosshair, Scissors, Skull } from 'lucide-react'
+import { Bomb, Clock, Crosshair, Scissors, Skull, Zap } from 'lucide-react'
 import type { DetalleXplay } from '@/lib/xplay/leer'
 import type { Compra, EquipoXplay, MotivoRonda } from '@/lib/xplay/tipos'
 import { nombreArma } from '@/lib/xplay/armas'
+import { calcularProbabilidad } from '@/lib/xplay/probabilidad'
 import { cn } from '@/lib/utils'
 import { segundosATexto, tonoEquipo, type Participante } from './comun'
+import { CurvaProbabilidad, porcentaje } from './probabilidad-xplay'
 
 const MOTIVOS: Record<MotivoRonda, { icono: typeof Bomb; texto: string }> = {
   bomba: { icono: Bomb, texto: 'explotó la bomba' },
@@ -23,7 +25,10 @@ const COMPRAS: Record<Compra, { texto: string; clase: string }> = {
   full: { texto: 'Full', clase: 'bg-emerald-500/15 text-emerald-300' },
 }
 
-/** Rondas: quién ganó cada una y cómo, y el detalle de la elegida (compras, kills, daño). */
+/**
+ * Rondas: quién ganó cada una y cómo, las chances de ganar con la ronda bisagra
+ * marcada, y el detalle de la elegida (compras, kills, daño).
+ */
 export function RondasXplay({
   detalle,
   participantes,
@@ -38,6 +43,16 @@ export function RondasXplay({
   const mitad = detalle.rondasEnMitad ?? 12
   const ronda = detalle.rondas[elegida - 1]
   const kills = useMemo(() => detalle.kills.filter((k) => k.ronda === elegida), [detalle.kills, elegida])
+  const prob = useMemo(() => calcularProbabilidad(detalle.rondas, detalle.rondasEnMitad), [detalle.rondas, detalle.rondasEnMitad])
+  const bisagra = prob.bisagra?.ronda ?? null
+  /** Chances del primer equipo antes y después de la ronda elegida. */
+  const chancesElegida = (() => {
+    const antes = prob.puntos[elegida - 1]
+    const despues = prob.puntos[elegida]
+    if (!antes || !despues) return null
+    const chance = (p1: number) => (orden[0] === 1 ? p1 : 1 - p1)
+    return { antes: chance(antes.p1), despues: chance(despues.p1) }
+  })()
 
   const resumen = useMemo(() => {
     const porEquipo = (equipo: EquipoXplay) => {
@@ -62,6 +77,20 @@ export function RondasXplay({
       <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
         <div className="overflow-x-auto pb-1">
           <div className="inline-grid min-w-full gap-y-1" style={{ gridTemplateColumns: `110px repeat(${detalle.rondas.length}, minmax(26px, 1fr))` }}>
+            {bisagra ? (
+              <>
+                <span className="pr-2 text-[10px] font-bold uppercase tracking-wider text-amber-300">Bisagra</span>
+                {detalle.rondas.map((r) => (
+                  <span key={r.n} className={cn('flex justify-center', separaMitad(r.n, mitad) && 'ml-1.5')}>
+                    {r.n === bisagra ? (
+                      <button type="button" onClick={() => setElegida(r.n)} title="Ronda bisagra: acá se dio vuelta la partida" className="text-amber-300">
+                        <Zap className="h-4 w-4 fill-amber-300/40" aria-hidden="true" />
+                      </button>
+                    ) : null}
+                  </span>
+                ))}
+              </>
+            ) : null}
             {orden.map((equipo) => {
               const tono = tonoEquipo(nombres[equipo])
               return (
@@ -79,8 +108,9 @@ export function RondasXplay({
                         aria-label={`Ronda ${r.n}`}
                         className={cn(
                           'flex h-8 items-center justify-center border-y border-border/40 transition-colors',
-                          r.n === mitad + 1 || (r.n > 2 * mitad && (r.n - 2 * mitad - 1) % 3 === 0) ? 'ml-1.5 border-l' : '',
+                          separaMitad(r.n, mitad) ? 'ml-1.5 border-l' : '',
                           gano ? cn(tono.fondo, tono.texto) : 'bg-muted/20 text-transparent',
+                          r.n === bisagra && 'border-y-amber-300/70',
                           elegida === r.n && 'ring-2 ring-inset ring-white/70',
                         )}
                       >
@@ -97,8 +127,8 @@ export function RondasXplay({
                 key={r.n}
                 className={cn(
                   'text-center font-mono text-[10px]',
-                  elegida === r.n ? 'font-bold text-foreground' : 'text-muted-foreground',
-                  r.n === mitad + 1 || (r.n > 2 * mitad && (r.n - 2 * mitad - 1) % 3 === 0) ? 'ml-1.5' : '',
+                  elegida === r.n ? 'font-bold text-foreground' : r.n === bisagra ? 'font-bold text-amber-300' : 'text-muted-foreground',
+                  separaMitad(r.n, mitad) ? 'ml-1.5' : '',
                 )}
               >
                 {r.n}
@@ -116,6 +146,8 @@ export function RondasXplay({
             ))}
         </div>
       </section>
+
+      <CurvaProbabilidad prob={prob} orden={orden} nombres={nombres} elegida={elegida} onElegir={setElegida} />
 
       <section className="grid gap-3 sm:grid-cols-2">
         {orden.map((equipo) => {
@@ -147,10 +179,28 @@ export function RondasXplay({
                 {ronda.duracion !== null ? ` · ${segundosATexto(ronda.duracion)}` : ''}
               </p>
             </div>
-            <span className="font-mono text-lg font-bold text-foreground">
-              {ronda.marcador[orden[0] - 1]} - {ronda.marcador[orden[1] - 1]}
-            </span>
+            <div className="text-right">
+              <span className="font-mono text-lg font-bold text-foreground">
+                {ronda.marcador[orden[0] - 1]} - {ronda.marcador[orden[1] - 1]}
+              </span>
+              {chancesElegida ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Chances de <span className={tonoEquipo(nombres[orden[0]]).texto}>{nombres[orden[0]]}</span>: {porcentaje(chancesElegida.antes)} →{' '}
+                  <span className="font-semibold text-foreground">{porcentaje(chancesElegida.despues)}</span>
+                </p>
+              ) : null}
+            </div>
           </header>
+
+          {ronda.n === bisagra && prob.bisagra ? (
+            <p className="flex items-start gap-2 border-b border-amber-300/30 bg-amber-300/10 px-3 py-2 text-[12px] text-amber-100">
+              <Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
+              <span>
+                Ronda bisagra: con esta ronda se dio vuelta la partida. {nombres[prob.bisagra.equipo]} pasó de {porcentaje(prob.bisagra.antes)} a{' '}
+                {porcentaje(prob.bisagra.despues)} de chances y ya no soltó el favoritismo.
+              </span>
+            </p>
+          ) : null}
 
           <div className="grid gap-3 border-b border-border p-3 sm:grid-cols-2">
             {orden.map((equipo) => {
@@ -278,3 +328,7 @@ function Etiqueta({ children }: { children: React.ReactNode }) {
   return <span className="rounded-full border border-border px-1.5 py-0 text-[10px] text-muted-foreground">{children}</span>
 }
 
+/** Hueco visual al empezar cada mitad (y cada mitad de alargue). */
+function separaMitad(n: number, mitad: number) {
+  return n === mitad + 1 || (n > 2 * mitad && (n - 2 * mitad - 1) % 3 === 0)
+}
