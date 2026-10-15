@@ -16,6 +16,7 @@ import { ModoLivianoDemo } from './modo-liviano-demo'
 import { PerfilDemo } from './perfil-demo'
 import { MvpDemo } from './mvp-demo'
 import { TeamGeneratorDemo } from './team-generator-demo'
+import { XplayDemo } from './xplay-demo'
 import { HighlightIcon } from './novedad-icons'
 import { OPEN_NOVEDAD_EVENT } from './novedades-state'
 
@@ -26,6 +27,7 @@ const DEMOS: Record<NovedadDemo, ComponentType> = {
   cartel: CartelDemo,
   'modo-liviano': ModoLivianoDemo,
   perfil: PerfilDemo,
+  xplay: XplayDemo,
 }
 
 const STORAGE_KEY = 'novedades-vistas'

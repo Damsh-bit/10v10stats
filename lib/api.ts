@@ -12,6 +12,7 @@ import type { Player, CSMap, Match, PlayerStats, LiveData, NelsonEntry } from '@
 import { computeKDRecord } from '@/lib/utils'
 import { mvpWinnersOnly, pickMvp } from '@/lib/mvp'
 import { contarStrikes, ladderConStrikes, valorLadder } from '@/lib/ladder'
+import { getEstadosXplay } from '@/lib/xplay/leer'
 
 export { formatDate } from '@/lib/format'
 
@@ -171,6 +172,26 @@ function toMatch(row: SupabaseMatchRecord, seasons: Season[]): Match {
   }
 }
 
+/**
+ * Las partidas de un mismo día se guardan todas a medianoche y se ordenan por
+ * cuándo se cargaron. Si todas las de ese día vienen de Xplay, se ordenan por
+ * la hora real en que se jugaron (la más nueva primero, como el resto).
+ */
+function ordenarPorHoraXplay(matches: Match[]) {
+  const resultado: Match[] = []
+  for (let i = 0; i < matches.length; ) {
+    let j = i
+    while (j < matches.length && matches[j].date.slice(0, 10) === matches[i].date.slice(0, 10)) j++
+    const dia = matches.slice(i, j)
+    if (dia.length > 1 && dia.every((m) => m.xplay?.inicio)) {
+      dia.sort((a, b) => b.xplay!.inicio!.localeCompare(a.xplay!.inicio!))
+    }
+    resultado.push(...dia)
+    i = j
+  }
+  return resultado
+}
+
 export const getLeagueData = cache(async (): Promise<LeagueData> => {
   const [seasons, snapshots] = await Promise.all([getSeasons(), getSeasonSnapshots()])
   const currentSeason = getCurrentSeason(seasons)
@@ -180,12 +201,19 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
   if (!supabase) return empty
 
   try {
-    const [playersResult, fakesResult, faceitResult] = await Promise.all([
+    const [playersResult, fakesResult, faceitResult, steamResult, estadosXplay] = await Promise.all([
       supabase.from('players').select('id, name, photo_url, badge, contador_nelson').order('name'),
       supabase.from('fake_leaderboard').select('player_name, fake_count'),
       // Aparte: si estas columnas no existen, el resto de la app sigue andando sin ellas.
       supabase.from('players').select('id, faceit_nickname, menuda_mierda, inactivo'),
+      supabase.from('players').select('id, steam_account_id'),
+      getEstadosXplay(),
     ])
+    const steamById = new Map<string, number>(
+      (steamResult.data ?? [])
+        .filter((row) => row.steam_account_id !== null && row.steam_account_id !== undefined)
+        .map((row) => [String(row.id), Number(row.steam_account_id)]),
+    )
 
     const fakesByName = new Map<string, number>(
       (fakesResult.data ?? []).map((row) => [String(row.player_name).toLowerCase(), Number(row.fake_count ?? 0)]),
@@ -215,6 +243,7 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
         faceitNickname: faceitById.get(String(row.id)),
         menudaMierda: menudaMierdaIds.has(String(row.id)),
         inactivo: inactivoIds.has(String(row.id)),
+        steamAccountId: steamById.get(String(row.id)),
       }
     })
 
@@ -223,7 +252,13 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
     let result = await fetchAllMatchRows(supabase, true)
     if (result.error) result = await fetchAllMatchRows(supabase, false)
 
-    const matches = (result.rows ?? []).map((row) => toMatch(row, seasons))
+    const matches = ordenarPorHoraXplay(
+      (result.rows ?? []).map((row) => {
+        const match = toMatch(row, seasons)
+        const xplay = estadosXplay.get(match.id)
+        return xplay ? { ...match, xplay } : match
+      }),
+    )
 
     return { players, matches, seasons, currentSeason, snapshots }
   } catch {

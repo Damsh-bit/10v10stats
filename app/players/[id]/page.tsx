@@ -25,6 +25,8 @@ import type { AlcancePerfil } from '@/components/players/perfil/tipos'
 import { Reveal } from '@/components/motion/reveal'
 import { FaceitHeaderChip, FaceitProfileSection } from '@/components/faceit/faceit-profile-section'
 import { getFaceitProfile, summarizeFaceit } from '@/lib/faceit'
+import { getXplayDeJugador } from '@/lib/xplay/leer'
+import { resumirCifrasXplay, resumirDuelos } from '@/lib/xplay/duelos'
 import type { LiveData } from '@/types'
 
 export const revalidate = 60
@@ -49,10 +51,11 @@ export default async function PlayerProfile({
   const player = league.players.find((p) => p.id === id)
   if (!player) notFound()
 
-  const [faceitProfile, likes, recomendaciones] = await Promise.all([
+  const [faceitProfile, likes, recomendaciones, xplay] = await Promise.all([
     getFaceitProfile(player),
     contarMeGusta(id),
     listarRecomendaciones(id).catch(() => null),
+    getXplayDeJugador(id).catch(() => ({ kills: [], participantes: [], cifras: [] })),
   ])
   const faceitSummary = faceitProfile ? summarizeFaceit(faceitProfile) : null
 
@@ -68,6 +71,7 @@ export default async function PlayerProfile({
     // El puesto es el de la ladder (sin inactivos); los récords cuentan a todos.
     const ranked = getLadderStats(data, { minMatches: 1 })
     const rankIndex = ranked.findIndex((s) => s.player.id === id)
+    const matchIds = new Set(data.matches.map((m) => m.id))
     return {
       key,
       label,
@@ -81,6 +85,8 @@ export default async function PlayerProfile({
       inactivo: !!player.inactivo,
       nelsons: data.players.find((p) => p.id === id)?.nelsons ?? 0,
       perfil: buildPerfilAlcance(data, id, options.seasonId === null ? 'carrera' : 'temporada'),
+      duelos: resumirDuelos({ playerId: id, kills: xplay.kills, participantes: xplay.participantes, matchIds, players: league.players }),
+      xplay: resumirCifrasXplay(xplay.cifras, matchIds),
     }
   }
 

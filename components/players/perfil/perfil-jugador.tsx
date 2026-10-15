@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Gauge, LayoutDashboard, Map as MapIcon, Medal, Swords, Users, type LucideIcon } from 'lucide-react'
+import { Crosshair, Gauge, LayoutDashboard, Map as MapIcon, Medal, Swords, Users, type LucideIcon } from 'lucide-react'
 import { SeasonTabs } from '@/components/season/season-tabs'
 import { PlayerMatchHistory, type MatchEntry } from '@/components/players/player-match-history'
 import { cn } from '@/lib/utils'
@@ -13,9 +13,10 @@ import { Posiciones } from './posiciones'
 import { Mapas } from './mapas'
 import { Companeros } from './companeros'
 import { Marcas } from './marcas'
+import { Duelos } from './duelos'
 import { Recomendaciones, type Recomendacion } from './recomendaciones'
 
-type TabKey = 'resumen' | 'partidas' | 'mapas' | 'companeros' | 'marcas' | 'faceit'
+type TabKey = 'resumen' | 'partidas' | 'duelos' | 'mapas' | 'companeros' | 'marcas' | 'faceit'
 
 /** Las recomendaciones van al pie del resumen, como los comentarios del perfil. */
 const ANCLA_RECOMENDACIONES = 'recomendaciones'
@@ -25,6 +26,7 @@ type Tab = { key: TabKey; label: string; icon: LucideIcon; porTemporada: boolean
 const TABS: Tab[] = [
   { key: 'resumen', label: 'Resumen', icon: LayoutDashboard, porTemporada: true },
   { key: 'partidas', label: 'Partidas', icon: Swords, porTemporada: true },
+  { key: 'duelos', label: 'Duelos', icon: Crosshair, porTemporada: true },
   { key: 'mapas', label: 'Mapas', icon: MapIcon, porTemporada: true },
   { key: 'companeros', label: 'Compañeros', icon: Users, porTemporada: true },
   { key: 'marcas', label: 'Marcas', icon: Medal, porTemporada: true },
@@ -209,6 +211,8 @@ export function PerfilJugador({
               <PlayerMatchHistory key={alcance.key} matches={scopedHistory} />
             </section>
           )}
+
+          {actual.key === 'duelos' && <Duelos duelos={alcance.duelos} cifras={alcance.xplay} nombre={nombre} />}
 
           {actual.key === 'mapas' && <Mapas mapas={alcance.perfil.mapas} />}
 

@@ -12,6 +12,8 @@ export type Player = {
   menudaMierda?: boolean
   /** No aparece en la ladder; sus partidas siguen contando para lo demás (se marca a mano en la base). */
   inactivo?: boolean
+  /** Cuenta de Steam con la que juega en Xplay (se completa sola al cargar partidas). */
+  steamAccountId?: number
 }
 
 export type MatchPlayer = {
@@ -50,6 +52,8 @@ export type Match = {
   notes?: string
   teamAName?: string
   teamBName?: string
+  /** Si se cargó con el link de Xplay: `procesada` es que hay cifras, rondas y duelos. */
+  xplay?: { procesada: boolean; inicio: string | null }
 }
 
 export type NelsonTrend = 'up' | 'down' | 'same'

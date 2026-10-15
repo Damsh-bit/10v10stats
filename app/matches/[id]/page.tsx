@@ -7,6 +7,9 @@ import { Scoreboard } from '@/components/matches/scoreboard'
 import { EditMatchModal } from '@/components/matches/edit-match-modal'
 import { Reveal } from '@/components/motion/reveal'
 import { cn } from '@/lib/utils'
+import { getDetalleXplay, type DetalleXplay } from '@/lib/xplay/leer'
+import { PartidaXplay } from '@/components/matches/xplay/partida-xplay'
+import { VincularXplayModal } from '@/components/matches/xplay/vincular-xplay-modal'
 
 export const revalidate = 60
 
@@ -20,7 +23,7 @@ export default async function MatchDetail({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const league = await getLeagueData()
+  const [league, detalle] = await Promise.all([getLeagueData(), getDetalleXplay(id)])
   const match = league.matches.find((m) => m.id === id)
   if (!match) notFound()
 
@@ -47,17 +50,20 @@ export default async function MatchDetail({
             Partidas
           </Link>
 
-          <EditMatchModal
-            matchId={match.id}
-            initialCtScore={match.ctScore}
-            initialTScore={match.tScore}
-            initialMap={match.map}
-            initialDate={match.date}
-            teamALabel={teamALabel}
-            teamBLabel={teamBLabel}
-            matchPlayers={entries}
-            allPlayers={league.players}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {detalle ? <VincularXplayModal matchId={match.id} label="Actualizar Xplay" /> : null}
+            <EditMatchModal
+              matchId={match.id}
+              initialCtScore={match.ctScore}
+              initialTScore={match.tScore}
+              initialMap={match.map}
+              initialDate={match.date}
+              teamALabel={teamALabel}
+              teamBLabel={teamBLabel}
+              matchPlayers={entries}
+              allPlayers={league.players}
+            />
+          </div>
         </div>
 
         <Reveal immediate>
@@ -102,14 +108,29 @@ export default async function MatchDetail({
           </div>
         </Reveal>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <Reveal delay={0.05}>
-            <Scoreboard team="CT" teamLabel={teamALabel} score={match.ctScore} entries={ctPlayers} isWinner={ctWins} players={league.players} />
+        {detalle?.procesada ? (
+          <Reveal delay={0.05} className="mt-6">
+            <PartidaXplay
+              detalle={detalle}
+              players={league.players}
+              teamALabel={teamALabel}
+              teamBLabel={teamBLabel}
+              mvpPlayerId={match.players.find((p) => p.mvps > 0)?.playerId}
+            />
           </Reveal>
-          <Reveal delay={0.15}>
-            <Scoreboard team="T" teamLabel={teamBLabel} score={match.tScore} entries={tPlayers} isWinner={!ctWins && !isDraw} players={league.players} />
-          </Reveal>
-        </div>
+        ) : (
+          <>
+            <AvisoXplay matchId={match.id} detalle={detalle} pideLink={match.seasonId >= 2} />
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <Reveal delay={0.05}>
+                <Scoreboard team="CT" teamLabel={teamALabel} score={match.ctScore} entries={ctPlayers} isWinner={ctWins} players={league.players} />
+              </Reveal>
+              <Reveal delay={0.15}>
+                <Scoreboard team="T" teamLabel={teamBLabel} score={match.tScore} entries={tPlayers} isWinner={!ctWins && !isDraw} players={league.players} />
+              </Reveal>
+            </div>
+          </>
+        )}
 
         {match.fotoUrl ? (
           <Reveal className="mt-6">
@@ -126,5 +147,31 @@ export default async function MatchDetail({
         ) : null}
       </div>
     </main>
+  )
+}
+
+/** Partida sin datos de Xplay: falta el link, o SCOPE no pudo procesar la demo. */
+function AvisoXplay({ matchId, detalle, pideLink }: { matchId: string; detalle: DetalleXplay | null; pideLink: boolean }) {
+  if (detalle) {
+    return (
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-[13px] text-amber-100">
+        <p>
+          Esta partida tiene link de Xplay, pero SCOPE no pudo procesar la demo: no hay rondas ni duelos, y los números son los de la captura.
+        </p>
+        <a href={detalle.link} target="_blank" rel="noreferrer" className="font-semibold underline">
+          Ver en Xplay
+        </a>
+      </div>
+    )
+  }
+  if (!pideLink) return null
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-amber-400/40 bg-amber-400/5 px-4 py-3">
+      <div className="text-[13px]">
+        <p className="font-semibold text-amber-200">Falta el link de Xplay de esta partida</p>
+        <p className="text-muted-foreground">Con el link se suman las cifras completas, las rondas, los duelos y el replay.</p>
+      </div>
+      <VincularXplayModal matchId={matchId} />
+    </div>
   )
 }

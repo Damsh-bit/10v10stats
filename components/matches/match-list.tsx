@@ -114,8 +114,9 @@ export function MatchList({
                   <span className="font-mono text-xl font-bold text-foreground">
                     {match.ctScore}-{match.tScore}
                   </span>
-                  <span className="text-[13px] text-muted-foreground">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
                     {formatDate(match.date)} · {match.durationMin ? `${match.durationMin} rondas` : 'Sin info'}
+                    <XplayChip match={match} />
                   </span>
                 </div>
 
@@ -223,6 +224,36 @@ export function MatchList({
         </div>
       )}
     </div>
+  )
+}
+
+/** Desde la Season 2 las partidas van con el link de Xplay: se marca la que todavía no lo tiene. */
+function XplayChip({ match }: { match: Match }) {
+  if (match.xplay?.procesada) {
+    return (
+      <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+        Xplay
+      </span>
+    )
+  }
+  if (match.xplay) {
+    return (
+      <span
+        title="Tiene link de Xplay pero la demo no se procesó: sin rondas ni duelos"
+        className="rounded border border-border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+      >
+        Xplay sin datos
+      </span>
+    )
+  }
+  if (match.seasonId < 2) return null
+  return (
+    <span
+      title="Falta cargarle el link de Xplay"
+      className="rounded border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200"
+    >
+      Falta Xplay
+    </span>
   )
 }
 

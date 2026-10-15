@@ -59,7 +59,7 @@ export type NovedadTag =
   | 'Arreglos'
   | 'Sitio'
 
-export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano' | 'perfil'
+export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano' | 'perfil' | 'xplay'
 
 export type Novedad = {
   /** Único y estable: si cambia, todos la vuelven a ver. */
@@ -80,6 +80,23 @@ export type Novedad = {
 export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
+  {
+    id: '2026-10-15-xplay',
+    date: '2026-10-15',
+    tag: 'Partidas',
+    title: 'Las partidas ahora vienen de Xplay',
+    summary:
+      'Cada partida se carga con el link de Xplay y trae todo: la tabla completa, ronda por ronda, cada kill y el replay 2D. Y en tu perfil, tus duelos contra cada uno.',
+    highlights: [
+      { icon: 'swords', text: 'Duelos: cuántas veces mató cada uno a cada rival. En tu perfil, tu víctima favorita, tu verdugo y contra quién perdés más.' },
+      { icon: 'list', text: 'Ronda por ronda: quién la ganó y cómo, qué compró cada equipo y quién mató a quién.' },
+      { icon: 'chart', text: 'Tabla completa: rating, ADR, KAST, HS% real, aperturas, clutches, granadas y hasta gallinas.' },
+      { icon: 'target', text: 'Replay 2D de cada partida y la demo para bajar. Las de la Season 2 ya están cargadas.' },
+    ],
+    cta: { label: 'Ver las partidas', href: '/matches' },
+    popup: true,
+    visual: { kind: 'demo', name: 'xplay' },
+  },
   {
     // Id nuevo: la primera versión decía que el KDA se recuperaba al volver.
     id: '2026-10-13-ladder-strikes-2',

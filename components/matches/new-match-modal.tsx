@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Loader2, Plus, Upload, X } fr
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Portal, useBodyScrollLock } from '@/components/ui/portal'
+import { ImportarXplay } from '@/components/matches/xplay/importar-xplay'
 
 type Team = 'CT' | 'T' | 'EMPATE'
 
@@ -99,6 +100,8 @@ export function NewMatchModal({
   const [authError, setAuthError] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [aiSuccess, setAiSuccess] = useState<string | null>(null)
+  // Desde la Season 2 se carga con el link de Xplay; la captura queda por si acaso.
+  const [mode, setMode] = useState<'xplay' | 'captura'>('xplay')
 
   useEffect(() => {
     if (!isOpen) return
@@ -147,6 +150,7 @@ export function NewMatchModal({
   useBodyScrollLock(isOpen)
   const handleOpen = () => {
     setIsOpen(true)
+    setMode('xplay')
     setStep(1)
     setError(null)
     setSuccessMessage(null)
@@ -784,44 +788,75 @@ export function NewMatchModal({
                   </div>
                 ) : (
                   <>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {STEP_LABELS.map((label, index) => {
-                        const active = index + 1 === step
-                        const complete = index + 1 < step
-                        return (
-                          <div key={label} className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${active ? 'bg-primary text-primary-foreground' : complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
-                            {label}
+                    <div className="mt-4 flex w-fit flex-wrap items-center rounded-full bg-muted/40 p-0.5" role="group" aria-label="Forma de cargar la partida">
+                      {([
+                        ['xplay', 'Con link de Xplay'],
+                        ['captura', 'Con captura (como antes)'],
+                      ] as const).map(([key, label]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={mode === key}
+                          onClick={() => setMode(key)}
+                          className={cn(
+                            'h-8 rounded-full px-3.5 text-[12px] font-semibold uppercase tracking-wider transition-colors',
+                            mode === key ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground',
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {mode === 'xplay' ? (
+                      <div className="mt-6 flex-1">
+                        <ImportarXplay
+                          clave={adminPassword}
+                          onGuardada={(matchId) => setSuccessMessage(`Partida guardada correctamente (${matchId}).`)}
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {STEP_LABELS.map((label, index) => {
+                            const active = index + 1 === step
+                            const complete = index + 1 < step
+                            return (
+                              <div key={label} className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${active ? 'bg-primary text-primary-foreground' : complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                                {label}
+                              </div>
+                            )
+                          })}
+                        </div>
+  
+                        <div className="mt-6 flex-1">{stepContent}</div>
+  
+                        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                          <div className="text-sm text-muted-foreground">
+                            {isLoadingPlayers ? 'Cargando jugadores…' : 'Los jugadores se traen desde la base de datos.'}
                           </div>
-                        )
-                      })}
-                    </div>
-  
-                    <div className="mt-6 flex-1">{stepContent}</div>
-  
-                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                      <div className="text-sm text-muted-foreground">
-                        {isLoadingPlayers ? 'Cargando jugadores…' : 'Los jugadores se traen desde la base de datos.'}
-                      </div>
-                      <div className="flex gap-2">
-                        {step > 1 ? (
-                          <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Volver
-                          </Button>
-                        ) : null}
-                        {step < 3 ? (
-                          <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isAnalyzing}>
-                            Siguiente
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button onClick={handleSubmit} disabled={!canSave || isSubmitting}>
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Guardar partida
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                          <div className="flex gap-2">
+                            {step > 1 ? (
+                              <Button variant="outline" onClick={() => setStep((prev) => prev - 1)}>
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Volver
+                              </Button>
+                            ) : null}
+                            {step < 3 ? (
+                              <Button onClick={() => setStep((prev) => prev + 1)} disabled={step === 1 && isAnalyzing}>
+                                Siguiente
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button onClick={handleSubmit} disabled={!canSave || isSubmitting}>
+                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Guardar partida
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>
