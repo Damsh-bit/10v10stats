@@ -12,7 +12,7 @@ import { motionPreferenceScript } from '@/components/motion/motion-preference'
 import { getCurrentSeason, getSeasons } from '@/lib/seasons'
 import { getApuestasConfig } from '@/lib/apuestas/config'
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import pkg from '../package.json'
+import { versionSitio } from '@/lib/version'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -49,6 +49,7 @@ export default async function RootLayout({
 }>) {
   const seasons = await getSeasons()
   const currentSeason = getCurrentSeason(seasons)
+  const version = versionSitio()
 
   return (
     <html
@@ -85,8 +86,29 @@ export default async function RootLayout({
                 El cartel
               </Link>
               <span aria-hidden="true">·</span>
-              <span title="Versión de la aplicación">v{pkg.version}</span>
+              <span title="Versión del sitio">v{version.version}</span>
             </p>
+            {version.commitCorto ? (
+              <p className="flex flex-wrap items-center justify-center gap-x-2 font-mono text-[10px] tracking-wider opacity-50">
+                <a
+                  href={version.url ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Último commit desplegado"
+                  className="transition-colors hover:text-foreground"
+                >
+                  commit {version.commitCorto}
+                </a>
+                {version.fechaTexto ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <time dateTime={version.fecha ?? undefined} title="Hora del último commit (Argentina)">
+                      {version.fechaTexto}
+                    </time>
+                  </>
+                ) : null}
+              </p>
+            ) : null}
           </footer>
           <RecommendationsWidget />
         </MotionProvider>
