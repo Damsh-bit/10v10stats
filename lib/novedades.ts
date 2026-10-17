@@ -96,6 +96,18 @@ export const NOVEDADES: Novedad[] = [
     cta: { label: 'Ver la ladder', href: '/' },
   },
   {
+    id: '2026-10-17-temporada-sin-depresivos',
+    date: '2026-10-17',
+    tag: 'Temporadas',
+    title: 'Comienza una nueva temporada sin depresivos',
+    summary:
+      'Arriba de todo en la home hay un banner nuevo para festejar que arrancamos la temporada sin Tiky y Foco. Con fotos y todo.',
+    highlights: [
+      { icon: 'sparkles', text: 'Ahora 100% libre de bajón: se terminó el "para qué juego si siempre pierdo".' },
+    ],
+    cta: { label: 'Ver el banner', href: '/' },
+  },
+  {
     id: '2026-10-17-homenaje-qepd',
     date: '2026-10-17',
     tag: 'Estadísticas',
