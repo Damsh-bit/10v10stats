@@ -17,6 +17,8 @@ export type AlcancePerfil = {
   menudaMierda: boolean
   /** Fuera de la ladder: no tiene puesto aunque haya jugado. */
   inactivo: boolean
+  /** Ya no juega más (homenaje QEPD): en la temporada en curso dice QEPD en vez de Inactivo. */
+  qepd: boolean
   nelsons: number
   perfil: PerfilAlcance
   /** Duelos contra cada rival (sólo partidas de Xplay). */

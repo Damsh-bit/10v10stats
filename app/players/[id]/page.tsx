@@ -82,7 +82,9 @@ export default async function PlayerProfile({
       rankedCount: ranked.length,
       records: getPlayerRecords(data, getPlayerStatsForData(data, { minMatches: 1 }))[id] ?? [],
       menudaMierda: !!player.menudaMierda,
-      inactivo: !!player.inactivo,
+      // Los del homenaje QEPD sólo quedan fuera de la ladder de la temporada en curso.
+      inactivo: !!data.players.find((p) => p.id === id)?.inactivo,
+      qepd: !!player.qepd,
       nelsons: data.players.find((p) => p.id === id)?.nelsons ?? 0,
       perfil: buildPerfilAlcance(data, id, options.seasonId === null ? 'carrera' : 'temporada'),
       duelos: resumirDuelos({ playerId: id, kills: xplay.kills, participantes: xplay.participantes, matchIds, players: league.players }),

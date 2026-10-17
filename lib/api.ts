@@ -201,14 +201,16 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
   if (!supabase) return empty
 
   try {
-    const [playersResult, fakesResult, faceitResult, steamResult, estadosXplay] = await Promise.all([
+    const [playersResult, fakesResult, faceitResult, steamResult, qepdResult, estadosXplay] = await Promise.all([
       supabase.from('players').select('id, name, photo_url, badge, contador_nelson').order('name'),
       supabase.from('fake_leaderboard').select('player_name, fake_count'),
       // Aparte: si estas columnas no existen, el resto de la app sigue andando sin ellas.
       supabase.from('players').select('id, faceit_nickname, menuda_mierda, inactivo'),
       supabase.from('players').select('id, steam_account_id'),
+      supabase.from('players').select('id, qepd'),
       getEstadosXplay(),
     ])
+    const qepdIds = new Set((qepdResult.data ?? []).filter((row) => row.qepd === true).map((row) => String(row.id)))
     const steamById = new Map<string, number>(
       (steamResult.data ?? [])
         .filter((row) => row.steam_account_id !== null && row.steam_account_id !== undefined)
@@ -243,6 +245,7 @@ export const getLeagueData = cache(async (): Promise<LeagueData> => {
         faceitNickname: faceitById.get(String(row.id)),
         menudaMierda: menudaMierdaIds.has(String(row.id)),
         inactivo: inactivoIds.has(String(row.id)),
+        qepd: qepdIds.has(String(row.id)),
         steamAccountId: steamById.get(String(row.id)),
       }
     })
@@ -278,6 +281,9 @@ export function getSeasonData(league: LeagueData, seasonId: number): LiveData {
   const useSnapshot = !isCurrent && seasonSnapshots.length > 0
 
   const players = league.players.map((player) => {
+    // Los del homenaje QEPD dejan la ladder de la temporada en curso; en las
+    // cerradas siguen en la tabla final.
+    if (isCurrent && player.qepd) return { ...player, inactivo: true }
     if (!useSnapshot) return player
     const snapshot = snapshotByPlayer.get(player.id)
     return { ...player, nelsons: snapshot?.nelsonPoints ?? 0, fakes: snapshot?.fakeCount ?? 0 }

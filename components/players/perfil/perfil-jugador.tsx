@@ -36,7 +36,7 @@ const TABS: Tab[] = [
 function rankLabel(alcance: AlcancePerfil) {
   if (alcance.seasonId === null) return null
   if (alcance.rank) return `#${alcance.rank} de ${alcance.rankedCount}`
-  if (alcance.inactivo && alcance.stats?.matches) return 'Inactivo'
+  if (alcance.inactivo && alcance.stats?.matches) return alcance.qepd ? 'QEPD' : 'Inactivo'
   return alcance.isCurrent ? 'Sin debut' : 'No jugó'
 }
 

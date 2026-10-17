@@ -12,6 +12,8 @@ export type Player = {
   menudaMierda?: boolean
   /** No aparece en la ladder; sus partidas siguen contando para lo demás (se marca a mano en la base). */
   inactivo?: boolean
+  /** Ya no juega más: fuera de la ladder de la temporada en curso y en el homenaje QEPD (se marca a mano en la base). */
+  qepd?: boolean
   /** Cuenta de Steam con la que juega en Xplay (se completa sola al cargar partidas). */
   steamAccountId?: number
 }

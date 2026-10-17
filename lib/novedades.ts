@@ -81,6 +81,19 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-17-homenaje-qepd',
+    date: '2026-10-17',
+    tag: 'Estadísticas',
+    title: 'Homenaje QEPD: Tiky y Foco',
+    summary:
+      'Tiky y Foco ya no juegan más: salieron de la ladder y en la home tienen su apartado de homenaje, en blanco y negro, con las cifras de toda su carrera.',
+    highlights: [
+      { icon: 'heart', text: 'Se fueron como vivieron: muriendo primero. Que en paz descansen.' },
+      { icon: 'history', text: 'Sus partidas siguen contando en los récords y en sus perfiles, y en la Season 1 siguen en la tabla final.' },
+    ],
+    cta: { label: 'Ir al homenaje', href: '/' },
+  },
+  {
     id: '2026-10-15-ronda-bisagra',
     date: '2026-10-15',
     tag: 'Partidas',

@@ -1,4 +1,12 @@
-import { getLadderData, getLadderStats, getLeagueData, getSeasonData, getPlayerStatsForData } from '@/lib/api'
+import {
+  getCareerData,
+  getLadderData,
+  getLadderStats,
+  getLeagueData,
+  getSeasonData,
+  getPlayerStatsForData,
+  getSinglePlayerStats,
+} from '@/lib/api'
 import { getPlayerRecords } from '@/lib/records'
 import { getNelsonData } from '@/lib/nelson'
 import { formatSeasonDate, getPreviousSeason, getSeasonDay } from '@/lib/seasons'
@@ -14,6 +22,7 @@ import { SeasonLadder } from '@/components/stats/season-ladder'
 import { RankBattles } from '@/components/stats/rank-battles'
 import { SeasonRecords } from '@/components/stats/season-records'
 import { NelsonLeague } from '@/components/stats/nelson-league'
+import { HomenajeQepd, type Difunto } from '@/components/stats/homenaje-qepd'
 import { NelsonVotePanel } from '@/components/stats/nelson-vote-panel'
 import { MapWinrateSection } from '@/components/stats/map-winrate-section'
 import { RecentMatches } from '@/components/matches/recent-matches'
@@ -73,6 +82,17 @@ export default async function Page() {
 
   const recentMatch = data.matches[0]
 
+  // Homenaje QEPD: los que ya no juegan más, con las cifras de toda su carrera.
+  const career = getCareerData(league)
+  const homenaje: Difunto[] = league.players
+    .filter((player) => player.qepd)
+    .flatMap((player) => {
+      const stats = getSinglePlayerStats(career, player.id)
+      if (!stats?.matches) return []
+      const jugadas = league.matches.filter((m) => m.players.some((mp) => mp.playerId === player.id))
+      return [{ stats, desde: jugadas[jugadas.length - 1]?.date ?? null, hasta: jugadas[0]?.date ?? null }]
+    })
+
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
       <WhatsNewModal />
@@ -112,6 +132,12 @@ export default async function Page() {
                 emptyAction={<NewMatchModal triggerLabel="Cargar la primera partida" />}
               />
             </Reveal>
+
+            {homenaje.length > 0 && (
+              <Reveal>
+                <HomenajeQepd difuntos={homenaje} />
+              </Reveal>
+            )}
 
             {battles.length > 0 && (
               <Reveal>
