@@ -23,6 +23,7 @@ import { RankBattles } from '@/components/stats/rank-battles'
 import { SeasonRecords } from '@/components/stats/season-records'
 import { NelsonLeague } from '@/components/stats/nelson-league'
 import { HomenajeQepd, type Difunto } from '@/components/stats/homenaje-qepd'
+import { BannerTemporadaNueva } from '@/components/season/banner-temporada-nueva'
 import { NelsonVotePanel } from '@/components/stats/nelson-vote-panel'
 import { MapWinrateSection } from '@/components/stats/map-winrate-section'
 import { RecentMatches } from '@/components/matches/recent-matches'
@@ -96,6 +97,8 @@ export default async function Page() {
     <main className="cs-grid min-h-screen overflow-x-hidden">
       <WhatsNewModal />
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-2 py-5 sm:px-4 sm:py-8">
+        <BannerTemporadaNueva seasonName={season.name} depresivos={league.players.filter((player) => player.qepd)} />
+
         {cartel && (
           <div className="flex flex-col gap-2">
             <CartelVivo
