@@ -44,7 +44,7 @@ export function HallOfFameView({ scopes, initialKey }: { scopes: HallScope[]; in
           animate="show"
           exit={{ opacity: 0, transition: { duration: 0.15 } }}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {scope.cards.map((card) => (
             <motion.div

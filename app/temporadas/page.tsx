@@ -28,7 +28,7 @@ export default async function SeasonsPage() {
 
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
-      <div className="page-container py-6 sm:py-10">
+      <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-10">
         <Reveal immediate className="mb-8">
           <span className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-brand">10v10 Stats</span>
           <h1 className="font-heading text-4xl font-bold uppercase tracking-wide text-foreground">Temporadas</h1>

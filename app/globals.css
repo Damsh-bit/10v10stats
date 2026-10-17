@@ -84,26 +84,6 @@
   }
 }
 
-/*
- * Contenedor de todas las páginas: usa el ancho de la pantalla con márgenes
- * cómodos. El tope sólo frena en monitores gigantes, donde las filas quedarían
- * demasiado largas para leer.
- */
-@utility page-container {
-  margin-inline: auto;
-  width: 100%;
-  max-width: 120rem;
-  padding-inline: 0.75rem;
-
-  @media (width >= 40rem) {
-    padding-inline: 1.25rem;
-  }
-
-  @media (width >= 64rem) {
-    padding-inline: 2rem;
-  }
-}
-
 .cs-grid {
   background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),

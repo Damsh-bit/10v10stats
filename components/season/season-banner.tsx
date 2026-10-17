@@ -60,7 +60,7 @@ export function SeasonBanner({ seasonSlug, seasonNumber, previousSeasonSlug, pre
             aria-hidden="true"
           />
 
-          <div className="page-container relative flex items-center gap-3 py-2">
+          <div className="relative mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
             <span className="season-chip flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 font-heading text-[11px] font-bold uppercase tracking-[0.2em] text-black">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
               Season {seasonNumber}

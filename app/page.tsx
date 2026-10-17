@@ -81,19 +81,6 @@ export default async function Page() {
       : null
 
   const recentMatch = data.matches[0]
-  // Con una votación abierta el panel sube arriba de la tabla: es lo único con apuro.
-  const voteActive = nelsonData.voteState.active
-  const votePanel = (
-    <NelsonVotePanel
-      initialPlayers={nelsonData.players.map((player) => ({
-        id: player.id,
-        name: player.name,
-        nelsonPoints: player.nelsonPoints,
-      }))}
-      initialVoteState={nelsonData.voteState}
-      initialAdminPasswordConfigured={nelsonData.adminPasswordConfigured}
-    />
-  )
 
   // Homenaje QEPD: los que ya no juegan más, con las cifras de toda su carrera.
   const career = getCareerData(league)
@@ -109,7 +96,7 @@ export default async function Page() {
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
       <WhatsNewModal />
-      <div className="page-container flex flex-col gap-6 py-5 sm:py-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-2 py-5 sm:px-4 sm:py-8">
         {cartel && (
           <div className="flex flex-col gap-2">
             <CartelVivo
@@ -132,15 +119,8 @@ export default async function Page() {
           primaryAction={<NewMatchModal triggerLabel="Cargar partida" triggerClassName="h-9 px-3.5 shadow-lg shadow-primary/30" />}
         />
 
-        {/*
-          Lo principal (tabla, duelos y última partida) va primero. El resto se reparte
-          según el ancho: en tablet, dos columnas abajo; en laptop, FACEIT al costado
-          y lo de Nelson abajo de la tabla; en monitores grandes, tres columnas.
-        */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-12 xl:grid-rows-[auto_1fr] 2xl:grid-rows-none">
-          <div className="flex min-w-0 flex-col gap-6 md:col-span-2 xl:col-span-8 2xl:col-span-6">
-            {voteActive && votePanel}
-
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
             <Reveal immediate delay={0.2}>
               <SeasonLadder
                 seasonName={season.name}
@@ -153,39 +133,36 @@ export default async function Page() {
               />
             </Reveal>
 
-            {homenaje.length > 0 && <HomenajeQepd difuntos={homenaje} />}
+            {homenaje.length > 0 && (
+              <Reveal>
+                <HomenajeQepd difuntos={homenaje} />
+              </Reveal>
+            )}
 
-            {battles.length > 0 && <RankBattles battles={battles} />}
+            {battles.length > 0 && (
+              <Reveal>
+                <RankBattles battles={battles} />
+              </Reveal>
+            )}
 
             {recentMatch && <RecentMatchScoreboard match={recentMatch} players={data.players} />}
+
+            <MapWinrateSection rows={toMapWinrateRows(data.matches)} />
+
+            <Reveal>
+              <FakeLeaderboard />
+            </Reveal>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-6 xl:col-span-4 xl:row-span-2 2xl:col-span-3 2xl:row-span-1">
+          <div className="flex min-w-0 flex-col gap-6">
             {faceitRows.length > 0 && (
               <Reveal immediate delay={0.25}>
                 <FaceitLadder rows={faceitRows} variant="compact" />
               </Reveal>
             )}
 
-            <SeasonRecords
-              records={records}
-              seasonName={season.name}
-              previous={previousSeason && previousData ? { records: computeMatchRecords(previousData), seasonName: previousSeason.name } : null}
-            />
-
-            <RecentMatches matches={data.matches.slice(0, 5)} />
-          </div>
-
-          <div className="grid min-w-0 content-start gap-6 xl:col-span-8 xl:grid-cols-2 2xl:col-span-3 2xl:grid-cols-1">
-            <div className="flex min-w-0 flex-col gap-6">
-              <NelsonLeague entries={data.nelsonLeague} subtitle={`Ranking por Nelson Points · ${season.name}`} />
-              {!voteActive && votePanel}
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-6">
-              <FakeLeaderboard />
-
-              {previousSeason && previousData && previousStandings.length > 0 && (
+            {previousSeason && previousData && previousStandings.length > 0 && (
+              <Reveal immediate delay={0.3}>
                 <SeasonLegacyCard
                   seasonName={previousSeason.name}
                   seasonSlug={previousSeason.slug}
@@ -193,12 +170,38 @@ export default async function Page() {
                   matches={previousData.matches.length}
                   dateRange={`${formatSeasonDate(previousSeason.startsAt)} → ${formatSeasonDate(previousSeason.endsAt)}`}
                 />
-              )}
-            </div>
+              </Reveal>
+            )}
+
+            <Reveal>
+              <SeasonRecords
+                records={records}
+                seasonName={season.name}
+                previous={previousSeason && previousData ? { records: computeMatchRecords(previousData), seasonName: previousSeason.name } : null}
+              />
+            </Reveal>
+
+            <Reveal>
+              <NelsonLeague entries={data.nelsonLeague} subtitle={`Ranking por Nelson Points · ${season.name}`} />
+            </Reveal>
+
+            <Reveal>
+              <NelsonVotePanel
+                initialPlayers={nelsonData.players.map((player) => ({
+                  id: player.id,
+                  name: player.name,
+                  nelsonPoints: player.nelsonPoints,
+                }))}
+                initialVoteState={nelsonData.voteState}
+                initialAdminPasswordConfigured={nelsonData.adminPasswordConfigured}
+              />
+            </Reveal>
+
+            <Reveal>
+              <RecentMatches matches={data.matches.slice(0, 4)} />
+            </Reveal>
           </div>
         </div>
-
-        <MapWinrateSection rows={toMapWinrateRows(data.matches)} />
       </div>
     </main>
   )

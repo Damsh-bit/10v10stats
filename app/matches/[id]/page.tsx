@@ -40,7 +40,7 @@ export default async function MatchDetail({
 
   return (
     <main className="cs-grid min-h-screen">
-      <div className="page-container py-6 sm:py-8">
+      <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <Link
             href={season && !season.isCurrent ? `/matches?temporada=${season.slug}` : '/matches'}

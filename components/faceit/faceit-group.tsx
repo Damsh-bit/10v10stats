@@ -124,7 +124,7 @@ export function FaceitHighlights({ entries }: { entries: FaceitEntry[] }) {
   if (highlights.length === 0) return null
 
   return (
-    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:auto-cols-fr xl:grid-flow-col">
+    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
       {highlights.map((h) => (
         <li key={h.key}>
           <Link

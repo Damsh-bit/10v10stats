@@ -60,7 +60,7 @@ export default async function CartelPage() {
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
       <WhatsNewModal autoOpen={false} />
-      <div className="page-container flex flex-col gap-6 py-5 sm:py-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-2 py-5 sm:px-4 sm:py-8">
         <header className="flex flex-col gap-2 px-1">
           <span className="w-fit rounded-full border border-orange-400/40 bg-orange-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-300">
             Donaciones

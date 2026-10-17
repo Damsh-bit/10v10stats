@@ -124,7 +124,7 @@ function TeamRadarCard({
   const sorted = [...chartData].sort((a, b) => b.winrate - a.winrate)
 
   return (
-    <div className="@container h-full rounded-xl border border-border bg-card p-4 shadow-sm">
+    <div className="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Card title */}
       <h3
         className="font-heading text-sm font-bold uppercase tracking-[0.2em]"
@@ -133,8 +133,6 @@ function TeamRadarCard({
         {title}
       </h3>
 
-      {/* Angosta: radar arriba y tabla abajo. Con lugar, uno al lado del otro. */}
-      <div className="mt-3 flex flex-col gap-3 @xl:grid @xl:grid-cols-2 @xl:items-center @xl:gap-5">
       {/* Radar chart */}
       {maps.length === 0 ? (
         <div className="flex h-[260px] items-center justify-center text-[13px] text-muted-foreground">
@@ -215,7 +213,6 @@ function TeamRadarCard({
           </table>
         </div>
       )}
-      </div>
     </div>
   )
 }

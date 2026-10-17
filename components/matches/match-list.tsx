@@ -85,8 +85,8 @@ export function MatchList({
         )}
       </div>
 
-      {/* Match cards: en monitores anchos, de a dos por fila. */}
-      <div className="grid grid-cols-1 gap-3 2xl:grid-cols-2">
+      {/* Match cards */}
+      <div className="flex flex-col gap-3">
         {paginated.map((match, index) => {
           const isDraw = match.ctScore === match.tScore;
           const isCtWinner = match.winnerTeam

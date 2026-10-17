@@ -161,17 +161,6 @@ const MEDALS = [
   { row: 'bg-gradient-to-r from-orange-500/[0.08] to-transparent', bar: 'border-l-orange-400', rank: 'text-orange-300' },
 ]
 
-/**
- * Columnas de la tabla. Angosta (celu o tarjeta chica): puesto, jugador con
- * sus números abajo y KDA. Con lugar (@3xl del contenedor) cada número va en
- * su columna, y desde @5xl se suma la de partidas positivas/negativas.
- */
-const COLUMNAS =
-  'grid grid-cols-[2rem_minmax(0,1fr)_4.5rem] items-center gap-x-2.5 sm:gap-x-3 @3xl:grid-cols-[2.5rem_minmax(0,1fr)_5.5rem_3.5rem_7rem_3.5rem_3.5rem_5.5rem] @3xl:gap-x-4 @5xl:grid-cols-[2.5rem_minmax(0,1fr)_5.5rem_3.5rem_7rem_3.5rem_3.5rem_6rem_5.5rem]'
-
-const CELDA_ANCHA = 'hidden @3xl:block'
-const CELDA_MUY_ANCHA = 'hidden @5xl:block'
-
 export function SeasonLadder({
   seasonName,
   ranked,
@@ -196,6 +185,7 @@ export function SeasonLadder({
       key={s.player.id}
       stats={s}
       index={i}
+      total={stats.length}
       maxKda={maxKda}
       records={showingRecent ? undefined : records?.[s.player.id]}
       isTopFakador={topFakadorId === s.player.id}
@@ -287,7 +277,6 @@ export function SeasonLadder({
         <EmptyLadder archived={archived} action={emptyAction} />
       ) : (
         <div className="@container">
-          <ColumnHeader />
           {zonas ? (
             zonas.map((zona) => (
               <section key={zona.id} aria-labelledby={`zona-${zona.id}`}>
@@ -329,42 +318,10 @@ export function SeasonLadder({
   )
 }
 
-/** Encabezado de columnas: sólo cuando la tabla tiene lugar para mostrarlas. */
-function ColumnHeader() {
-  const th = 'font-sans text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'
-  return (
-    <div
-      aria-hidden="true"
-      className={cn(COLUMNAS, 'hidden border-b border-border bg-black/20 px-4 py-2 @3xl:grid')}
-    >
-      <span className={cn(th, 'text-center')}>#</span>
-      <span className={th}>Jugador</span>
-      <span className={cn(th, 'text-right')} title="Victorias - Empates - Derrotas">
-        V-E-D
-      </span>
-      <span className={cn(th, 'text-right')} title="Porcentaje de victorias">
-        % Vic
-      </span>
-      <span className={cn(th, 'text-right')} title="Kills / Muertes / Asistencias">
-        K / D / A
-      </span>
-      <span className={cn(th, 'text-right')} title="Daño promedio por partida">
-        ADM
-      </span>
-      <span className={cn(th, 'text-right')} title="Porcentaje de headshots">
-        HS
-      </span>
-      <span className={cn(th, CELDA_MUY_ANCHA, 'text-center')} title="Partidas en las que salió positivo / negativo">
-        + / −
-      </span>
-      <span className={cn(th, 'text-right')}>KDA</span>
-    </div>
-  )
-}
-
 function LadderRow({
   stats: s,
   index: i,
+  total,
   maxKda,
   records,
   isTopFakador,
@@ -372,17 +329,19 @@ function LadderRow({
 }: {
   stats: PlayerStats
   index: number
+  total: number
   maxKda: number
   records?: PlayerRecordMap[string]
   isTopFakador: boolean
-  /** Temporada en curso: la zona manda los colores. Archivo: medallas. */
+  /** Temporada en curso: la zona manda los colores. Archivo: medallas y zona roja. */
   zona: Zona | null
 }) {
   const medal = MEDALS[i]
   const enPodio = !zona || zona.id === 'top'
-  const puestoClase = (enPodio && medal?.rank) || zona?.puesto || 'text-muted-foreground'
-  const kdaClase = zona?.puesto ?? medal?.rank ?? 'text-foreground'
-  const barraClase = zona?.barra ?? (medal ? 'bg-amber-300' : 'bg-sky-400/80')
+  const inDangerZone = !zona && total > 5 && i >= total - 3
+  const puestoClase = (enPodio && medal?.rank) || zona?.puesto || (inDangerZone ? 'text-brand/80' : 'text-muted-foreground')
+  const kdaClase = zona?.puesto ?? (medal ? medal.rank : inDangerZone ? 'text-brand' : 'text-foreground')
+  const barraClase = zona?.barra ?? (medal ? 'bg-amber-300' : inDangerZone ? 'bg-primary' : 'bg-sky-400/80')
   const winrate = s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0
   const valor = valorLadder(s)
   const descuento = s.descuentoStrikes ?? 0
@@ -399,25 +358,24 @@ function LadderRow({
       <Link
         href={`/players/${s.player.id}`}
         className={cn(
-          COLUMNAS,
-          'group border-l-2 border-l-transparent px-2.5 py-2.5 transition-colors hover:bg-accent/50 sm:px-4',
+          'group flex items-center gap-2.5 border-l-2 border-l-transparent px-2.5 py-2.5 transition-colors hover:bg-accent/50 sm:gap-3 sm:px-4',
           zona ? cn(zona.fila, zona.borde) : cn(medal?.row, medal?.bar),
         )}
       >
-        <div className="flex flex-col items-center leading-none">
+        <div className="flex w-8 shrink-0 flex-col items-center leading-none">
           <span className="sr-only">Puesto </span>
           <span className={cn('font-heading text-lg font-black tabular-nums', puestoClase)}>{i + 1}</span>
           <TrendMark trend={s.trend} />
         </div>
 
-        <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
           <span className={cn('flex shrink-0 rounded-full', zona?.avatar)}>
             <PlayerAvatar player={s.player} size={36} />
           </span>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              <span className="truncate text-[15px] font-semibold leading-tight text-foreground group-hover:text-white">
+              <span className="truncate text-[14px] font-semibold leading-tight text-foreground group-hover:text-white">
                 {s.player.name}
               </span>
               {s.trend === 'new' && (
@@ -459,8 +417,8 @@ function LadderRow({
               {records?.map((record) => <RecordBadge key={record} type={record} compact />)}
             </div>
 
-            {/* Celu y tarjetas angostas: los números van en una línea abajo del nombre. */}
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-muted-foreground @3xl:hidden">
+            {/* Los números van abajo del nombre; lo que no entra en tarjetas angostas se esconde. */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-muted-foreground">
               <span>
                 <span className="sr-only">Kills, muertes y asistencias: </span>
                 {s.kills}/{s.deaths}/{s.assists}
@@ -483,26 +441,9 @@ function LadderRow({
           </div>
         </div>
 
-        <Celda label="Victorias, empates y derrotas" className="text-foreground/90">
-          {s.wins}-{s.draws}-{s.losses}
-        </Celda>
-        <Celda label="Porcentaje de victorias" className={cn('font-semibold', winrateClase)}>
-          {winrate}%
-        </Celda>
-        <Celda label="Kills, muertes y asistencias" className="text-foreground/90">
-          {s.kills}/{s.deaths}/{s.assists}
-        </Celda>
-        <Celda label="Daño promedio por partida">{s.adm}</Celda>
-        <Celda label="Headshots" className="text-yellow-500/90">
-          {s.hsPct}%
-        </Celda>
-        <div className={cn(CELDA_MUY_ANCHA, 'justify-self-center')}>
-          <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
-        </div>
-
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex w-16 shrink-0 flex-col items-end gap-1 sm:w-20">
           <span
-            className={cn('font-mono text-base font-black tabular-nums', kdaClase)}
+            className={cn('font-mono text-[15px] font-black tabular-nums sm:text-base', kdaClase)}
             title={descuento > 0 ? `KDA ${s.kda.toFixed(2)} menos ${descuento.toFixed(2)} perdido por faltar` : 'KDA'}
           >
             <span className="sr-only">{descuento > 0 ? 'KDA en la ladder ' : 'KDA '}</span>
@@ -523,16 +464,6 @@ function LadderRow({
         </div>
       </Link>
     </motion.li>
-  )
-}
-
-/** Un número en su columna (vista ancha). El lector de pantalla lee qué es. */
-function Celda({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
-  return (
-    <span className={cn(CELDA_ANCHA, 'text-right font-mono text-[13px] tabular-nums text-muted-foreground', className)}>
-      <span className="sr-only">{label}: </span>
-      {children}
-    </span>
   )
 }
 
