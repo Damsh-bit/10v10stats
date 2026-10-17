@@ -631,6 +631,15 @@ export function toLadderRows(entries: FaceitEntry[], now = Date.now()): FaceitLa
   }))
 }
 
+/**
+ * "Ahora" redondeado a la hora, para lo que se dibuja en páginas cacheadas: con
+ * la hora exacta cada regeneración salía distinta y Vercel la volvía a escribir
+ * aunque nadie hubiera jugado.
+ */
+export function ahoraEstable(now = Date.now(), pasoMs = 60 * 60 * 1000) {
+  return Math.floor(now / pasoMs) * pasoMs
+}
+
 /** "hace 3 h", "hace 2 d": corto, para filas apretadas. */
 export function timeAgo(timestamp: number, now = Date.now()) {
   const minutes = Math.max(0, Math.round((now - timestamp) / 60000))

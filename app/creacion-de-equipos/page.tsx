@@ -6,7 +6,9 @@ import { TeamGenerator, type RatingSource } from '@/components/TeamGenerator/Tea
 import { Reveal } from '@/components/motion/reveal'
 import { getApuestasConfig } from '@/lib/apuestas/config'
 
-export const revalidate = 60
+// Las partidas ya la refrescan al cargarse; esto es para el nivel de FACEIT, que
+// cambia cada vez que alguien juega (más seguido sería reescribirla por cada partida).
+export const revalidate = 1800
 // Margen para refrescar FACEIT (los pedidos van de a uno).
 export const maxDuration = 60
 

@@ -11,7 +11,9 @@ import { getDetalleXplay, type DetalleXplay } from '@/lib/xplay/leer'
 import { PartidaXplay } from '@/components/matches/xplay/partida-xplay'
 import { VincularXplayModal } from '@/components/matches/xplay/vincular-xplay-modal'
 
-export const revalidate = 60
+// Cargar o editar una partida (o un jugador) ya la refresca al toque; esto es
+// sólo un respaldo. Con 60 s se regeneraba sin parar y cada vez era una escritura.
+export const revalidate = 3600
 
 export async function generateStaticParams() {
   return []

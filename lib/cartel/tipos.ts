@@ -75,8 +75,13 @@ export type RankingDonador = {
   jugador: JugadorMini | null
   total: number
   carteles: number
-  /** Milisegundos con el cartel arriba (sumando todos los suyos). */
+  /** Milisegundos con el cartel arriba de los suyos que ya sacaron (sin el que está arriba ahora). */
   tiempoMs: number
+  /**
+   * Si el cartel de arriba es suyo, desde cuándo (ISO). Va aparte para que lo
+   * que se cachea no dependa de la hora: el tiempo en vivo lo suma el navegador.
+   */
+  arribaDesde: string | null
 }
 
 export type RankingObjetivo = { jugador: JugadorMini; carteles: number; plata: number }
@@ -116,6 +121,12 @@ export function formatDuracion(ms: number) {
   if (dias > 0) return horas > 0 ? `${dias} d ${horas} h` : `${dias} d`
   if (horas > 0) return minutos > 0 ? `${horas} h ${minutos} min` : `${horas} h`
   return `${minutos} min`
+}
+
+/** Tiempo arriba sin la hora actual: lo que se puede dibujar en el servidor y cachear. */
+export function tiempoArribaFijo({ tiempoMs, arribaDesde }: Pick<RankingDonador, 'tiempoMs' | 'arribaDesde'>) {
+  const partes = [tiempoMs > 0 ? `${formatDuracion(tiempoMs)} arriba` : null, arribaDesde ? 'arriba ahora' : null]
+  return partes.filter(Boolean).join(' · ') || `${formatDuracion(0)} arriba`
 }
 
 /** La novedad que explica el cartel (el "¿Cómo funciona?" abre ese pop-up). */

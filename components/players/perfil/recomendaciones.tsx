@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Flag, Loader2, MessageSquareHeart, Send } from 'lucide-react'
+import { formatShortDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { getDeviceId } from './dispositivo'
 import { Tarjeta } from './tarjeta'
@@ -60,10 +61,13 @@ export function Recomendaciones({
   const [ok, setOk] = useState(false)
   const [reportadas, setReportadas] = useState<Set<string>>(new Set())
   const [cargaFallo, setCargaFallo] = useState(false)
+  // El "hace X" depende de la hora: sólo en el navegador, así la página cacheada no cambia.
+  const [montado, setMontado] = useState(false)
   const campoId = useId()
 
   // La página se cachea un minuto: al montarse se traen las últimas.
   useEffect(() => {
+    setMontado(true)
     setReportadas(leerReportadas())
     let vivo = true
     fetch(`/api/players/${playerId}/recomendaciones`, { cache: 'no-store' })
@@ -197,7 +201,7 @@ export function Recomendaciones({
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="whitespace-pre-wrap break-words text-[14px] leading-snug text-foreground">{r.texto}</p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">Anónimo · {hace(r.creadaAt)}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Anónimo · {montado ? hace(r.creadaAt) : formatShortDate(r.creadaAt)}</p>
                 </div>
                 <button
                   type="button"

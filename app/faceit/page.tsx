@@ -8,8 +8,10 @@ import { FaceitHighlights, SharedFaceitMatches } from '@/components/faceit/facei
 import { FaceitLevel } from '@/components/faceit/faceit-bits'
 import { Reveal } from '@/components/motion/reveal'
 
-// Igual que el cache de los pedidos a FACEIT (FACEIT_REVALIDATE_SECONDS).
-export const revalidate = 300
+// Sin ISR: el elo y los "hace 5 min" cambian todo el tiempo y cada regeneración
+// era una escritura nueva en Vercel. Los pedidos a FACEIT siguen cacheados
+// (FACEIT_REVALIDATE_SECONDS), así que dibujarla en cada visita sale barato.
+export const dynamic = 'force-dynamic'
 // Margen para refrescar FACEIT (los pedidos van de a uno).
 export const maxDuration = 60
 

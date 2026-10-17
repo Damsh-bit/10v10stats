@@ -18,7 +18,9 @@ import { PlayerAvatar } from '@/components/shared/strike-ui'
 import { valorLadder } from '@/lib/ladder'
 import { Reveal } from '@/components/motion/reveal'
 
-export const revalidate = 300
+// Cargar o editar una partida (o un jugador) ya la refresca al toque; esto es
+// sólo un respaldo. Con 60 s se regeneraba sin parar y cada vez era una escritura.
+export const revalidate = 3600
 
 export async function generateStaticParams() {
   const seasons = await getSeasons()

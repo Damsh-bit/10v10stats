@@ -9,7 +9,9 @@ import { valorLadder } from '@/lib/ladder'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion/reveal'
 import { cn } from '@/lib/utils'
 
-export const revalidate = 60
+// Cargar o editar una partida (o un jugador) ya la refresca al toque; esto es
+// sólo un respaldo. Con 60 s se regeneraba sin parar y cada vez era una escritura.
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Temporadas — 10v10 Stats',

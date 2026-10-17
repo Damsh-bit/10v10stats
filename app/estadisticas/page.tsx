@@ -9,7 +9,9 @@ import { Reveal } from '@/components/motion/reveal'
 import type { LiveData } from '@/types'
 import { getCifrasXplayTodas, type FilaCifrasXplay } from '@/lib/xplay/leer'
 
-export const revalidate = 60
+// Cargar o editar una partida (o un jugador) ya la refresca al toque; esto es
+// sólo un respaldo. Con 60 s se regeneraba sin parar y cada vez era una escritura.
+export const revalidate = 3600
 
 function recordCard(title: string, record: MatchRecord | null, color: string, format = (v: number) => String(v)): HallCard {
   return {

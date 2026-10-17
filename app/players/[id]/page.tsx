@@ -24,12 +24,14 @@ import { MeGusta } from '@/components/players/perfil/me-gusta'
 import type { AlcancePerfil } from '@/components/players/perfil/tipos'
 import { Reveal } from '@/components/motion/reveal'
 import { FaceitHeaderChip, FaceitProfileSection } from '@/components/faceit/faceit-profile-section'
-import { getFaceitProfile, summarizeFaceit } from '@/lib/faceit'
+import { ahoraEstable, getFaceitProfile, summarizeFaceit } from '@/lib/faceit'
 import { getXplayDeJugador } from '@/lib/xplay/leer'
 import { resumirCifrasXplay, resumirDuelos } from '@/lib/xplay/duelos'
 import type { LiveData } from '@/types'
 
-export const revalidate = 60
+// Las partidas y ediciones ya refrescan el perfil al cargarse; esto cubre FACEIT,
+// los me gusta y las recomendaciones (que igual se piden de nuevo al abrirlo).
+export const revalidate = 1800
 // Margen para refrescar FACEIT (los pedidos van de a uno).
 export const maxDuration = 60
 
@@ -57,7 +59,9 @@ export default async function PlayerProfile({
     listarRecomendaciones(id).catch(() => null),
     getXplayDeJugador(id).catch(() => ({ kills: [], participantes: [], cifras: [] })),
   ])
-  const faceitSummary = faceitProfile ? summarizeFaceit(faceitProfile) : null
+  // Hora redondeada: si FACEIT no cambió, el perfil regenerado sale idéntico y no se reescribe.
+  const now = ahoraEstable()
+  const faceitSummary = faceitProfile ? summarizeFaceit(faceitProfile, now) : null
 
   const current = league.currentSeason
   const previous = getPreviousSeason(league.seasons, current)
@@ -190,7 +194,7 @@ export default async function PlayerProfile({
             alcances={alcances}
             history={history}
             recomendacionesIniciales={recomendaciones}
-            faceit={player.faceitNickname ? <FaceitProfileSection profile={faceitProfile} summary={faceitSummary} /> : undefined}
+            faceit={player.faceitNickname ? <FaceitProfileSection profile={faceitProfile} summary={faceitSummary} now={now} /> : undefined}
             comparacion={
               previous && currentAlcance && previousAlcance ? (
                 <SeasonComparison

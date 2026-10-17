@@ -2,14 +2,15 @@ import type { Metadata } from 'next'
 import { Crown, Flame, HandCoins, History, ShieldCheck, Target } from 'lucide-react'
 import { formatPesos } from '@/lib/apuestas/cuotas'
 import { getCartelHistorial, listarJugadores } from '@/lib/cartel/servicio'
-import { formatDuracion } from '@/lib/cartel/tipos'
 import { CartelVivo } from '@/components/cartel/cartel-vivo'
 import { HistorialCarteles } from '@/components/cartel/cartel-historial'
+import { TiempoArriba } from '@/components/cartel/tiempo-arriba'
 import { JugadorAvatar } from '@/components/apuestas/ui'
 import { WhatsNewModal } from '@/components/novedades/whats-new-modal'
 import { Reveal } from '@/components/motion/reveal'
 
-export const revalidate = 60
+// Un cartel nuevo ya refresca la página al pagarse; esto cubre la moderación y lo demás.
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'El Cartel — 10v10 STATS',
@@ -129,7 +130,7 @@ export default async function CartelPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] font-semibold text-foreground">{donador.autor}</p>
                         <p className="text-[11px] text-muted-foreground">
-                          {donador.carteles === 1 ? '1 cartel' : `${donador.carteles} carteles`} · {formatDuracion(donador.tiempoMs)} arriba
+                          {donador.carteles === 1 ? '1 cartel' : `${donador.carteles} carteles`} · <TiempoArriba donador={donador} />
                         </p>
                       </div>
                       <span className="font-mono text-[13px] font-black text-amber-200">{formatPesos(donador.total)}</span>

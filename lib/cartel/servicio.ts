@@ -181,7 +181,6 @@ export async function getCartelHistorial(): Promise<CartelHistorial | null> {
       pagados().order('pagado_at', { ascending: true }).limit(500).then((r) => (check(r, 'No se pudo leer el historial') ?? []) as unknown as Fila[]),
     ])
     const jugadores = await jugadoresPorId(rows.flatMap((row) => [row.autor_player_id, ...objetivoIds(row)]))
-    const ahora = Date.now()
 
     // Cada uno estuvo arriba hasta que pagó el siguiente (los pagados suben siempre de precio).
     const cronologico: EntradaHistorial[] = rows.map((row, i) => ({
@@ -200,10 +199,13 @@ export async function getCartelHistorial(): Promise<CartelHistorial | null> {
       totalDonado += monto
 
       const clave = row.autor_player_id ?? `nombre:${row.autor.trim().toLowerCase()}`
-      const donador = donadores.get(clave) ?? { autor: row.autor, jugador: entrada.autorJugador, total: 0, carteles: 0, tiempoMs: 0 }
+      const donador =
+        donadores.get(clave) ?? { autor: row.autor, jugador: entrada.autorJugador, total: 0, carteles: 0, tiempoMs: 0, arribaDesde: null }
       donador.total += monto
       donador.carteles += 1
-      donador.tiempoMs += (entrada.hastaAt ? Date.parse(entrada.hastaAt) : ahora) - Date.parse(entrada.pagadoAt)
+      // Sin Date.now(): la página se cachea y una hora distinta en cada render la reescribiría siempre.
+      if (entrada.hastaAt) donador.tiempoMs += Date.parse(entrada.hastaAt) - Date.parse(entrada.pagadoAt)
+      else donador.arribaDesde = entrada.pagadoAt
       donadores.set(clave, donador)
 
       // Si va para varios, a cada uno le cuenta el cartel entero.

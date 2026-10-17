@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Crown } from 'lucide-react'
 import { formatPesos } from '@/lib/apuestas/cuotas'
-import { formatDuracion, type RankingDonador } from '@/lib/cartel/tipos'
+import { tiempoArribaFijo, type RankingDonador } from '@/lib/cartel/tipos'
 import { JugadorAvatar } from '@/components/apuestas/ui'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +46,7 @@ export function TopDonadores({ donadores, max = 5 }: { donadores: RankingDonador
             return (
               <li
                 key={`${donador.autor}-${i}`}
-                title={`${donador.carteles === 1 ? '1 cartel' : `${donador.carteles} carteles`} · ${formatDuracion(donador.tiempoMs)} arriba`}
+                title={`${donador.carteles === 1 ? '1 cartel' : `${donador.carteles} carteles`} · ${tiempoArribaFijo(donador)}`}
                 className={cn(
                   'flex min-w-0 items-center gap-1.5 rounded-full border py-0.5 pl-1 pr-2.5 text-[12px]',
                   puesto?.chip ?? 'border-border bg-background/40',

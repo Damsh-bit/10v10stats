@@ -30,22 +30,21 @@ import { RecentMatchScoreboard } from '@/components/matches/recent-match-scorebo
 import { NewMatchModal } from '@/components/matches/new-match-modal'
 import { FakeLeaderboard } from '@/components/TeamGenerator/FakeLeaderboard'
 import { Reveal } from '@/components/motion/reveal'
-import { FaceitLadder } from '@/components/faceit/faceit-ladder'
+import { FaceitLadderHome } from '@/components/faceit/faceit-ladder-home'
 import { WhatsNewModal } from '@/components/novedades/whats-new-modal'
-import { getFaceitEntries, toLadderRows } from '@/lib/faceit'
 import { getCartelHistorial } from '@/lib/cartel/servicio'
 import { CartelVivo } from '@/components/cartel/cartel-vivo'
 import { TopDonadores } from '@/components/cartel/top-donadores'
 
-export const revalidate = 60
-// Margen para refrescar FACEIT (los pedidos van de a uno).
-export const maxDuration = 60
+// Lo que cambia por partidas, Nelson y el cartel ya se refresca al cargarlo; esto
+// cubre lo demás (fakasos, el día de la temporada). FACEIT lo pide el navegador.
+export const revalidate = 300
 
 const RECENT_MATCH_COUNT = 30
 
 export default async function Page() {
   const [league, nelsonData, cartel] = await Promise.all([getLeagueData(), getNelsonData(), getCartelHistorial()])
-  const faceitRows = toLadderRows(await getFaceitEntries(league.players))
+  const faceitLinked = league.players.filter((player) => player.faceitNickname).length
   const season = league.currentSeason
   const previousSeason = getPreviousSeason(league.seasons, season)
 
@@ -155,9 +154,9 @@ export default async function Page() {
           </div>
 
           <div className="flex min-w-0 flex-col gap-6">
-            {faceitRows.length > 0 && (
-              <Reveal immediate delay={0.25}>
-                <FaceitLadder rows={faceitRows} variant="compact" />
+            {faceitLinked > 0 && (
+              <Reveal immediate delay={0.25} className="empty:hidden">
+                <FaceitLadderHome expected={faceitLinked} />
               </Reveal>
             )}
 

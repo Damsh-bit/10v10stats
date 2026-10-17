@@ -3,7 +3,9 @@ import { getLeagueData } from '@/lib/api'
 import { MatchesPageContent } from '@/components/matches/matches-page-content'
 import { Reveal } from '@/components/motion/reveal'
 
-export const revalidate = 60
+// Cargar o editar una partida (o un jugador) ya la refresca al toque; esto es
+// sólo un respaldo. Con 60 s se regeneraba sin parar y cada vez era una escritura.
+export const revalidate = 3600
 
 export default async function MatchesPage() {
   const league = await getLeagueData()

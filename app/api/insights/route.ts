@@ -3,8 +3,9 @@ import { getLeagueData, getSeasonData } from '@/lib/api'
 import { generateInsights, type Insight } from '@/lib/insights'
 import { getPreviousSeason } from '@/lib/seasons'
 
-// Cacheado: el banner lo pide en cada página y no necesita estar al segundo.
-export const revalidate = 60
+// Cacheado: el banner lo pide en cada página y sólo cambia con las partidas, que
+// ya lo refrescan al cargarse. Esto es un respaldo.
+export const revalidate = 3600
 
 /** Con menos partidas que esto la temporada activa no da para curiosidades propias. */
 const MIN_SEASON_MATCHES = 3
