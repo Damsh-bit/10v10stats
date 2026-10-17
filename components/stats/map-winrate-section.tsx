@@ -124,7 +124,7 @@ function TeamRadarCard({
   const sorted = [...chartData].sort((a, b) => b.winrate - a.winrate)
 
   return (
-    <div className="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+    <div className="@container h-full rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Card title */}
       <h3
         className="font-heading text-sm font-bold uppercase tracking-[0.2em]"
@@ -133,6 +133,8 @@ function TeamRadarCard({
         {title}
       </h3>
 
+      {/* Angosta: radar arriba y tabla abajo. Con lugar, uno al lado del otro. */}
+      <div className="mt-3 flex flex-col gap-3 @xl:grid @xl:grid-cols-2 @xl:items-center @xl:gap-5">
       {/* Radar chart */}
       {maps.length === 0 ? (
         <div className="flex h-[260px] items-center justify-center text-[13px] text-muted-foreground">
@@ -170,16 +172,17 @@ function TeamRadarCard({
       {/* Legend table */}
       {sorted.length > 0 && (
         <div className="mt-1 overflow-hidden rounded-md border border-border/60">
-          <table className="w-full text-[11px]">
+          <table className="w-full text-[12px]">
+            <caption className="sr-only">Winrate de {title} por mapa</caption>
             <thead>
               <tr className="border-b border-border/60 bg-black/20">
-                <th className="px-3 py-1.5 text-left font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <th className="px-3 py-1.5 text-left font-semibold uppercase tracking-wider text-muted-foreground">
                   Mapa
                 </th>
-                <th className="px-3 py-1.5 text-right font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <th className="px-3 py-1.5 text-right font-semibold uppercase tracking-wider text-muted-foreground">
                   WR
                 </th>
-                <th className="px-3 py-1.5 text-right font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <th className="px-3 py-1.5 text-right font-semibold uppercase tracking-wider text-muted-foreground">
                   Registro
                 </th>
               </tr>
@@ -198,7 +201,7 @@ function TeamRadarCard({
                     </td>
                     <td
                       className="px-3 py-1.5 text-right font-mono font-bold"
-                      style={{ color: row.winrate >= 50 ? color : '#6b7280' }}
+                      style={{ color: row.winrate >= 50 ? color : '#93b3c9' }}
                     >
                       {s?.played ? `${row.winrate}%` : '—'}
                     </td>
@@ -212,6 +215,7 @@ function TeamRadarCard({
           </table>
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -238,7 +242,7 @@ export function MapWinrateSection({ rows }: { rows: MapWinrateRow[] }) {
     <section>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-foreground">
-          ▶ Winrate por mapa
+          <span aria-hidden="true">▶ </span>Winrate por mapa
         </h2>
         <span className="rounded border border-border bg-card px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
           {maps.length} mapas

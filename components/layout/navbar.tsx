@@ -70,7 +70,7 @@ export function Navbar({ seasonNumber, apuestas = false }: { seasonNumber: numbe
 
   return (
     <header ref={headerRef} className="sticky top-0 z-50 border-b border-border bg-background/95">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+      <div className="page-container flex h-14 items-center justify-between">
         <Link href="/" className="group flex items-center gap-2">
           <img
             src="/logo.png"

@@ -155,7 +155,7 @@ export default async function EstadisticasPage() {
 
   return (
     <main className="cs-grid min-h-screen">
-      <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
+      <div className="page-container py-6 sm:py-8">
         <Reveal immediate className="mb-6 flex items-center gap-3">
           <Link
             href="/"

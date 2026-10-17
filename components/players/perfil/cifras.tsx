@@ -27,7 +27,7 @@ export function Cifras({ alcance }: { alcance: AlcancePerfil }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5 2xl:grid-cols-8">
         {cards.map((card) => (
           <div
             key={card.label}

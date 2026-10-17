@@ -52,7 +52,7 @@ export default async function FaceitPage() {
 
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
-      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-3 py-6 sm:px-4 sm:py-8">
+      <div className="page-container flex flex-col gap-5 py-6 sm:py-8">
         <Reveal immediate className="flex flex-col gap-4">
           <div>
             <span className="font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-orange-400">10v10 Stats</span>
@@ -81,33 +81,36 @@ export default async function FaceitPage() {
           <FaceitHighlights entries={entries} />
         </Reveal>
 
-        <Reveal immediate delay={0.14}>
-          <FaceitLadder rows={rows} variant="full" updatedLabel={`actualizado ${updatedAt}`} />
-        </Reveal>
+        {/* En monitores anchos la tabla va al lado del gráfico y las partidas en grupo. */}
+        <div className="grid grid-cols-1 items-start gap-5 2xl:grid-cols-2">
+          <Reveal immediate delay={0.14}>
+            <FaceitLadder rows={rows} variant="full" updatedLabel={`actualizado ${updatedAt}`} />
+          </Reveal>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <Reveal>
-            <section className="overflow-hidden rounded-xl border border-border bg-card">
-              <header className="flex items-center gap-2.5 border-b border-border px-4 py-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300">
-                  <LineChart className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <div className="flex flex-col">
-                  <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
-                    Carrera de elo
-                  </h2>
-                  <span className="text-[11px] text-muted-foreground">Elo al final de cada día · últimos {RACE_DAYS} días</span>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 2xl:grid-cols-1">
+            <Reveal>
+              <section className="overflow-hidden rounded-xl border border-border bg-card">
+                <header className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300">
+                    <LineChart className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div className="flex flex-col">
+                    <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
+                      Carrera de elo
+                    </h2>
+                    <span className="text-[11px] text-muted-foreground">Elo al final de cada día · últimos {RACE_DAYS} días</span>
+                  </div>
+                </header>
+                <div className="p-4">
+                  <FaceitEloRace series={race.series} rows={race.rows} change={race.change} />
                 </div>
-              </header>
-              <div className="p-4">
-                <FaceitEloRace series={race.series} rows={race.rows} change={race.change} />
-              </div>
-            </section>
-          </Reveal>
+              </section>
+            </Reveal>
 
-          <Reveal>
-            <SharedFaceitMatches shared={shared} now={now} />
-          </Reveal>
+            <Reveal>
+              <SharedFaceitMatches shared={shared} now={now} />
+            </Reveal>
+          </div>
         </div>
       </div>
     </main>

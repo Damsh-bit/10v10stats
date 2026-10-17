@@ -62,10 +62,18 @@ export default async function RootLayout({
       </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <MotionProvider>
+          <a
+            href="#contenido"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+          >
+            Saltar al contenido
+          </a>
           <MapBackdrop />
           <Navbar seasonNumber={currentSeason.id} apuestas={getApuestasConfig().visibles} />
           <CuriositiesBanner />
-          <div className="flex-1">{children}</div>
+          <div id="contenido" tabIndex={-1} className="flex-1 outline-none">
+            {children}
+          </div>
           <footer className="flex flex-col items-center justify-center gap-2 border-t border-border bg-background/90 py-8 text-sm text-muted-foreground">
             <p className="flex items-center justify-center gap-1.5">
               Desarrollado con <span className="text-rose-500">❤️</span> por

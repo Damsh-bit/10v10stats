@@ -192,7 +192,7 @@ export function PerfilJugador({
       <div id={panelId} role="tabpanel" aria-labelledby={`${baseId}-tab-${actual.key}`} className="flex min-w-0 flex-col gap-4">
         <div key={actual.porTemporada ? `${actual.key}-${alcance.key}` : actual.key} className="perfil-panel min-w-0">
           {actual.key === 'resumen' && (
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_380px]">
               <div className="flex min-w-0 flex-col gap-4">
                 <Cifras alcance={alcance} />
                 <FormaReciente forma={alcance.perfil.forma} />

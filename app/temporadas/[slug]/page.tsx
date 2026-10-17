@@ -48,7 +48,7 @@ export default async function SeasonArchivePage({ params }: { params: Promise<{ 
 
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-2 py-5 sm:px-4 sm:py-8">
+      <div className="page-container flex flex-col gap-6 py-5 sm:py-8">
         <Link
           href="/temporadas"
           className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"

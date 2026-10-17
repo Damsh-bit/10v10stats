@@ -11,7 +11,7 @@ export const metadata = {
 export default function FinalDelMundoPage() {
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
-      <div className="mx-auto max-w-6xl px-2 py-6 sm:px-4 sm:py-8">
+      <div className="page-container py-6 sm:py-8">
         <FinalMundialHero />
         <ExpectationsWall />
       </div>

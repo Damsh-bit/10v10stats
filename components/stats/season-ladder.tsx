@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { motion } from 'motion/react'
 import { CalendarX, Flame, Info, Snowflake, Trophy, UserPlus } from 'lucide-react'
 import type { Player, PlayerStats } from '@/types'
 import type { PlayerRecordMap } from '@/lib/records'
@@ -30,15 +30,14 @@ type Props = {
 /**
  * Zonas de la tabla de la temporada en curso, como en una liga: arriba los
  * que mandan, abajo los que tendrían que descender. Cada zona tiene su color
- * (borde, fondo, puesto, KDA y barra) y un separador con su nombre.
+ * (borde, fondo, puesto, KDA y barra) y un título con su nombre.
  */
-type Zona = {
-  id: string
-  desde: number
-  hasta: number
+type ZonaId = 'top' | 'promo' | 'medio' | 'peligro' | 'verguenza'
+
+type EstiloZona = {
   titulo: string
   emoji: string
-  /** Separador: texto, línea y fondo. */
+  /** Título: texto, línea y fondo. */
   texto: string
   linea: string
   fondoTitulo: string
@@ -50,11 +49,10 @@ type Zona = {
   avatar?: string
 }
 
-const ZONAS: Zona[] = [
-  {
-    id: 'top',
-    desde: 1,
-    hasta: 3,
+type Zona = EstiloZona & { id: ZonaId; desde: number; hasta: number }
+
+const ESTILOS: Record<ZonaId, EstiloZona> = {
+  top: {
     titulo: 'Top globales',
     emoji: '👑',
     texto: 'text-amber-300 text-gold-glow',
@@ -66,10 +64,7 @@ const ZONAS: Zona[] = [
     barra: 'bg-amber-300',
     avatar: 'ring-2 ring-amber-300/70 shadow-[0_0_14px_rgba(251,191,36,0.45)]',
   },
-  {
-    id: 'promo-top',
-    desde: 4,
-    hasta: 4,
+  promo: {
     titulo: 'En promoción a top globales',
     emoji: '⏫',
     texto: 'text-emerald-300',
@@ -81,10 +76,7 @@ const ZONAS: Zona[] = [
     barra: 'bg-emerald-400',
     avatar: 'ring-2 ring-emerald-400/50',
   },
-  {
-    id: 'medio',
-    desde: 5,
-    hasta: 9,
+  medio: {
     titulo: 'Empujan pero la tienen corta',
     emoji: '🤏',
     texto: 'text-sky-300',
@@ -92,13 +84,10 @@ const ZONAS: Zona[] = [
     fondoTitulo: 'bg-gradient-to-r from-sky-400/[0.07] to-transparent',
     fila: 'bg-gradient-to-r from-sky-400/[0.03] to-transparent',
     borde: 'border-l-sky-400/50',
-    puesto: 'text-sky-200/80',
+    puesto: 'text-sky-200',
     barra: 'bg-sky-400/80',
   },
-  {
-    id: 'promo-descenso',
-    desde: 10,
-    hasta: 10,
+  peligro: {
     titulo: 'En peligro de descenso',
     emoji: '⚠️',
     texto: 'text-orange-300',
@@ -110,10 +99,7 @@ const ZONAS: Zona[] = [
     barra: 'bg-orange-400',
     avatar: 'ring-2 ring-orange-400/50',
   },
-  {
-    id: 'verguenza',
-    desde: 11,
-    hasta: Infinity,
+  verguenza: {
     titulo: 'La vergüenza del servidor',
     emoji: '🤡',
     texto: 'text-rose-400',
@@ -125,23 +111,66 @@ const ZONAS: Zona[] = [
     barra: 'bg-rose-500',
     avatar: 'grayscale-[60%] ring-2 ring-rose-500/50',
   },
-]
+}
 
-function zonaDePuesto(puesto: number) {
-  return ZONAS.find((zona) => puesto >= zona.desde && puesto <= zona.hasta) ?? ZONAS[ZONAS.length - 1]
+/**
+ * Arma las zonas según cuántos hay en la tabla, para que el medio no quede
+ * vacío ni la parte de abajo más grande que la de arriba. Con 10 jugadores:
+ * 3 arriba, 4 en el medio, 2 en peligro y el último en la vergüenza; con 12-13,
+ * dos en la vergüenza. La zona de promoción vuelve si la tabla crece a 15 o más.
+ */
+export function armarZonas(total: number): Zona[] {
+  const cuota = (divisor: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, Math.floor(total / divisor)))
+  const verguenza = total >= 5 ? cuota(6, 1, 3) : 0
+  const peligro = total >= 6 ? cuota(5, 1, 3) : 0
+  const top = Math.min(3, total - verguenza - peligro)
+  const promo = total >= 15 ? cuota(7, 2, 3) : 0
+  const medio = total - top - promo - peligro - verguenza
+
+  const tamanos: [ZonaId, number][] = [
+    ['top', top],
+    ['promo', promo],
+    ['medio', medio],
+    ['peligro', peligro],
+    ['verguenza', verguenza],
+  ]
+
+  let desde = 1
+  return tamanos
+    .filter(([, cantidad]) => cantidad > 0)
+    .map(([id, cantidad]) => {
+      const zona = { ...ESTILOS[id], id, desde, hasta: desde + cantidad - 1 }
+      desde += cantidad
+      return zona
+    })
 }
 
 function rangoZona(zona: Zona) {
-  if (zona.hasta === Infinity) return `#${zona.desde}+`
   return zona.desde === zona.hasta ? `#${zona.desde}` : `#${zona.desde}–${zona.hasta}`
 }
 
-/** Tabla final de una temporada cerrada: oro, plata y bronce (sin zonas). */
+function rangoZonaLegible(zona: Zona) {
+  return zona.desde === zona.hasta ? `puesto ${zona.desde}` : `puestos ${zona.desde} a ${zona.hasta}`
+}
+
+/** Oro, plata y bronce: el número del podio (y toda la fila en el archivo). */
 const MEDALS = [
   { row: 'bg-gradient-to-r from-amber-400/[0.12] to-transparent', bar: 'border-l-amber-300', rank: 'text-amber-300' },
   { row: 'bg-gradient-to-r from-slate-300/[0.08] to-transparent', bar: 'border-l-slate-300', rank: 'text-slate-200' },
   { row: 'bg-gradient-to-r from-orange-500/[0.08] to-transparent', bar: 'border-l-orange-400', rank: 'text-orange-300' },
 ]
+
+/**
+ * Columnas de la tabla. Angosta (celu o tarjeta chica): puesto, jugador con
+ * sus números abajo y KDA. Con lugar (@3xl del contenedor) cada número va en
+ * su columna, y desde @5xl se suma la de partidas positivas/negativas.
+ */
+const COLUMNAS =
+  'grid grid-cols-[2rem_minmax(0,1fr)_4.5rem] items-center gap-x-2.5 sm:gap-x-3 @3xl:grid-cols-[2.5rem_minmax(0,1fr)_5.5rem_3.5rem_7rem_3.5rem_3.5rem_5.5rem] @3xl:gap-x-4 @5xl:grid-cols-[2.5rem_minmax(0,1fr)_5.5rem_3.5rem_7rem_3.5rem_3.5rem_6rem_5.5rem]'
+
+const CELDA_ANCHA = 'hidden @3xl:block'
+const CELDA_MUY_ANCHA = 'hidden @5xl:block'
 
 export function SeasonLadder({
   seasonName,
@@ -160,19 +189,35 @@ export function SeasonLadder({
   const maxKda = Math.max(...stats.map(valorLadder), 0.01)
   // Desde la Season 2 la ladder lleva strikes por faltar.
   const conStrikes = stats[0]?.strikes !== undefined
+  const zonas = archived ? null : armarZonas(stats.length)
+
+  const renderRow = (s: PlayerStats, i: number, zona: Zona | null) => (
+    <LadderRow
+      key={s.player.id}
+      stats={s}
+      index={i}
+      maxKda={maxKda}
+      records={showingRecent ? undefined : records?.[s.player.id]}
+      isTopFakador={topFakadorId === s.player.id}
+      zona={zona}
+    />
+  )
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
+    <section
+      aria-labelledby="ladder-titulo"
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
+    >
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-brand">
             <Trophy className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="flex flex-col">
-            <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
+            <h2 id="ladder-titulo" className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
               {archived ? 'Clasificación final' : 'Ladder'}
             </h2>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[12px] text-muted-foreground">
               {seasonName} ·{' '}
               <button
                 type="button"
@@ -191,14 +236,15 @@ export function SeasonLadder({
               >
                 {conStrikes ? 'por KDA y strikes' : 'por KDA'}
                 <Info className="h-3 w-3" aria-hidden="true" />
-              </button>
+              </button>{' '}
+              · {stats.length} {stats.length === 1 ? 'jugador' : 'jugadores'}
               {showingRecent && ` · últimas ${recent.matchCount} partidas`}
             </span>
           </div>
         </div>
 
         {recent && !archived && (
-          <div className="relative flex items-center rounded-full bg-muted/40 p-0.5" role="tablist" aria-label="Vista del ladder">
+          <div className="relative flex items-center rounded-full bg-muted/40 p-0.5" role="group" aria-label="Qué partidas cuenta la tabla">
             {([
               ['season', 'Temporada'],
               ['recent', `Últimas ${recent.matchCount}`],
@@ -208,11 +254,10 @@ export function SeasonLadder({
                 <button
                   key={key}
                   type="button"
-                  role="tab"
-                  aria-selected={active}
+                  aria-pressed={active}
                   onClick={() => setView(key)}
                   className={cn(
-                    'relative h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-wider transition-colors',
+                    'relative h-8 rounded-full px-3 text-[12px] font-semibold uppercase tracking-wider transition-colors',
                     active ? 'text-white' : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
@@ -241,45 +286,37 @@ export function SeasonLadder({
       {stats.length === 0 ? (
         <EmptyLadder archived={archived} action={emptyAction} />
       ) : (
-        <LayoutGroup>
-          <ol className="flex flex-col">
-            <AnimatePresence initial={false}>
-              {stats.flatMap((s, i) => {
-                const zona = archived ? null : zonaDePuesto(i + 1)
-                const row = (
-                  <LadderRow
-                    key={s.player.id}
-                    stats={s}
-                    index={i}
-                    total={stats.length}
-                    maxKda={maxKda}
-                    records={showingRecent ? undefined : records?.[s.player.id]}
-                    isTopFakador={topFakadorId === s.player.id}
-                    zona={zona}
-                  />
-                )
-                // Separador con el nombre de la zona antes del primero de cada una.
-                return zona && zona.desde === i + 1 ? [<ZonaSeparador key={`zona-${zona.id}`} zona={zona} />, row] : [row]
-              })}
-            </AnimatePresence>
-          </ol>
-        </LayoutGroup>
+        <div className="@container">
+          <ColumnHeader />
+          {zonas ? (
+            zonas.map((zona) => (
+              <section key={zona.id} aria-labelledby={`zona-${zona.id}`}>
+                <ZonaTitulo zona={zona} />
+                <ol start={zona.desde} className="flex flex-col">
+                  {stats.slice(zona.desde - 1, zona.hasta).map((s, j) => renderRow(s, zona.desde - 1 + j, zona))}
+                </ol>
+              </section>
+            ))
+          ) : (
+            <ol className="flex flex-col">{stats.map((s, i) => renderRow(s, i, null))}</ol>
+          )}
+        </div>
       )}
 
       {unplayed.length > 0 && !archived && !showingRecent && (
         <div className="border-t border-border px-4 py-3">
-          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <h3 className="mb-2 flex items-center gap-1.5 font-sans text-[12px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
             Sin debut en la temporada
-          </p>
+          </h3>
           <ul className="flex flex-wrap gap-1.5">
             {unplayed.map((player) => (
               <li key={player.id}>
                 <Link
                   href={`/players/${player.id}`}
-                  className="flex items-center gap-1.5 rounded-full bg-muted/30 py-0.5 pl-0.5 pr-2.5 text-[11px] text-muted-foreground opacity-70 transition hover:opacity-100"
+                  className="flex items-center gap-1.5 rounded-full bg-muted/30 py-0.5 pl-0.5 pr-2.5 text-[12px] text-muted-foreground transition hover:text-foreground"
                 >
-                  <PlayerAvatar player={player} size={18} />
+                  <PlayerAvatar player={player} size={20} />
                   {player.name}
                   {player.menudaMierda && <span title="Menuda mierda">💩</span>}
                 </Link>
@@ -292,10 +329,42 @@ export function SeasonLadder({
   )
 }
 
+/** Encabezado de columnas: sólo cuando la tabla tiene lugar para mostrarlas. */
+function ColumnHeader() {
+  const th = 'font-sans text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(COLUMNAS, 'hidden border-b border-border bg-black/20 px-4 py-2 @3xl:grid')}
+    >
+      <span className={cn(th, 'text-center')}>#</span>
+      <span className={th}>Jugador</span>
+      <span className={cn(th, 'text-right')} title="Victorias - Empates - Derrotas">
+        V-E-D
+      </span>
+      <span className={cn(th, 'text-right')} title="Porcentaje de victorias">
+        % Vic
+      </span>
+      <span className={cn(th, 'text-right')} title="Kills / Muertes / Asistencias">
+        K / D / A
+      </span>
+      <span className={cn(th, 'text-right')} title="Daño promedio por partida">
+        ADM
+      </span>
+      <span className={cn(th, 'text-right')} title="Porcentaje de headshots">
+        HS
+      </span>
+      <span className={cn(th, CELDA_MUY_ANCHA, 'text-center')} title="Partidas en las que salió positivo / negativo">
+        + / −
+      </span>
+      <span className={cn(th, 'text-right')}>KDA</span>
+    </div>
+  )
+}
+
 function LadderRow({
   stats: s,
   index: i,
-  total,
   maxKda,
   records,
   isTopFakador,
@@ -303,118 +372,140 @@ function LadderRow({
 }: {
   stats: PlayerStats
   index: number
-  total: number
   maxKda: number
   records?: PlayerRecordMap[string]
   isTopFakador: boolean
-  /** Temporada en curso: la zona manda los colores. Archivo: medallas y zona roja. */
+  /** Temporada en curso: la zona manda los colores. Archivo: medallas. */
   zona: Zona | null
 }) {
-  const medal = zona ? undefined : MEDALS[i]
-  const inDangerZone = !zona && total > 5 && i >= total - 3
-  const puestoClase = zona?.puesto ?? medal?.rank ?? (inDangerZone ? 'text-brand/80' : 'text-muted-foreground')
-  const kdaClase = zona?.puesto ?? (medal ? medal.rank : inDangerZone ? 'text-brand' : 'text-foreground')
-  const barraClase = zona?.barra ?? (medal ? 'bg-amber-300' : inDangerZone ? 'bg-primary' : 'bg-sky-400/80')
+  const medal = MEDALS[i]
+  const enPodio = !zona || zona.id === 'top'
+  const puestoClase = (enPodio && medal?.rank) || zona?.puesto || 'text-muted-foreground'
+  const kdaClase = zona?.puesto ?? medal?.rank ?? 'text-foreground'
+  const barraClase = zona?.barra ?? (medal ? 'bg-amber-300' : 'bg-sky-400/80')
   const winrate = s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0
   const valor = valorLadder(s)
   const descuento = s.descuentoStrikes ?? 0
+  const winrateClase = winrate >= 50 ? 'text-emerald-400' : 'text-rose-400'
 
   return (
     <motion.li
-      layout
+      layout="position"
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 12 }}
       transition={{ duration: 0.35, delay: Math.min(i * 0.035, 0.4), ease: [0.22, 1, 0.36, 1] }}
       className="border-b border-border last:border-b-0"
     >
       <Link
         href={`/players/${s.player.id}`}
         className={cn(
-          'group flex items-center gap-2.5 border-l-2 border-l-transparent px-2.5 py-2.5 transition-colors hover:bg-accent/50 sm:gap-3 sm:px-4',
+          COLUMNAS,
+          'group border-l-2 border-l-transparent px-2.5 py-2.5 transition-colors hover:bg-accent/50 sm:px-4',
           zona ? cn(zona.fila, zona.borde) : cn(medal?.row, medal?.bar),
         )}
       >
-        <div className="flex w-8 shrink-0 flex-col items-center leading-none">
-          <span
-            className={cn('font-heading text-lg font-black tabular-nums', puestoClase)}
-          >
-            {i + 1}
-          </span>
+        <div className="flex flex-col items-center leading-none">
+          <span className="sr-only">Puesto </span>
+          <span className={cn('font-heading text-lg font-black tabular-nums', puestoClase)}>{i + 1}</span>
           <TrendMark trend={s.trend} />
         </div>
 
-        <span className={cn('flex shrink-0 rounded-full', zona?.avatar)}>
-          <PlayerAvatar player={s.player} size={36} />
-        </span>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className={cn('flex shrink-0 rounded-full', zona?.avatar)}>
+            <PlayerAvatar player={s.player} size={36} />
+          </span>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="truncate text-[14px] font-semibold leading-tight text-foreground group-hover:text-white">
-              {s.player.name}
-            </span>
-            {s.trend === 'new' && (
-              <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-sky-300">
-                Nuevo
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <span className="truncate text-[15px] font-semibold leading-tight text-foreground group-hover:text-white">
+                {s.player.name}
               </span>
-            )}
-            {(!!s.strikes || descuento > 0) && <StrikesChip strikes={s.strikes ?? 0} descuento={descuento} />}
-            {s.currentStreak >= 3 && (
-              <Chip className="border-orange-500/40 text-orange-400" title={`Racha de ${s.currentStreak} victorias`}>
-                <Flame className="h-3 w-3" aria-hidden="true" /> {s.currentStreak}W
-              </Chip>
-            )}
-            {s.currentLossStreak >= 3 && (
-              <Chip className="border-cyan-500/40 text-cyan-400" title={`Racha de ${s.currentLossStreak} derrotas`}>
-                <Snowflake className="h-3 w-3" aria-hidden="true" /> {s.currentLossStreak}L
-              </Chip>
-            )}
-            {s.mvps > 0 && (
-              <Chip className="border-[#d4af37]/40 text-[#d4af37]" title="MVPs en la temporada">
-                👑 {s.mvps}
-              </Chip>
-            )}
-            {s.player.nelsons > 0 && (
-              <Chip className="border-primary/40 text-brand" title="Nelsons">
-                💀 {s.player.nelsons}
-              </Chip>
-            )}
-            {isTopFakador && (
-              <Chip className="border-purple-500/40 text-purple-400" title="Top 1 Fakasos">
-                🎭 Fakaso
-              </Chip>
-            )}
-            {s.player.menudaMierda && (
-              <Chip className="border-amber-700/50 text-amber-600" title="Badge de honor">
-                💩 Menuda mierda
-              </Chip>
-            )}
-            {records?.map((record) => <RecordBadge key={record} type={record} compact />)}
-          </div>
+              {s.trend === 'new' && (
+                <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-sky-300">
+                  Nuevo
+                </span>
+              )}
+              {(!!s.strikes || descuento > 0) && <StrikesChip strikes={s.strikes ?? 0} descuento={descuento} />}
+              {s.currentStreak >= 3 && (
+                <Chip className="border-orange-500/40 text-orange-400" label={`Racha de ${s.currentStreak} victorias`}>
+                  <Flame className="h-3 w-3" aria-hidden="true" /> {s.currentStreak}W
+                </Chip>
+              )}
+              {s.currentLossStreak >= 3 && (
+                <Chip className="border-cyan-500/40 text-cyan-400" label={`Racha de ${s.currentLossStreak} derrotas`}>
+                  <Snowflake className="h-3 w-3" aria-hidden="true" /> {s.currentLossStreak}L
+                </Chip>
+              )}
+              {s.mvps > 0 && (
+                <Chip className="border-[#d4af37]/40 text-[#d4af37]" label={`${s.mvps} MVP en la temporada`}>
+                  👑 {s.mvps}
+                </Chip>
+              )}
+              {s.player.nelsons > 0 && (
+                <Chip className="border-primary/40 text-brand" label={`${s.player.nelsons} Nelson`}>
+                  💀 {s.player.nelsons}
+                </Chip>
+              )}
+              {isTopFakador && (
+                <Chip className="border-purple-500/40 text-purple-400" label="Top 1 Fakasos">
+                  🎭 Fakaso
+                </Chip>
+              )}
+              {s.player.menudaMierda && (
+                <Chip className="border-amber-700/50 text-amber-600" label="Badge de honor: menuda mierda">
+                  💩 Menuda mierda
+                </Chip>
+              )}
+              {records?.map((record) => <RecordBadge key={record} type={record} compact />)}
+            </div>
 
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[10px] text-muted-foreground sm:text-[11px]">
-            <span title="Kills / Deaths / Assists">
-              {s.kills}/{s.deaths}/{s.assists}
-            </span>
-            <span className="opacity-30">·</span>
-            <span title="Victorias - Empates - Derrotas">
-              {s.wins}W-{s.draws}D-{s.losses}L <span className={winrate >= 50 ? 'text-emerald-400' : 'text-rose-400/80'}>{winrate}%</span>
-            </span>
-            <span className="hidden opacity-30 sm:inline">·</span>
-            <span className="hidden sm:inline" title="Daño promedio por partida">{s.adm} ADM</span>
-            <span className="hidden opacity-30 sm:inline">·</span>
-            <span className="hidden text-yellow-500/80 sm:inline" title="% de headshots">{s.hsPct}% HS</span>
-            <span className="hidden md:inline-flex">
-              <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
-            </span>
+            {/* Celu y tarjetas angostas: los números van en una línea abajo del nombre. */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-muted-foreground @3xl:hidden">
+              <span>
+                <span className="sr-only">Kills, muertes y asistencias: </span>
+                {s.kills}/{s.deaths}/{s.assists}
+              </span>
+              <span className="opacity-40" aria-hidden="true">·</span>
+              <span>
+                <span className="sr-only">Victorias, empates y derrotas: </span>
+                {s.wins}W-{s.draws}D-{s.losses}L <span className={winrateClase}>{winrate}%</span>
+              </span>
+              <span className="hidden opacity-40 @md:inline" aria-hidden="true">·</span>
+              <span className="hidden @md:inline">
+                {s.adm} ADM
+              </span>
+              <span className="hidden opacity-40 @md:inline" aria-hidden="true">·</span>
+              <span className="hidden text-yellow-500/90 @md:inline">{s.hsPct}% HS</span>
+              <span className="hidden @xl:inline-flex">
+                <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex w-16 shrink-0 flex-col items-end gap-1 sm:w-20">
+        <Celda label="Victorias, empates y derrotas" className="text-foreground/90">
+          {s.wins}-{s.draws}-{s.losses}
+        </Celda>
+        <Celda label="Porcentaje de victorias" className={cn('font-semibold', winrateClase)}>
+          {winrate}%
+        </Celda>
+        <Celda label="Kills, muertes y asistencias" className="text-foreground/90">
+          {s.kills}/{s.deaths}/{s.assists}
+        </Celda>
+        <Celda label="Daño promedio por partida">{s.adm}</Celda>
+        <Celda label="Headshots" className="text-yellow-500/90">
+          {s.hsPct}%
+        </Celda>
+        <div className={cn(CELDA_MUY_ANCHA, 'justify-self-center')}>
+          <KDaBadges positiveGames={s.positiveGames} negativeGames={s.negativeGames} size="sm" />
+        </div>
+
+        <div className="flex flex-col items-end gap-1">
           <span
-            className={cn('font-mono text-[15px] font-black tabular-nums sm:text-base', kdaClase)}
+            className={cn('font-mono text-base font-black tabular-nums', kdaClase)}
             title={descuento > 0 ? `KDA ${s.kda.toFixed(2)} menos ${descuento.toFixed(2)} perdido por faltar` : 'KDA'}
           >
+            <span className="sr-only">{descuento > 0 ? 'KDA en la ladder ' : 'KDA '}</span>
             {valor.toFixed(2)}
           </span>
           <span className="h-1 w-full overflow-hidden rounded-full bg-muted/60" aria-hidden="true">
@@ -424,7 +515,8 @@ function LadderRow({
             />
           </span>
           {descuento > 0 && (
-            <span className="font-mono text-[9px] leading-none tabular-nums text-muted-foreground" title="KDA real, sin el descuento">
+            <span className="font-mono text-[10px] leading-none tabular-nums text-muted-foreground" title="KDA real, sin el descuento">
+              <span className="sr-only">KDA real </span>
               <s>{s.kda.toFixed(2)}</s> <span className="text-rose-400">−{descuento.toFixed(2)}</span>
             </span>
           )}
@@ -434,31 +526,52 @@ function LadderRow({
   )
 }
 
-function ZonaSeparador({ zona }: { zona: Zona }) {
+/** Un número en su columna (vista ancha). El lector de pantalla lee qué es. */
+function Celda({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
-    <motion.li
-      layout
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn('flex items-center gap-2 border-b border-border px-3 py-1.5 sm:px-4', zona.fondoTitulo)}
-    >
-      <span aria-hidden="true" className="text-[12px] leading-none">
-        {zona.emoji}
-      </span>
-      <span className={cn('whitespace-nowrap font-heading text-[11px] font-bold uppercase tracking-[0.2em]', zona.texto)}>{zona.titulo}</span>
-      <span className={cn('h-px min-w-4 flex-1 bg-gradient-to-r', zona.linea)} aria-hidden="true" />
-      <span className="font-mono text-[10px] text-muted-foreground">{rangoZona(zona)}</span>
-    </motion.li>
+    <span className={cn(CELDA_ANCHA, 'text-right font-mono text-[13px] tabular-nums text-muted-foreground', className)}>
+      <span className="sr-only">{label}: </span>
+      {children}
+    </span>
   )
 }
 
-function TrendMark({ trend }: { trend?: PlayerStats['trend'] }) {
-  if (trend === 'up') return <span className="mt-0.5 text-[9px] text-emerald-400" title="Subió de puesto en la última partida">▲</span>
-  if (trend === 'down') return <span className="mt-0.5 text-[9px] text-rose-400" title="Bajó de puesto en la última partida">▼</span>
-  if (trend === 'new') return <span className="mt-0.5 text-[9px] text-sky-300" title="Entró al ranking">●</span>
-  return <span className="mt-0.5 text-[9px] text-muted-foreground/40" title="Mantuvo el puesto">=</span>
+function ZonaTitulo({ zona }: { zona: Zona }) {
+  return (
+    <div className={cn('flex items-center gap-2 border-b border-border px-3 py-1.5 sm:px-4', zona.fondoTitulo)}>
+      <span aria-hidden="true" className="text-[13px] leading-none">
+        {zona.emoji}
+      </span>
+      <h3
+        id={`zona-${zona.id}`}
+        className={cn('whitespace-nowrap font-heading text-[12px] font-bold uppercase tracking-[0.2em]', zona.texto)}
+      >
+        {zona.titulo}
+        <span className="sr-only">, {rangoZonaLegible(zona)}</span>
+      </h3>
+      <span className={cn('h-px min-w-4 flex-1 bg-gradient-to-r', zona.linea)} aria-hidden="true" />
+      <span className="font-mono text-[11px] text-muted-foreground" aria-hidden="true">
+        {rangoZona(zona)}
+      </span>
+    </div>
+  )
+}
+
+const TRENDS: Record<NonNullable<PlayerStats['trend']>, { simbolo: string; clase: string; texto: string }> = {
+  up: { simbolo: '▲', clase: 'text-emerald-400', texto: 'Subió de puesto en la última partida' },
+  down: { simbolo: '▼', clase: 'text-rose-400', texto: 'Bajó de puesto en la última partida' },
+  new: { simbolo: '●', clase: 'text-sky-300', texto: 'Entró al ranking' },
+  same: { simbolo: '=', clase: 'text-muted-foreground/60', texto: 'Mantuvo el puesto' },
+}
+
+function TrendMark({ trend = 'same' }: { trend?: PlayerStats['trend'] }) {
+  const { simbolo, clase, texto } = TRENDS[trend]
+  return (
+    <span className={cn('mt-0.5 text-[10px]', clase)} title={texto}>
+      <span aria-hidden="true">{simbolo}</span>
+      <span className="sr-only">{texto}</span>
+    </span>
+  )
 }
 
 /**
@@ -474,7 +587,7 @@ function StrikesChip({ strikes, descuento }: { strikes: number; descuento: numbe
   return (
     <Chip
       className={descuento > 0 ? 'border-rose-500/50 text-rose-400' : 'border-amber-400/40 text-amber-300'}
-      title={[faltas, perdido, strikes > 0 ? aviso : ''].filter(Boolean).join(' ')}
+      label={[faltas, perdido, strikes > 0 ? aviso : ''].filter(Boolean).join(' ')}
     >
       <CalendarX className="h-3 w-3" aria-hidden="true" />
       {conteo}
@@ -483,16 +596,19 @@ function StrikesChip({ strikes, descuento }: { strikes: number; descuento: numbe
   )
 }
 
-function Chip({ children, className, title }: { children: React.ReactNode; className?: string; title?: string }) {
+function Chip({ children, className, label }: { children: React.ReactNode; className?: string; label: string }) {
   return (
     <span
-      title={title}
+      title={label}
       className={cn(
-        'flex shrink-0 cursor-help items-center gap-1 rounded border bg-black/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider',
+        'flex shrink-0 cursor-help items-center gap-1 rounded border bg-black/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
         className,
       )}
     >
-      {children}
+      <span className="sr-only">{label}</span>
+      <span aria-hidden="true" className="flex items-center gap-1">
+        {children}
+      </span>
     </span>
   )
 }

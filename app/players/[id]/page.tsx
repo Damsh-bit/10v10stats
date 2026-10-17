@@ -118,7 +118,7 @@ export default async function PlayerProfile({
 
   return (
     <main className="cs-grid min-h-screen overflow-x-hidden">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-3 py-5 sm:gap-5 sm:px-4 sm:py-7">
+      <div className="page-container flex flex-col gap-4 py-5 sm:gap-5 sm:py-7">
         <Link
           href="/"
           className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"

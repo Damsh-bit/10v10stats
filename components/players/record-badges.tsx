@@ -22,9 +22,9 @@ export function RecordBadge({ type, compact = false }: { type: RecordType; compa
     return (
       <span
         title={config.label}
-        aria-label={config.label}
         className={`flex h-[18px] w-[18px] shrink-0 cursor-help items-center justify-center rounded border ${config.colorClass}`}
       >
+        <span className="sr-only">{config.label}</span>
         <Icon className="h-3 w-3" aria-hidden="true" />
       </span>
     )

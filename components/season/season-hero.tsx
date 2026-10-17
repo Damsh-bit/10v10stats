@@ -42,7 +42,7 @@ export function SeasonHero({
         </span>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center lg:gap-8">
+      <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)] xl:items-center xl:gap-8">
         <div className="flex flex-col items-start gap-3">
           <span
             className="enter flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300"

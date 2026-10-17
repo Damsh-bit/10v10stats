@@ -97,7 +97,7 @@ export function RecentMatchScoreboard({ match, players }: { match: Match; player
     <section>
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="shrink-0 whitespace-nowrap font-heading text-sm font-bold uppercase tracking-[0.15em] text-foreground sm:tracking-[0.2em]">
-          ▶ Partida reciente
+          <span aria-hidden="true">▶ </span>Partida reciente
         </h2>
         <Link
           href={`/matches/${match.id}`}

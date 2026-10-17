@@ -81,6 +81,25 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-17-home-ancha',
+    date: '2026-10-17',
+    tag: 'Diseño',
+    title: 'Inicio a todo lo ancho y zonas nuevas en la tabla',
+    summary:
+      'El sitio ahora usa toda la pantalla, así entra mucha más info de un vistazo. La tabla muestra cada número en su columna y las zonas se ajustan a cuántos somos.',
+    highlights: [
+      {
+        icon: 'crown',
+        text: 'Zonas según cuántos hay en la tabla. Hoy somos 10: del 1 al 3 top globales, del 4 al 7 empujan pero la tienen corta, el 8 y el 9 en peligro y el último, la vergüenza del servidor.',
+      },
+      { icon: 'list', text: 'En la compu, la tabla tiene columnas: V-E-D, % de victorias, K/D/A, daño, headshots y KDA.' },
+      { icon: 'chart', text: 'El inicio ordenado por importancia: primero la tabla, los duelos y la última partida; FACEIT, récords y Nelson al costado.' },
+      { icon: 'phone', text: 'En el celu sigue todo en una columna, con la tabla compacta de siempre.' },
+      { icon: 'sparkles', text: 'Recomendaciones ahora es el botón redondo de abajo a la derecha, para no tapar las tablas.' },
+    ],
+    cta: { label: 'Ver la tabla', href: '/' },
+  },
+  {
     id: '2026-10-17-homenaje-qepd',
     date: '2026-10-17',
     tag: 'Estadísticas',

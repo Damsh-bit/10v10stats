@@ -108,7 +108,7 @@ export function CuriositiesBanner({ initialInsights }: CuriositiesBannerProps) {
       {/* Top micro glowing line */}
       <div className={LINE_CLASS} />
 
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 text-xs sm:text-sm">
+      <div className="page-container flex items-center justify-between gap-3 py-2 text-xs sm:text-sm">
         {/* Left Badge */}
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand border border-primary/20 shadow-sm">
