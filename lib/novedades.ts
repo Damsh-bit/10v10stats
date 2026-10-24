@@ -81,6 +81,20 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-10-24-resurreccion-tiky-foco',
+    date: '2026-10-24',
+    tag: 'Estadísticas',
+    title: '¡Tiky y Foco resucitaron!',
+    summary:
+      'El retiro les duró menos que un pedo en una canasta: Tiky y Foco renacieron como el ave fénix y vuelven a la ladder como todos, con su puesto y sus números de la temporada.',
+    highlights: [
+      { icon: 'flame', text: 'Chau homenaje en blanco y negro: en la home tienen su banner de resurrección por un par de semanas.' },
+      { icon: 'list', text: 'Vuelven a pelear el puesto, a aparecer en las peleas de la tabla y en las últimas 30, como cualquiera.' },
+      { icon: 'heart', text: 'Las coronas de flores no tienen devolución.' },
+    ],
+    cta: { label: 'Ver la ladder', href: '/' },
+  },
+  {
     // Id nuevo: la primera versión anunciaba el sitio a todo lo ancho, que se volvió atrás.
     id: '2026-10-17-zonas-segun-jugadores',
     date: '2026-10-17',

@@ -460,6 +460,52 @@ html[data-motion='off'] .motion-toggle {
   }
 }
 
+/* ─── Banner del ave fénix: brasas que suben y llamas atrás de las caras ──── */
+@keyframes fenix-brasa {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(1);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-160px) scale(0.3);
+  }
+}
+
+.fenix-brasas > span {
+  animation: fenix-brasa 3.2s ease-in infinite both;
+  box-shadow: 0 0 6px 2px currentColor;
+}
+
+@keyframes fenix-llama {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.fenix-llama {
+  animation: fenix-llama 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fenix-brasas > span,
+  .fenix-llama {
+    animation: none;
+  }
+  .fenix-brasas > span {
+    opacity: 0;
+  }
+}
+
 /* ─── El Cartel: lamparitas de marquesina ─────────────────────────────────── */
 @keyframes cartel-bulb {
   0%,
