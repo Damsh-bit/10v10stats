@@ -3,8 +3,9 @@
 import { useMemo, useState } from 'react'
 import type { PlayerStats } from '@/types'
 
-import { FACEIT_WEIGHTS, generateTeams, type FaceitInfo, type FaceitWeightKey } from '@/lib/teamBalancer'
+import { generateTeams } from '@/lib/teamBalancer'
 import type { PairStatsMap, PlayerForm } from '@/lib/team-history'
+import type { CaraACaraMap, RatingXplay } from '@/lib/xplay/rating'
 import { PlayerSelector } from './PlayerSelector'
 import { MatchupHeader } from './MatchupHeader'
 import { DuelBoard } from './DuelBoard'
@@ -45,21 +46,23 @@ export type RatingSource = {
   /** Toda la carrera: no hace falta completar con nada. */
   isCareer?: boolean
   stats: PlayerStats[]
+  /** Rating de Xplay de cada jugador en este contexto. */
+  ratings: Record<string, RatingXplay>
   /** Duplas (juntos, rivales, quién rinde más) dentro de este contexto. */
   pairs: PairStatsMap
+  /** Kills entre cada dupla dentro de este contexto. */
+  caraACara: CaraACaraMap
 }
 
 export function TeamGenerator({
   players,
   sources,
-  faceit,
   form,
   apuestas,
 }: {
   /** Carrera de todos. */
   players: PlayerStats[]
   sources: RatingSource[]
-  faceit: Record<string, FaceitInfo>
   form: Record<string, PlayerForm>
   apuestas: ApuestasPublicConfig
 }) {
@@ -70,7 +73,6 @@ export function TeamGenerator({
   // Arrancan todos seleccionados; se destilda a los que no juegan hoy.
   const [selectedIds, setSelectedIds] = useState<string[]>(sortedPlayers.map(p => p.player.id))
   const [sourceKey, setSourceKey] = useState(sources[0]?.key ?? '')
-  const [weightKey, setWeightKey] = useState<FaceitWeightKey>('medio')
   const [generated, setGenerated] = useState(false)
   const [optionIndex, setOptionIndex] = useState(0)
   const [recommendedMap, setRecommendedMap] = useState<string | null>(null)
@@ -78,7 +80,6 @@ export function TeamGenerator({
 
   const source = sources.find((s) => s.key === sourceKey) ?? sources[0]
   const sourceLabel = source?.label ?? 'Carrera'
-  const faceitWeight = FACEIT_WEIGHTS.find((w) => w.key === weightKey)?.value ?? 0.5
   const ready = selectedIds.length === TEAM_SIZE * 2
 
   const result = useMemo(() => {
@@ -88,12 +89,12 @@ export function TeamGenerator({
       sourceLabel,
       sourceIsCareer: source?.isCareer ?? true,
       careerStats: players,
-      faceit,
+      ratings: source?.ratings ?? {},
       form,
       pairs: source?.pairs ?? {},
-      faceitWeight,
+      caraACara: source?.caraACara ?? {},
     })
-  }, [generated, ready, selectedIds, source, sourceLabel, players, faceit, form, faceitWeight])
+  }, [generated, ready, selectedIds, source, sourceLabel, players, form])
 
   const optionCount = result?.options.length ?? 0
   const option = result && optionCount > 0 ? result.options[optionIndex % optionCount] : null
@@ -140,39 +141,24 @@ export function TeamGenerator({
         players={sortedPlayers}
         selectedIds={selectedIds}
         onToggle={togglePlayer}
-        faceit={faceit}
+        ratings={source?.ratings ?? {}}
       />
 
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-center sm:gap-8">
-        {sources.length > 1 && (
-          <div className="flex max-w-full flex-col items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Rendimiento 10v10</span>
-            <SeasonTabs
-              options={sources.map((s) => ({ value: s.key, label: s.label, hint: s.hint }))}
-              value={sourceKey}
-              onChange={(key) => {
-                setSourceKey(key)
-                setOptionIndex(0)
-              }}
-              layoutId="team-source-tab"
-              ariaLabel="Estadísticas del 10v10 para balancear"
-            />
-          </div>
-        )}
+      {sources.length > 1 && (
         <div className="flex max-w-full flex-col items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Peso de FACEIT</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Rating de Xplay</span>
           <SeasonTabs
-            options={FACEIT_WEIGHTS.map((w) => ({ value: w.key, label: w.label, hint: `${Math.round(w.value * 100)}%` }))}
-            value={weightKey}
+            options={sources.map((s) => ({ value: s.key, label: s.label, hint: s.hint }))}
+            value={sourceKey}
             onChange={(key) => {
-              setWeightKey(key as FaceitWeightKey)
+              setSourceKey(key)
               setOptionIndex(0)
             }}
-            layoutId="team-faceit-weight-tab"
-            ariaLabel="Cuánto pesa el nivel de FACEIT"
+            layoutId="team-source-tab"
+            ariaLabel="Partidas con las que se calcula el rating para balancear"
           />
         </div>
-      </div>
+      )}
 
       <div className="flex justify-center">
         <button
@@ -231,7 +217,7 @@ export function TeamGenerator({
             <TeamComparison option={option} sourceLabel={sourceLabel} />
           </div>
 
-          <BalanceReasons option={option} sourceLabel={sourceLabel} faceitPct={Math.round(faceitWeight * 100)} total={result.total} />
+          <BalanceReasons option={option} sourceLabel={sourceLabel} total={result.total} />
 
           {apuestas.visibles && (
             <BetPanel
@@ -239,7 +225,6 @@ export function TeamGenerator({
               pairs={source?.pairs ?? {}}
               map={recommendedMap}
               sourceLabel={sourceLabel}
-              faceitWeight={faceitWeight}
               config={apuestas}
             />
           )}

@@ -2,8 +2,7 @@
 
 import { motion } from 'motion/react'
 import { Flame, Snowflake } from 'lucide-react'
-import { formatElo, type BalanceOption, type TeamSummary } from '@/lib/teamBalancer'
-import { FaceitLevel } from '@/components/faceit/faceit-bits'
+import { formatRating, type BalanceOption, type TeamSummary } from '@/lib/teamBalancer'
 import { cn } from '@/lib/utils'
 import { TEAM_TONES } from './team-ui'
 
@@ -72,13 +71,9 @@ function TeamHead({ team, pct, tone }: { team: TeamSummary; pct: number; tone: 0
         {pct}
         <span className="text-xl text-muted-foreground sm:text-2xl">%</span>
       </span>
-      <span className={cn('mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground', right && 'flex-row-reverse')}>
-        <FaceitLevel level={team.avgLevel} size={18} />
-        <span className="font-mono tabular-nums">{formatElo(team.avgElo)} elo</span>
-      </span>
-      <span className={cn('flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground', right && 'justify-end')}>
-        <span>
-          Poder <span className="font-mono font-semibold text-foreground">{team.avgPower.toFixed(1)}</span>
+      <span className={cn('mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground', right && 'justify-end')}>
+        <span title="Rating de Xplay promedio de los 5">
+          Rating <span className="font-mono font-semibold tabular-nums text-foreground">{formatRating(team.avgRating)}</span>
         </span>
         {team.hot.length > 0 && (
           <span className="flex items-center gap-0.5 text-orange-400" title={`En racha: ${team.hot.map((p) => p.stats.player.name).join(', ')}`}>

@@ -2,21 +2,21 @@
 
 import type { PlayerStats } from '@/types'
 
-import type { FaceitInfo } from '@/lib/teamBalancer'
+import { formatRating } from '@/lib/teamBalancer'
+import type { RatingXplay } from '@/lib/xplay/rating'
 import { PlayerAvatar, BadgePill } from '@/components/shared/strike-ui'
-import { FaceitLevel } from '@/components/faceit/faceit-bits'
-import { NoFaceitLevel } from './team-ui'
 
 export function PlayerSelector({
   players,
   selectedIds,
   onToggle,
-  faceit,
+  ratings,
 }: {
   players: PlayerStats[]
   selectedIds: string[]
   onToggle: (id: string) => void
-  faceit: Record<string, FaceitInfo>
+  /** Rating de Xplay de cada uno en el contexto elegido. */
+  ratings: Record<string, RatingXplay>
 }) {
   const selectedCount = selectedIds.length
   
@@ -34,7 +34,7 @@ export function PlayerSelector({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {players.map((p) => {
           const isSelected = selectedIds.includes(p.player.id)
-          const level = faceit[p.player.id]?.level
+          const xplay = ratings[p.player.id]
           return (
             <button
               key={p.player.id}
@@ -46,13 +46,10 @@ export function PlayerSelector({
                   : 'border-border/50 bg-background/50 opacity-60 hover:opacity-100 hover:border-border'
               }`}
             >
-              <span className="relative flex shrink-0">
+              <span className="flex shrink-0">
                 <PlayerAvatar player={p.player} size={32} />
-                <span className="absolute -bottom-1.5 -right-1.5" title={level ? `Nivel ${level} de FACEIT` : 'Sin FACEIT cargado'}>
-                  {level ? <FaceitLevel level={level} size={18} /> : <NoFaceitLevel size={18} className="bg-card" />}
-                </span>
               </span>
-              <div className="flex min-w-0 flex-col items-start gap-0.5">
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
                 <span
                   className={`truncate text-[13px] font-semibold leading-none ${
                     isSelected ? 'text-foreground' : 'text-muted-foreground'
@@ -62,6 +59,18 @@ export function PlayerSelector({
                 </span>
                 <BadgePill>{p.player.badge}</BadgePill>
               </div>
+              {xplay && (
+                <span
+                  className="shrink-0 font-mono text-[11px] font-bold tabular-nums text-muted-foreground"
+                  title={
+                    xplay.partidas > 0
+                      ? `Rating de Xplay para el generador (${xplay.partidas} ${xplay.partidas === 1 ? 'partida' : 'partidas'})`
+                      : 'Todavía sin partidas con Xplay'
+                  }
+                >
+                  {formatRating(xplay.rating)}
+                </span>
+              )}
             </button>
           )
         })}

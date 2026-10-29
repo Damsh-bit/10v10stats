@@ -16,12 +16,10 @@ const TONE_ICONS: Record<ReasonTone, { icon: typeof Info; className: string; lab
 export function BalanceReasons({
   option,
   sourceLabel,
-  faceitPct,
   total,
 }: {
   option: BalanceOption
   sourceLabel: string
-  faceitPct: number
   total: number
 }) {
   const fair = option.verdict.tone === 'good'
@@ -37,7 +35,7 @@ export function BalanceReasons({
             {fair ? 'Por qué está balanceado' : 'Por qué quedó así'}
           </h2>
           <span className="text-[11px] text-muted-foreground">
-            10v10: {sourceLabel} · FACEIT pesa {faceitPct}% · forma de las últimas 5
+            Rating de Xplay: {sourceLabel} · forma de las últimas 5
           </span>
         </div>
       </header>
@@ -67,21 +65,26 @@ export function BalanceReasons({
         </summary>
         <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-[12px] leading-relaxed text-muted-foreground marker:text-border">
           <li>
-            <strong className="text-foreground">Poder (0–100)</strong> de cada jugador = {faceitPct}% su elo de FACEIT +{' '}
-            {100 - faceitPct}% su rendimiento en el 10v10 ({sourceLabel}: KDA, daño, win rate, HS, partidas positivas y MVPs), ±
-            hasta 3 puntos según cómo viene en sus últimas 5 del 10v10.
+            <strong className="text-foreground">Rating</strong> de cada jugador = su Rating 2.1 de Xplay ({sourceLabel}),
+            promediado por ronda: junta kills, muertes, daño, KAST y aperturas, y sale de partidas contra nosotros mismos. Suma o
+            resta hasta 0,04 según cómo viene en sus últimas 5 del 10v10.
           </li>
           <li>
-            Si alguien tiene pocas partidas en {sourceLabel}, su rating se completa con la carrera. Si no tiene FACEIT, su nivel se
-            estima con el 10v10.
+            Con pocas partidas no se le cree del todo: se mezcla con un punto de partida que vale como 3 partidas. En la carrera
+            ese punto es el promedio del grupo; en una temporada o en las últimas partidas, su carrera.
           </li>
           <li>
-            Se prueban las {total} formas de dividir a los 10 y se ordenan por qué tan parejos quedan el poder, el nivel de FACEIT,
-            las rachas (los que vienen ganando con los que vienen perdiendo) y cada duelo por posición.
+            El FACEIT no cuenta. Sólo al que recién empieza con Xplay se lo ubica con lo que suele sacar acá la gente de su elo, y
+            eso deja de contar a las 5 partidas.
+          </li>
+          <li>
+            Se prueban las {total} formas de dividir a los 10 y se ordenan por qué tan parejos quedan el rating, las rachas (los
+            que vienen ganando con los que vienen perdiendo) y cada duelo por posición.
           </li>
           <li>Las duplas que ganan mucho juntas en el 10v10 le suman fuerza a su equipo.</li>
           <li>
-            La chance de ganar usa la fórmula del elo de FACEIT: 100 de elo promedio de diferencia ≈ 64% para el que tiene más.
+            La chance de ganar sale de las partidas de Xplay: 0,10 de rating promedio de diferencia ≈ 60% para el que tiene más, y
+            0,20 ≈ 68%.
           </li>
           <li>&quot;Otra opción&quot; recorre las combinaciones más parejas que siguen (hasta 8, entre 42% y 58% de chances).</li>
         </ul>

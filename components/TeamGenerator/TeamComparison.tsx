@@ -3,8 +3,7 @@
 import type { ReactNode } from 'react'
 import { motion } from 'motion/react'
 import { BarChart3 } from 'lucide-react'
-import { formatElo, type BalanceOption } from '@/lib/teamBalancer'
-import { FaceitLevel } from '@/components/faceit/faceit-bits'
+import { formatRating, type BalanceOption } from '@/lib/teamBalancer'
 import { cn } from '@/lib/utils'
 import { TEAM_TONES } from './team-ui'
 
@@ -26,30 +25,27 @@ export function TeamComparison({ option, sourceLabel }: { option: BalanceOption;
   const duo = (team: typeof t1) =>
     team.bestDuo ? `${team.bestDuo.a.stats.player.name} + ${team.bestDuo.b.stats.player.name}` : '—'
 
+  const xplayRow = (label: string, a: number | null, b: number | null, format: (v: number) => string): Row => ({
+    label,
+    left: a === null ? '—' : format(a),
+    right: b === null ? '—' : format(b),
+    a: a ?? 0,
+    b: b ?? 0,
+  })
+
   const rows: Row[] = [
     { label: 'Chance de ganar', left: `${p1}%`, right: `${100 - p1}%`, a: p1, b: 100 - p1 },
-    { label: 'Poder promedio', left: t1.avgPower.toFixed(1), right: t2.avgPower.toFixed(1), a: t1.avgPower, b: t2.avgPower },
     {
-      label: 'Elo FACEIT',
-      left: (
-        <span className="inline-flex items-center gap-1.5">
-          <FaceitLevel level={t1.avgLevel} size={16} />
-          {formatElo(t1.avgElo)}
-        </span>
-      ),
-      right: (
-        <span className="inline-flex flex-row-reverse items-center gap-1.5">
-          <FaceitLevel level={t2.avgLevel} size={16} />
-          {formatElo(t2.avgElo)}
-        </span>
-      ),
-      a: t1.avgElo,
-      b: t2.avgElo,
+      label: 'Rating Xplay',
+      left: formatRating(t1.avgRating),
+      right: formatRating(t2.avgRating),
+      a: t1.avgRating - t2.avgRating,
+      b: 0,
+      range: 0.2,
     },
-    { label: `Rating 10v10`, left: Math.round(t1.avgPerf), right: Math.round(t2.avgPerf), a: t1.avgPerf, b: t2.avgPerf },
+    xplayRow('ADR', t1.adr, t2.adr, (v) => String(Math.round(v))),
+    xplayRow('KAST', t1.kast, t2.kast, (v) => `${Math.round(v)}%`),
     { label: 'KDA', left: t1.kda.toFixed(2), right: t2.kda.toFixed(2), a: t1.kda, b: t2.kda },
-    { label: 'Daño por partida', left: Math.round(t1.adm), right: Math.round(t2.adm), a: t1.adm, b: t2.adm },
-    { label: 'Win rate', left: `${Math.round(t1.winRate)}%`, right: `${Math.round(t2.winRate)}%`, a: t1.winRate, b: t2.winRate },
     {
       label: 'Forma (últimas 5)',
       left: `${t1.recentWins}V–${t1.recentLosses}D`,
@@ -71,7 +67,7 @@ export function TeamComparison({ option, sourceLabel }: { option: BalanceOption;
           <h2 className="font-heading text-base font-bold uppercase leading-tight tracking-widest text-foreground">
             Equipo contra equipo
           </h2>
-          <span className="text-[11px] text-muted-foreground">Promedios de los 5 · 10v10 según {sourceLabel}</span>
+          <span className="text-[11px] text-muted-foreground">Promedios de los 5 · según {sourceLabel}</span>
         </div>
       </header>
 

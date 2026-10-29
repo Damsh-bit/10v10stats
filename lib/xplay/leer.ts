@@ -132,16 +132,20 @@ export const getDetalleXplay = cache(async (matchId: string): Promise<DetalleXpl
   }
 })
 
-/** Cifras de Xplay de cada jugador del sitio en cada partida (para los récords). */
+/** Cifras de Xplay de cada jugador del sitio en cada partida (para los récords y el generador de equipos). */
 export type FilaCifrasXplay = {
   matchId: string
   playerId: string
+  /** Cuenta de Steam con la que jugó esa partida. */
+  accountId: number
   rondas: number
   rating: number
   adr: number
   kast: number
   aperturas: number
   clutches: number
+  /** Elo de FACEIT que tenía al jugarla. */
+  faceitElo: number | null
 }
 
 export const getCifrasXplayTodas = cache(async (): Promise<FilaCifrasXplay[]> => {
@@ -151,26 +155,55 @@ export const getCifrasXplayTodas = cache(async (): Promise<FilaCifrasXplay[]> =>
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('xplay_match_players')
-      .select('match_id, player_id, rating, adr, kast, opening_kills, clutches_won, rondas:stats->general->rondas')
+      .select('match_id, player_id, account_id, rating, adr, kast, opening_kills, clutches_won, faceit_elo, rondas:stats->general->rondas')
       .not('player_id', 'is', null)
       .not('rating', 'is', null)
+      .order('match_id')
+      .order('account_id')
       .range(from, from + PAGE - 1)
     if (error || !data) break
     for (const f of data) {
       filas.push({
         matchId: String(f.match_id),
         playerId: String(f.player_id),
+        accountId: Number(f.account_id),
         rondas: Number(f.rondas ?? 0),
         rating: Number(f.rating ?? 0),
         adr: Number(f.adr ?? 0),
         kast: Number(f.kast ?? 0),
         aperturas: Number(f.opening_kills ?? 0),
         clutches: Number(f.clutches_won ?? 0),
+        faceitElo: f.faceit_elo ? Number(f.faceit_elo) : null,
       })
     }
     if (data.length < PAGE) break
   }
   return filas
+})
+
+/** Una kill entre dos jugadores (sin fuego amigo ni muertes solas), por cuenta de Steam. */
+export type KillCruzada = { matchId: string; killer: number; victima: number }
+
+/** Todas las kills de Xplay entre jugadores: de acá sale el cara a cara del generador de equipos. */
+export const getKillsXplayTodas = cache(async (): Promise<KillCruzada[]> => {
+  const supabase = cliente()
+  const kills: KillCruzada[] = []
+  if (!supabase) return kills
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('xplay_kills')
+      .select('match_id, killer, victim')
+      .eq('team_kill', false)
+      .not('killer', 'is', null)
+      .order('match_id')
+      .order('round')
+      .order('seq')
+      .range(from, from + PAGE - 1)
+    if (error || !data) break
+    for (const k of data) kills.push({ matchId: String(k.match_id), killer: Number(k.killer), victima: Number(k.victim) })
+    if (data.length < PAGE) break
+  }
+  return kills
 })
 
 /** Una kill en la que estuvo el jugador, con a quién de los dos le tocó. */

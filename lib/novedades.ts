@@ -59,7 +59,7 @@ export type NovedadTag =
   | 'Arreglos'
   | 'Sitio'
 
-export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano' | 'perfil' | 'xplay'
+export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano' | 'perfil' | 'xplay' | 'rating-xplay'
 
 export type Novedad = {
   /** Único y estable: si cambia, todos la vuelven a ver. */
@@ -80,6 +80,23 @@ export type Novedad = {
 export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
+  {
+    id: '2026-10-29-generador-rating-xplay',
+    date: '2026-10-29',
+    tag: 'Generador de equipos',
+    title: 'Los equipos se arman con el rating de Xplay',
+    summary:
+      'Chau FACEIT en el generador: ahora cada uno vale su rating de Xplay, el que sacamos jugando entre nosotros. Así nadie queda como crack por lo que hace en otro lado.',
+    highlights: [
+      { icon: 'scale', text: 'Cada uno vale su rating de Xplay: junta kills, muertes, daño, KAST y aperturas, ronda por ronda.' },
+      { icon: 'history', text: 'Con pocas partidas no se le cree del todo: se acerca al promedio del grupo hasta que juegue más.' },
+      { icon: 'faceit', text: 'El FACEIT ya no cuenta. Sólo ubica al que recién empieza, y a las 5 partidas deja de pesar.' },
+      { icon: 'swords', text: 'En los duelos por posición aparece el cara a cara: cuántas veces se mataron entre ellos.' },
+    ],
+    cta: { label: 'Armar equipos', href: '/creacion-de-equipos' },
+    popup: true,
+    visual: { kind: 'demo', name: 'rating-xplay' },
+  },
   {
     id: '2026-10-24-resurreccion-tiky-foco',
     date: '2026-10-24',

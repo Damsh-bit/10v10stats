@@ -1,62 +1,32 @@
 import type { PlayerStats } from '@/types'
-import { levelForElo } from '@/lib/faceit-format'
 import { getPair, type PairStatsMap, type PlayerForm } from '@/lib/team-history'
+import { getCaraACara, type CaraACaraMap, type RatingXplay } from '@/lib/xplay/rating'
 
 /**
  * Generador de equipos.
  *
- * Cada jugador tiene un "poder" de 0 a 100 que mezcla su elo de FACEIT con su
- * rendimiento en el 10v10 (en el contexto elegido: carrera, temporada o
- * últimas partidas) y suma o resta un poco según cómo viene. Con 10 jugadores
- * hay sólo 126 formas de armar dos equipos de 5, así que se prueban todas y se
- * elige la que deja más parejos el poder, el nivel de FACEIT, las rachas y
- * cada duelo por posición. La química de las duplas (cuánto ganan juntas)
- * también cuenta.
+ * Cada jugador vale su rating de Xplay (el Rating 2.1 que da SCOPE.GG en cada
+ * partida, promediado por ronda y ajustado por cuántas jugó: ver
+ * lib/xplay/rating.ts) en el contexto elegido (carrera, temporada o últimas
+ * partidas), y suma o resta un poco según cómo viene. Con 10 jugadores hay
+ * sólo 126 formas de armar dos equipos de 5, así que se prueban todas y se
+ * elige la que deja más parejos el rating, las rachas y cada duelo por
+ * posición. La química de las duplas (cuánto ganan juntas) también cuenta.
  */
-
-export type FaceitInfo = { level: number; elo: number }
-
-export type FaceitWeightKey = 'bajo' | 'medio' | 'alto'
-
-export const FACEIT_WEIGHTS: { key: FaceitWeightKey; label: string; value: number }[] = [
-  { key: 'bajo', label: 'Bajo', value: 0.3 },
-  { key: 'medio', label: 'Medio', value: 0.5 },
-  { key: 'alto', label: 'Alto', value: 0.7 },
-]
-
-export type BalancerContext = {
-  /** Estadísticas de todos los jugadores en el contexto elegido. */
-  sourceStats: PlayerStats[]
-  /** "Carrera", "Season 2", "Últimas 20"… */
-  sourceLabel: string
-  sourceIsCareer: boolean
-  /** Carrera de todos: completa a quien tiene pocas partidas en el contexto. */
-  careerStats: PlayerStats[]
-  faceit: Record<string, FaceitInfo>
-  form: Record<string, PlayerForm>
-  /** Duplas dentro del contexto elegido. */
-  pairs: PairStatsMap
-  /** 0 a 1: cuánto pesa FACEIT en el poder de cada jugador. */
-  faceitWeight: number
-}
 
 export type PlayerProfile = {
   id: string
-  /** Del contexto elegido; de la carrera si no jugó en él. */
+  /** Del 10v10 en el contexto elegido; de la carrera si no jugó en él. */
   stats: PlayerStats
-  faceit: FaceitInfo | null
-  /** Elo para comparar: el de FACEIT o, si no tiene, uno estimado con su 10v10. */
-  elo: number
-  faceitScore: number
-  /** Rendimiento en el 10v10 (0–100), completado con la carrera si hay pocas partidas. */
-  perf: number
-  /** Partidas en el contexto elegido. */
+  xplay: RatingXplay
+  /** El rating que usa el generador. */
+  rating: number
+  /** Partidas con Xplay en el contexto elegido. */
   sample: number
   form: PlayerForm
   /** −1 (viene muy mal) a 1 (viene muy bien). */
   formScore: number
-  /** Poder sin la forma: FACEIT + 10v10. */
-  basePower: number
+  /** Rating más lo que suma o resta la forma. */
   power: number
 }
 
@@ -66,14 +36,11 @@ export type TeamSummary = {
   winProb: number
   strength: number
   avgPower: number
-  avgElo: number
-  avgLevel: number
-  avgFaceitScore: number
-  avgPerf: number
+  avgRating: number
+  /** Promedios de Xplay de los que tienen; null si nadie jugó con Xplay. */
+  adr: number | null
+  kast: number | null
   kda: number
-  adm: number
-  /** Win rate promedio en el contexto (0–100). */
-  winRate: number
   formSum: number
   recentWins: number
   recentLosses: number
@@ -98,6 +65,9 @@ export type Duel = {
   apart: number
   apartWinsA: number
   apartLossesA: number
+  /** Cara a cara en Xplay: cuántas veces A mató a B y cuántas B a A. */
+  killsA: number
+  killsB: number
 }
 
 export type ReasonTone = 'good' | 'warn' | 'info'
@@ -125,39 +95,54 @@ export type BalanceResult = {
   options: BalanceOption[]
 }
 
+export type BalancerContext = {
+  /** Estadísticas del 10v10 de todos los jugadores en el contexto elegido. */
+  sourceStats: PlayerStats[]
+  /** "Carrera", "Season 2", "Últimas 20"… */
+  sourceLabel: string
+  sourceIsCareer: boolean
+  /** Carrera de todos: para mostrar a quien no jugó en el contexto. */
+  careerStats: PlayerStats[]
+  /** Rating de Xplay de cada jugador en el contexto elegido. */
+  ratings: Record<string, RatingXplay>
+  form: Record<string, PlayerForm>
+  /** Duplas dentro del contexto elegido. */
+  pairs: PairStatsMap
+  /** Kills entre cada dupla dentro del contexto elegido. */
+  caraACara: CaraACaraMap
+}
+
 // ─── Constantes del modelo ────────────────────────────────────────────────────
 
-/** Escala de FACEIT: 500 de elo = 0 de poder, 2100 = 100 (cada punto son 16 de elo). */
-const ELO_FLOOR = 500
-const ELO_PER_POINT = 16
-const NEUTRAL = 50
+/** Si a alguien le falta el rating, vale como el promedio. */
+const DEFAULT_RATING = 1
+/** Con menos partidas con Xplay que esto, su rating se completa con otra cosa (y se avisa). */
+const FEW_MATCHES = 5
 
-/** Rendimiento en el 10v10: KDA 30, daño 25, win rate 20, HS 10, partidas positivas 10, MVPs 5. */
-const PERF_WEIGHTS = { kda: 30, adm: 25, wr: 20, hs: 10, positive: 10, mvp: 5 }
-/** Partidas mínimas para entrar en la escala del rendimiento (un debut malo no la deforma). */
-const SCALE_MIN_MATCHES = 3
-/** Con pocas partidas en el contexto, el rating se completa con la carrera (o con la media). */
-const PERF_PRIOR_MATCHES = 5
-
-/** Cuánto mueve la forma: hasta ±3 de poder. */
-const FORM_POINTS = 3
+/** Cuánto mueve la forma: hasta ±0,04 de rating. */
+const FORM_RATING = 0.04
 const HOT_STREAK = 3
 
 /** Química: victorias juntos por encima del 50%, con 6 partidas de prior para no creerle a 2 partidas. */
 const SYNERGY_PRIOR_MATCHES = 6
-const SYNERGY_POINTS = 2.5
+const SYNERGY_RATING = 0.04
 
-/** Chance de victoria con la fórmula de elo de FACEIT: 100 de elo promedio de diferencia ≈ 64%. */
-const TEAM_SCALE = 400 / ELO_PER_POINT
-/** Duelos individuales: el modelo se mezcla con el historial real entre los dos. */
-const DUEL_SCALE = 30
+/**
+ * Chance de victoria: en las partidas de Xplay, la diferencia de rating
+ * promedio entre los dos equipos varía ±0,43 de una partida a otra (y el que la
+ * tiene a favor gana 95% de las veces). Con eso, 0,10 de diferencia ≈ 60% y
+ * 0,20 ≈ 68%.
+ */
+const TEAM_SCALE = 0.6
+/** Duelos: el rating de cada uno varía ±0,28 de partida a partida; 0,15 de diferencia ≈ 65%. */
+const DUEL_SCALE = 0.55
+/** Los duelos mezclan el modelo con el historial real entre los dos. */
 const DUEL_PRIOR_MATCHES = 6
 /** Por debajo de 55% para alguno, un duelo se considera parejo. */
 const EVEN_DUEL = 0.45
 
-/** Pesos del costo de una combinación (en puntos de poder). */
-const COST_FACEIT = 0.35
-const COST_FORM = 1.5
+/** Pesos del costo de una combinación (en rating). */
+const COST_FORM = 0.025
 const COST_SHAPE = 0.15
 
 const MAX_OPTIONS = 8
@@ -165,41 +150,6 @@ const FAIR_MARGIN = 0.08
 const UNEVEN_MARGIN = 0.1
 
 // ─── Perfiles ─────────────────────────────────────────────────────────────────
-
-const PERF_KEYS = Object.keys(PERF_WEIGHTS) as (keyof typeof PERF_WEIGHTS)[]
-
-function perfInputs(s: PlayerStats): Record<keyof typeof PERF_WEIGHTS, number> {
-  const n = s.matches || 1
-  return { kda: s.kda, adm: s.adm, wr: s.wins / n, hs: s.hsPct, positive: s.positiveGames / n, mvp: s.mvps / n }
-}
-
-/** Rendimiento 0–100 de cada jugador con partidas, en la escala de todo el grupo (no sólo de los 10 elegidos). */
-export function performanceScores(stats: PlayerStats[]): Map<string, number> {
-  const played = stats.filter((s) => s.matches > 0)
-  const regulars = played.filter((s) => s.matches >= SCALE_MIN_MATCHES)
-  const scale = (regulars.length >= 2 ? regulars : played).map(perfInputs)
-  if (scale.length === 0) return new Map()
-
-  const bounds = Object.fromEntries(
-    PERF_KEYS.map((k) => [k, { min: Math.min(...scale.map((i) => i[k])), max: Math.max(...scale.map((i) => i[k])) }]),
-  ) as Record<keyof typeof PERF_WEIGHTS, { min: number; max: number }>
-
-  return new Map(
-    played.map((s) => {
-      const inputs = perfInputs(s)
-      const score = PERF_KEYS.reduce((acc, k) => {
-        const { min, max } = bounds[k]
-        const normalized = max === min ? 0.5 : clamp((inputs[k] - min) / (max - min), 0, 1)
-        return acc + normalized * PERF_WEIGHTS[k]
-      }, 0)
-      return [s.player.id, score]
-    }),
-  )
-}
-
-function shrink(value: number, matches: number, prior: number) {
-  return (matches * value + PERF_PRIOR_MATCHES * prior) / (matches + PERF_PRIOR_MATCHES)
-}
 
 export function computeFormScore(form: PlayerForm) {
   const wins = form.recent.filter((r) => r === 'W').length
@@ -215,9 +165,9 @@ export function isCold(p: PlayerProfile) {
   return p.form.streak <= -HOT_STREAK || p.formScore <= -0.5
 }
 
+const NO_XPLAY: RatingXplay = { rating: DEFAULT_RATING, crudo: null, partidas: 0, rondas: 0, adr: null, kast: null, base: 'promedio' }
+
 export function buildProfiles(ids: string[], ctx: BalancerContext): PlayerProfile[] {
-  const sourceScores = performanceScores(ctx.sourceStats)
-  const careerScores = ctx.sourceIsCareer ? sourceScores : performanceScores(ctx.careerStats)
   const sourceById = new Map(ctx.sourceStats.map((s) => [s.player.id, s]))
   const careerById = new Map(ctx.careerStats.map((s) => [s.player.id, s]))
 
@@ -227,32 +177,20 @@ export function buildProfiles(ids: string[], ctx: BalancerContext): PlayerProfil
     const base = source ?? career
     if (!base) return []
 
-    const careerMatches = career?.matches ?? 0
-    const careerPerf = shrink(careerScores.get(id) ?? NEUTRAL, careerMatches, NEUTRAL)
-    const sample = source?.matches ?? 0
-    const perf = ctx.sourceIsCareer ? careerPerf : shrink(sourceScores.get(id) ?? careerPerf, sample, careerPerf)
-
-    const faceit = ctx.faceit[id] ?? null
-    const faceitScore = faceit ? clamp((faceit.elo - ELO_FLOOR) / ELO_PER_POINT, 0, 100) : perf
-    const elo = faceit ? faceit.elo : Math.round(ELO_FLOOR + perf * ELO_PER_POINT)
-
+    const xplay = ctx.ratings[id] ?? NO_XPLAY
     const form = ctx.form[id] ?? { recent: [], streak: 0 }
     const formScore = computeFormScore(form)
-    const basePower = ctx.faceitWeight * faceitScore + (1 - ctx.faceitWeight) * perf
 
     return [
       {
         id,
-        stats: sample > 0 || !career ? base : career,
-        faceit,
-        elo,
-        faceitScore,
-        perf,
-        sample,
+        stats: (source?.matches ?? 0) > 0 || !career ? base : career,
+        xplay,
+        rating: xplay.rating,
+        sample: xplay.partidas,
         form,
         formScore,
-        basePower,
-        power: basePower + FORM_POINTS * formScore,
+        power: xplay.rating + FORM_RATING * formScore,
       },
     ]
   })
@@ -276,19 +214,17 @@ function duelModelProb(a: PlayerProfile, b: PlayerProfile) {
 }
 
 /** Prueba todas las formas de dividir a los jugadores en dos equipos y las ordena de más pareja a menos. */
-function rankSplits(profiles: PlayerProfile[], synergy: number[][], faceitWeight: number): Split[] {
+function rankSplits(profiles: PlayerProfile[], synergy: number[][]): Split[] {
   const n = profiles.length
   const size = Math.floor(n / 2)
   const splits: Split[] = []
-  const faceitCost = COST_FACEIT * (faceitWeight / 0.5)
 
   const describe = (idx: number[]) => {
     let syn = 0
     for (let i = 0; i < idx.length; i++) for (let j = i + 1; j < idx.length; j++) syn += synergy[idx[i]][idx[j]]
     const powers = idx.map((i) => profiles[i].power)
     return {
-      strength: mean(powers) + SYNERGY_POINTS * syn,
-      faceit: mean(idx.map((i) => profiles[i].faceitScore)),
+      strength: mean(powers) + SYNERGY_RATING * syn,
       form: sumOf(idx.map((i) => profiles[i].formScore)),
       sorted: powers.sort((x, y) => y - x),
     }
@@ -304,11 +240,7 @@ function rankSplits(profiles: PlayerProfile[], synergy: number[][], faceitWeight
     const ta = describe(a)
     const tb = describe(b)
     const shape = mean(ta.sorted.map((p, k) => Math.abs(p - (tb.sorted[k] ?? 0))))
-    const cost =
-      Math.abs(ta.strength - tb.strength) +
-      faceitCost * Math.abs(ta.faceit - tb.faceit) +
-      COST_FORM * Math.abs(ta.form - tb.form) +
-      COST_SHAPE * shape
+    const cost = Math.abs(ta.strength - tb.strength) + COST_FORM * Math.abs(ta.form - tb.form) + COST_SHAPE * shape
 
     splits.push({ mask, a, b, cost, winProbA: winProbability(ta.strength, tb.strength) })
   }
@@ -322,7 +254,7 @@ export function generateTeams(ids: string[], ctx: BalancerContext): BalanceResul
   if (profiles.length < 2) return null
 
   const synergy = profiles.map((p) => profiles.map((q) => (p.id === q.id ? 0 : synergyOf(ctx.pairs, p.id, q.id))))
-  const splits = rankSplits(profiles, synergy, ctx.faceitWeight)
+  const splits = rankSplits(profiles, synergy)
   const total = splits.length
   const unevenShare = splits.filter((s) => Math.abs(s.winProbA - 0.5) > UNEVEN_MARGIN).length / total
 
@@ -345,6 +277,11 @@ type AnalysisInput = {
   unevenShare: number
 }
 
+function meanOrNull(values: (number | null)[]) {
+  const known = values.filter((v): v is number => v !== null)
+  return known.length > 0 ? mean(known) : null
+}
+
 function summarizeTeam(name: string, idx: number[], input: AnalysisInput): Omit<TeamSummary, 'winProb'> {
   const { profiles, synergy, ctx } = input
   const players = idx.map((i) => profiles[i]).sort((a, b) => b.power - a.power)
@@ -364,21 +301,17 @@ function summarizeTeam(name: string, idx: number[], input: AnalysisInput): Omit<
     }
   }
 
-  const avgElo = Math.round(mean(players.map((p) => p.elo)))
   const recent = players.flatMap((p) => p.form.recent)
 
   return {
     name,
     players,
-    strength: mean(players.map((p) => p.power)) + SYNERGY_POINTS * syn,
+    strength: mean(players.map((p) => p.power)) + SYNERGY_RATING * syn,
     avgPower: mean(players.map((p) => p.power)),
-    avgElo,
-    avgLevel: levelForElo(avgElo),
-    avgFaceitScore: mean(players.map((p) => p.faceitScore)),
-    avgPerf: mean(players.map((p) => p.perf)),
+    avgRating: mean(players.map((p) => p.rating)),
+    adr: meanOrNull(players.map((p) => p.xplay.adr)),
+    kast: meanOrNull(players.map((p) => p.xplay.kast)),
     kda: mean(players.map((p) => p.stats.kda)),
-    adm: mean(players.map((p) => p.stats.adm)),
-    winRate: mean(players.map((p) => (p.stats.matches > 0 ? (p.stats.wins / p.stats.matches) * 100 : 0))),
     formSum: sumOf(players.map((p) => p.formScore)),
     recentWins: recent.filter((r) => r === 'W').length,
     recentLosses: recent.filter((r) => r === 'L').length,
@@ -395,21 +328,23 @@ export function duelProbability(a: PlayerProfile, b: PlayerProfile, pairs: PairS
   return (pair.better + DUEL_PRIOR_MATCHES * duelModelProb(a, b)) / (pair.shared + DUEL_PRIOR_MATCHES)
 }
 
-function buildDuels(t1: TeamSummary, t2: TeamSummary, pairs: PairStatsMap): Duel[] {
+function buildDuels(t1: TeamSummary, t2: TeamSummary, ctx: BalancerContext): Duel[] {
   return t1.players.map((a, k) => {
     const b = t2.players[k]
-    const pair = getPair(pairs, a.id, b.id)
-    const modelProbA = duelModelProb(a, b)
+    const pair = getPair(ctx.pairs, a.id, b.id)
+    const kills = getCaraACara(ctx.caraACara, a.id, b.id)
     return {
       a,
       b,
-      probA: duelProbability(a, b, pairs),
-      modelProbA,
+      probA: duelProbability(a, b, ctx.pairs),
+      modelProbA: duelModelProb(a, b),
       shared: pair.shared,
       betterA: pair.better,
       apart: pair.apart,
       apartWinsA: pair.apartWins,
       apartLossesA: pair.apartLosses,
+      killsA: kills.mato,
+      killsB: kills.murio,
     }
   })
 }
@@ -428,7 +363,7 @@ function analyzeSplit(split: Split, rank: number, input: AnalysisInput): Balance
   const winProb = winProbability(base1.strength, base2.strength)
   const t1: TeamSummary = { ...base1, winProb }
   const t2: TeamSummary = { ...base2, winProb: 1 - winProb }
-  const duels = buildDuels(t1, t2, input.ctx.pairs)
+  const duels = buildDuels(t1, t2, input.ctx)
 
   return {
     id: split.mask.toString(36),
@@ -471,65 +406,34 @@ function explain(t1: TeamSummary, t2: TeamSummary, duels: Duel[], rank: number, 
       : { tone: 'info', text: `Es la combinación n.º **${rank}** de ${total}, ordenadas de más pareja a menos.${randomLine}` },
   )
 
-  // FACEIT.
-  const withFaceit = profiles.filter((p) => p.faceit)
-  const eloGap = t1.avgElo - t2.avgElo
-  const perfGap = t1.avgPerf - t2.avgPerf
-  if (withFaceit.length === 0) {
-    reasons.push({ tone: 'warn', text: 'No hay datos de FACEIT: el balance usa sólo el rendimiento en el 10v10.' })
-  } else if (Math.abs(eloGap) <= 60) {
+  // Rating de Xplay.
+  const ratingGap = t1.avgRating - t2.avgRating
+  if (Math.abs(ratingGap) <= 0.03) {
     reasons.push({
       tone: 'good',
-      text: `FACEIT parejo: elo promedio **${formatElo(t1.avgElo)}** (nivel ${t1.avgLevel}) contra **${formatElo(t2.avgElo)}** (nivel ${t2.avgLevel}).`,
+      text: `Rating de Xplay parejo (${ctx.sourceLabel}): **${formatRating(t1.avgRating)}** contra **${formatRating(t2.avgRating)}** de promedio.`,
     })
   } else {
-    const [up, down] = eloGap > 0 ? [t1, t2] : [t2, t1]
+    const [up, down] = ratingGap > 0 ? [t1, t2] : [t2, t1]
     reasons.push({
-      tone: Math.abs(eloGap) > 150 ? 'warn' : 'info',
-      text: `${up.name} tiene más FACEIT: **${formatElo(up.avgElo)}** de elo promedio (nivel ${up.avgLevel}) contra **${formatElo(down.avgElo)}** (nivel ${down.avgLevel}).`,
+      tone: Math.abs(ratingGap) > 0.08 ? 'warn' : 'info',
+      text: `${up.name} tiene más rating de Xplay (${ctx.sourceLabel}): **${formatRating(up.avgRating)}** contra **${formatRating(down.avgRating)}** de promedio.`,
     })
   }
 
-  // Los dos FACEIT más altos.
-  const topFaceit = [...withFaceit].sort((a, b) => b.elo - a.elo).slice(0, 2)
-  if (topFaceit.length === 2) {
-    const [first, second] = topFaceit
+  // Los dos ratings más altos.
+  const [first, second] = [...all].sort((a, b) => b.rating - a.rating)
+  if (first && second) {
     const sameTeam = teamOf(first, t1) === teamOf(second, t1)
+    const who = (p: PlayerProfile) => `**${p.stats.player.name}** (${formatRating(p.rating)})`
     reasons.push(
       sameTeam
-        ? {
-            tone: 'info',
-            text: `**${first.stats.player.name}** (nivel ${first.faceit!.level}) y **${second.stats.player.name}** (nivel ${second.faceit!.level}), los dos FACEIT más altos, juegan juntos en ${teamOf(first, t1)}.`,
-          }
+        ? { tone: 'info', text: `${who(first)} y ${who(second)}, los dos ratings más altos, juegan juntos en ${teamOf(first, t1)}.` }
         : {
             tone: 'good',
-            text: `Los dos FACEIT más altos quedaron separados: **${first.stats.player.name}** (nivel ${first.faceit!.level}) en ${teamOf(first, t1)} y **${second.stats.player.name}** (nivel ${second.faceit!.level}) en ${teamOf(second, t1)}.`,
+            text: `Los dos ratings más altos quedaron separados: ${who(first)} en ${teamOf(first, t1)} y ${who(second)} en ${teamOf(second, t1)}.`,
           },
     )
-  }
-
-  // Rendimiento en el 10v10.
-  if (Math.abs(perfGap) <= 5) {
-    reasons.push({
-      tone: 'good',
-      text: `En el 10v10 (${ctx.sourceLabel}) rinden parecido: rating **${Math.round(t1.avgPerf)}** contra **${Math.round(t2.avgPerf)}**.`,
-    })
-  } else {
-    const [up, down] = perfGap > 0 ? [t1, t2] : [t2, t1]
-    reasons.push({
-      tone: Math.abs(perfGap) > 12 ? 'warn' : 'info',
-      text: `${up.name} rinde más en el 10v10 (${ctx.sourceLabel}): rating **${Math.round(up.avgPerf)}** contra **${Math.round(down.avgPerf)}**.`,
-    })
-  }
-
-  // FACEIT para un lado y 10v10 para el otro: se compensan.
-  if (withFaceit.length > 0 && Math.abs(eloGap) > 60 && Math.abs(perfGap) > 5 && Math.sign(eloGap) !== Math.sign(perfGap)) {
-    const faceitSide = eloGap > 0 ? t1 : t2
-    const perfSide = perfGap > 0 ? t1 : t2
-    reasons.push({
-      tone: 'good',
-      text: `Se compensan: ${faceitSide.name} tiene más nivel de FACEIT y ${perfSide.name} rinde más en el 10v10.`,
-    })
   }
 
   reasons.push(...explainForm(t1, t2))
@@ -567,30 +471,41 @@ function explain(t1: TeamSummary, t2: TeamSummary, duels: Duel[], rank: number, 
   const evenDuels = duels.length - t1Duels - t2Duels
   const lopsided = [...duels].sort((x, y) => Math.abs(y.probA - 0.5) - Math.abs(x.probA - 0.5))[0]
   if (lopsided) {
-    const [winner, loser, prob] =
-      lopsided.probA >= 0.5 ? [lopsided.a, lopsided.b, lopsided.probA] : [lopsided.b, lopsided.a, 1 - lopsided.probA]
+    const aWins = lopsided.probA >= 0.5
+    const [winner, loser, prob] = aWins ? [lopsided.a, lopsided.b, lopsided.probA] : [lopsided.b, lopsided.a, 1 - lopsided.probA]
+    const [killsW, killsL] = aWins ? [lopsided.killsA, lopsided.killsB] : [lopsided.killsB, lopsided.killsA]
     const even = evenDuels > 0 ? ` y **${evenDuels}** ${evenDuels === 1 ? 'está parejo' : 'están parejos'}` : ''
+    const h2h =
+      killsW + killsL > 0
+        ? `; cara a cara, ${winner.stats.player.name} lo mató ${killsW} ${killsW === 1 ? 'vez' : 'veces'} y ${loser.stats.player.name} ${killsL}`
+        : ''
     reasons.push({
       tone: 'info',
-      text: `Duelos por posición: Equipo 1 se impone en **${t1Duels}**, Equipo 2 en **${t2Duels}**${even}. El más desigual es **${winner.stats.player.name}** contra **${loser.stats.player.name}** (${Math.round(prob * 100)}%).`,
+      text: `Duelos por posición: Equipo 1 se impone en **${t1Duels}**, Equipo 2 en **${t2Duels}**${even}. El más desigual es **${winner.stats.player.name}** contra **${loser.stats.player.name}** (${Math.round(prob * 100)}%${h2h}).`,
     })
   }
 
-  // Avisos sobre los datos.
-  const noFaceit = profiles.filter((p) => !p.faceit)
-  if (withFaceit.length > 0 && noFaceit.length > 0) {
+  // Avisos sobre los datos: a quién se le completó el rating y con qué.
+  const few = profiles.filter((p) => p.sample < FEW_MATCHES)
+  const fromCareer = few.filter((p) => p.xplay.base === 'carrera')
+  const fromFaceit = few.filter((p) => p.xplay.base === 'faceit')
+  const fromAverage = few.filter((p) => p.xplay.base === 'promedio')
+  if (fromCareer.length > 0) {
     reasons.push({
       tone: 'warn',
-      text: `${joinNames(noFaceit)} ${noFaceit.length === 1 ? 'no tiene' : 'no tienen'} FACEIT cargado: se estimó su nivel con el 10v10.`,
+      text: `${joinNames(fromCareer)} ${fromCareer.length === 1 ? 'tiene' : 'tienen'} pocas partidas con Xplay en ${ctx.sourceLabel}: se completó con su carrera.`,
     })
   }
-  const fewMatches = profiles.filter((p) => p.sample < PERF_PRIOR_MATCHES)
-  if (fewMatches.length > 0) {
+  if (fromFaceit.length > 0) {
     reasons.push({
       tone: 'warn',
-      text: ctx.sourceIsCareer
-        ? `${joinNames(fewMatches)} ${fewMatches.length === 1 ? 'jugó' : 'jugaron'} pocas partidas: su rating es más incierto.`
-        : `${joinNames(fewMatches)} ${fewMatches.length === 1 ? 'tiene' : 'tienen'} pocas partidas en ${ctx.sourceLabel}: se completó con su carrera.`,
+      text: `${joinNames(fromFaceit)} ${fromFaceit.length === 1 ? 'jugó' : 'jugaron'} pocas con Xplay: por ahora se completa con lo que diría su FACEIT, que deja de contar a las 5 partidas.`,
+    })
+  }
+  if (fromAverage.length > 0) {
+    reasons.push({
+      tone: 'warn',
+      text: `${joinNames(fromAverage)} ${fromAverage.length === 1 ? 'jugó' : 'jugaron'} pocas con Xplay: su rating se acerca al promedio del grupo hasta que juegue más.`,
     })
   }
 
@@ -654,8 +569,9 @@ function explainForm(t1: TeamSummary, t2: TeamSummary): BalanceReason[] {
 
 // ─── Utilidades ───────────────────────────────────────────────────────────────
 
-export function formatElo(elo: number) {
-  return Math.round(elo).toLocaleString('es-AR')
+/** 1.234 → "1.23", como lo muestra Xplay. */
+export function formatRating(rating: number) {
+  return rating.toFixed(2)
 }
 
 function joinNames(players: PlayerProfile[]) {

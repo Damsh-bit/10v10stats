@@ -1,7 +1,6 @@
 import { Flame, Snowflake } from 'lucide-react'
 import type { MatchResult, PlayerForm } from '@/lib/team-history'
 import type { PlayerProfile } from '@/lib/teamBalancer'
-import { FaceitLevel } from '@/components/faceit/faceit-bits'
 import { cn } from '@/lib/utils'
 
 /** Colores de cada equipo: Equipo 1 carmesí, Equipo 2 celeste. */
@@ -87,25 +86,17 @@ export function FormDots({ results, className }: { results: MatchResult[]; class
   )
 }
 
-/** Nivel de FACEIT; si no tiene, un anillo vacío con "?". */
-export function ProfileLevel({ profile, size = 22 }: { profile: PlayerProfile; size?: number }) {
-  if (profile.faceit) return <FaceitLevel level={profile.faceit.level} size={size} />
-  return <NoFaceitLevel size={size} />
-}
-
-export function NoFaceitLevel({ size = 22, className }: { size?: number; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 font-mono text-[10px] font-bold text-muted-foreground',
-        className,
-      )}
-      style={{ width: size, height: size }}
-      title="Sin FACEIT: se estima con su 10v10"
-    >
-      ?
-    </span>
-  )
+/** De dónde sale el rating de un jugador, para el tooltip. */
+export function ratingBreakdown(profile: PlayerProfile, sourceLabel: string) {
+  const { xplay } = profile
+  const form = profile.power - profile.rating
+  const formText = Math.abs(form) >= 0.005 ? ` · forma ${form > 0 ? '+' : ''}${form.toFixed(2)}` : ''
+  const sample =
+    xplay.crudo === null
+      ? `sin partidas con Xplay en ${sourceLabel}`
+      : `${xplay.crudo.toFixed(2)} en ${xplay.partidas} ${xplay.partidas === 1 ? 'partida' : 'partidas'} con Xplay (${sourceLabel})`
+  const base = { promedio: 'el promedio del grupo', faceit: 'su FACEIT', carrera: 'su carrera' }[xplay.base]
+  return `Rating ${profile.rating.toFixed(2)}: ${sample}, ajustado con ${base} por la muestra${formText}`
 }
 
 /** 6 → "6", 6.5 → "6,5". */

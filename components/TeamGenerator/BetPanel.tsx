@@ -25,14 +25,12 @@ export function BetPanel({
   pairs,
   map,
   sourceLabel,
-  faceitWeight,
   config,
 }: {
   option: BalanceOption
   pairs: PairStatsMap
   map: string | null
   sourceLabel: string
-  faceitWeight: number
   config: ApuestasPublicConfig
 }) {
   const router = useRouter()
@@ -71,7 +69,7 @@ export function BetPanel({
         probA,
         mapa: map,
         horas,
-        cuotas: { duelos, fuente: sourceLabel, pesoFaceit: faceitWeight },
+        cuotas: { duelos, fuente: `Rating Xplay · ${sourceLabel}` },
       })
       router.push(`/apuestas/${id}`)
     } catch (err) {
