@@ -82,6 +82,21 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-11-16-wow-v2',
+    date: '2026-11-16',
+    tag: 'WoW',
+    title: 'Tiempo de Juego 2.0: límite semanal, logros y en vivo',
+    summary:
+      'Ahora son 42 horas por semana en vez de un tope por día, y en /wow se ve mucho más: misiones, muertes, enemigos, oro ganado y gastado, logros y quién está jugando en este momento.',
+    highlights: [
+      { icon: 'shield', text: '42 horas por semana: si un día no jugás, te quedan para el finde.' },
+      { icon: 'chart', text: 'Elegís qué ver día por día: horas, misiones, muertes, enemigos, oro o experiencia.' },
+      { icon: 'trophy', text: '12 logros para desbloquear: Maratón, Kamikaze, Disciplina de hierro y más.' },
+      { icon: 'zap', text: 'Mientras alguien juega, sus números se actualizan cada par de minutos.' },
+    ],
+    cta: { label: 'Ver Tiempo de Juego', href: '/wow' },
+  },
+  {
     id: '2026-11-16-wow-tiempo-de-juego',
     date: '2026-11-16',
     tag: 'WoW',
