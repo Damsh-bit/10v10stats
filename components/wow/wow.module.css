@@ -277,19 +277,14 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  border: 3px solid transparent;
-  background:
-    radial-gradient(circle at 35% 30%, #3b2a12, #120c05 70%) padding-box,
-    linear-gradient(160deg, #fff0a6, #a8700f 55%, #ffd76a) border-box;
+  display: block;
   box-shadow: 0 0 0 1px #000, 0 4px 12px rgba(0, 0, 0, 0.7), 0 0 18px 4px rgba(255, 190, 40, 0.45);
   animation: latido 2.8s ease-in-out infinite;
   transition: transform 0.2s ease;
 }
 .medallon:hover { transform: scale(1.08) rotate(-6deg); }
 .medallon:focus-visible { outline: 2px solid #ffd100; outline-offset: 3px; }
-.medallon svg { width: 30px; height: 30px; filter: drop-shadow(0 1px 0 #000); }
+.medallon img { display: block; width: 100%; height: 100%; border-radius: 50%; }
 @media (min-width: 640px) {
   .medallon { right: 1.5rem; bottom: 1.5rem; width: 56px; height: 56px; }
 }
