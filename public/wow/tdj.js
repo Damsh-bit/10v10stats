@@ -210,9 +210,18 @@
     svg.addEventListener("pointerleave", () => { g.style.display = "none"; tip.style.display = "none"; });
   }
 
+  /* Mientras alguien juega, el subidor manda una estimacion de hoy (segundos_vivo).
+     Si es reciente y mayor que lo guardado, se muestra esa (con "~"). */
+  function normalizar(filas) {
+    return filas.map((f) => {
+      const vivo = f.en_vivo && Date.now() - Date.parse(f.en_vivo) < VIVO_MS && (f.segundos_vivo || 0) > (f.segundos || 0);
+      return vivo ? { ...f, segundos: f.segundos_vivo, estimado: true } : f;
+    });
+  }
+
   /* ───────── Panel ───────── */
   function iniciar(app, opciones = {}) {
-    const st = { filas: opciones.datos || [], periodo: PERIODOS[0], metrica: METRICAS[0], vista: "totales",
+    const st = { filas: normalizar(opciones.datos || []), periodo: PERIODOS[0], metrica: METRICAS[0], vista: "totales",
       demo: new URLSearchParams(location.search).has("demo") };
     if (st.demo) st.filas = datosEjemplo();
 
@@ -291,7 +300,7 @@
             </div>
             <div class="barra fina" title="Hoy">
               <div class="lleno" style="width:${Math.min(1, (f.segundos || 0) / (lim / 7)) * 100}%;background:linear-gradient(180deg,#4f8ff0,#1442a0)"></div>
-              <div class="texto">Hoy ${fmtH(f.segundos)}</div>
+              <div class="texto">Hoy ${f.estimado ? "~" : ""}${fmtH(f.segundos)}${f.estimado ? " (en vivo)" : ""}</div>
             </div>
             <div class="stats-hoy" title="Hoy: misiones, muertes, enemigos y oro ganado">
               <span>📜 ${fmtNum(f.misiones)}</span><span>💀 ${fmtNum(f.muertes)}</span><span>⚔️ ${fmtNum(f.kills)}</span><span>🪙 ${fmtOro(f.oro_ganado)}</span>
@@ -379,7 +388,7 @@
         const r = await fetch(opciones.fuente, { cache: "no-store" });
         if (!r.ok) throw new Error("HTTP " + r.status);
         const desde = diasHacia(120)[0];
-        st.filas = (await r.json()).filter((f) => f.dia >= desde);
+        st.filas = normalizar((await r.json()).filter((f) => f.dia >= desde));
         pintarTodo();
       } catch (e) {
         if (!st.filas.length) $("fecha").textContent = "No se pudieron cargar los registros (" + e.message + ").";
