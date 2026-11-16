@@ -134,7 +134,8 @@
         limite_semanal: LIMITE_SEMANAL, misiones: Math.round(h * 2.6 * ruido(1.3)), muertes: Math.round(h * 0.5 * ruido(2.1)),
         kills: Math.round(h * 38 * ruido(0.7)), oro_ganado: Math.round(h * 14 * ORO * ruido(1.1)),
         oro_gastado: Math.round(h * 9 * ORO * ruido(1.9)), xp: Math.round(h * 9000 * ruido(0.9)),
-        actualizado: null, en_vivo: dia === hoy && k === 1 ? new Date().toISOString() : null });
+        actualizado: null, en_vivo: dia === hoy && k === 1 ? new Date().toISOString() : null,
+        visto: dia === hoy && k !== 1 ? new Date(Date.now() - [40, 0, 200, 1560][k] * 60e3).toISOString() : null });
     }));
     return out;
   }
@@ -256,6 +257,23 @@
     const nivelHasta = (p, hasta) => { let nv = 0; for (const f of st.filas) if (f.persona === p && (!hasta || f.dia <= hasta)) nv = Math.max(nv, f.nivel || 0); return nv; };
     const limSem = (p) => { let l = 0; for (const f of st.filas) if (f.persona === p && f.limite_semanal) l = f.limite_semanal; return l || LIMITE_SEMANAL; };
     const enVivo = (p) => st.filas.some((f) => f.persona === p && f.en_vivo && Date.now() - Date.parse(f.en_vivo) < VIVO_MS);
+    // Ultima vez que se lo vio jugando: el ultimo dato en vivo o el cierre del juego
+    // (para datos viejos, la ultima subida propia).
+    const vistoPor = (p) => st.filas.reduce((a, f) => {
+      if (f.persona !== p) return a;
+      const t = f.visto || f.en_vivo || (f.fuente === "propio" ? f.actualizado : null);
+      return t && t > a ? t : a;
+    }, "");
+    const haceCuanto = (iso) => {
+      const min = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60e3));
+      if (min < 1) return "recién";
+      if (min < 60) return `hace ${min} min`;
+      const h = Math.round(min / 60);
+      if (h < 24) return `hace ${h} h`;
+      const d = new Date(iso);
+      if (h < 48) return `ayer ${d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+      return d.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "numeric" });
+    };
     let colores = {};
     const calcularColores = () => {
       colores = {}; const usados = new Set(); let r = 0;
@@ -287,13 +305,13 @@
         if (quedan <= 0) { fondo = "linear-gradient(180deg,#e23a2a,#8e0b0b)"; estado = `☠ <b>+${fmtH(-quedan)}</b> pasado`; }
         else if (quedan <= 5 * 3600) { fondo = "linear-gradient(180deg,#f2c94c,#b07a06)"; estado = `⚠ quedan <b>${fmtH(quedan)}</b>`; }
         else { fondo = "linear-gradient(180deg,#3fd23f,#127a12)"; estado = `✔ quedan <b>${fmtH(quedan)}</b>`; }
-        const vivo = enVivo(p);
+        const vivo = enVivo(p), visto = vistoPor(p);
         const meta = [u.personaje, CLASES[u.clase]].filter(Boolean).map(esc).join(" · ");
         return `<article class="marco unidad">
           <div class="retrato${vivo ? " vivo" : ""}" style="--c:${c};--c-claro:${aclarar(c)}">${esc((p[0] || "?").toUpperCase())}<span class="nivel" title="Nivel">${nivelHasta(p)}</span></div>
           <div class="info">
             <div class="fila-nombre"><div class="nombre" style="color:${c}">${esc(p)}</div><div class="estado">${estado}</div></div>
-            <div class="meta">${vivo ? `<span class="en-vivo">● jugando ahora</span>` : ""}${meta || "&nbsp;"}</div>
+            <div class="meta">${vivo ? `<span class="en-vivo">● jugando ahora</span>` : (visto ? `<span class="visto" title="${esc(new Date(visto).toLocaleString("es-AR"))}">visto ${haceCuanto(visto)}</span>` : "")}${meta || "&nbsp;"}</div>
             <div class="barra" role="progressbar" aria-label="Tiempo jugado esta semana" aria-valuenow="${Math.round(pct * 100)}" aria-valuemin="0" aria-valuemax="100">
               <div class="lleno" style="width:${pct * 100}%;background:${fondo}"></div>
               <div class="texto">Semana ${fmtH(sem)} / ${fmtH(lim)}</div>

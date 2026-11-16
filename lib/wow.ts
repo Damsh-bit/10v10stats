@@ -30,6 +30,8 @@ export type DiaWow = {
   actualizado: string | null
   /** Estimación de hoy mientras la persona juega (la manda el subidor al ver el juego abierto). */
   segundos_vivo: number
+  /** Última vez que se vio a la persona jugando (dato en vivo o cierre del juego). */
+  visto: string | null
   /** Último dato "en vivo" (mientras la persona juega). */
   en_vivo: string | null
 }
@@ -44,7 +46,8 @@ export async function getDiasWow(): Promise<DiaWow[]> {
       `select persona, to_char(dia, 'YYYY-MM-DD') as dia, segundos, nivel, personaje, clase, limite, limite_semanal,
               misiones, muertes, oro_ganado::float8 as oro_ganado, oro_gastado::float8 as oro_gastado, kills, xp,
               to_char(actualizado at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as actualizado,
-              to_char(en_vivo at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as en_vivo, segundos_vivo
+              to_char(en_vivo at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as en_vivo, segundos_vivo,
+              to_char(visto at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as visto
        from tdj_dias where dia >= current_date - 120 order by dia`,
     )
     return filas as DiaWow[]

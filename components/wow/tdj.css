@@ -162,3 +162,5 @@
 }
 @media (max-width: 560px) { .tdj .tarjetas { grid-template-columns: 1fr; } .tdj .cab { gap: 10px; } }
 @media (prefers-reduced-motion: reduce) { .tdj .retrato.vivo { animation: none; } }
+.tdj .visto { color: var(--pergamino-2); margin-right: 6px; }
+.tdj .visto::before { content: "○ "; color: var(--apagado); }
