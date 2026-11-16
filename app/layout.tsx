@@ -6,6 +6,7 @@ import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
 import { MapBackdrop } from '@/components/layout/map-backdrop'
 import { RecommendationsWidget } from '@/components/shared/recommendations-widget'
+import { MedallonWow } from '@/components/wow/medallon-wow'
 import { CuriositiesBanner } from '@/components/shared/curiosities-banner'
 import { MotionProvider } from '@/components/motion/motion-provider'
 import { motionPreferenceScript } from '@/components/motion/motion-preference'
@@ -119,6 +120,7 @@ export default async function RootLayout({
             ) : null}
           </footer>
           <RecommendationsWidget />
+          <MedallonWow />
         </MotionProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
         <SpeedInsights />

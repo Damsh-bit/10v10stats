@@ -73,4 +73,5 @@ export const TAG_STYLES: Record<NovedadTag, { icon: LucideIcon; chip: string; no
   Celular: { icon: Smartphone, chip: 'border-teal-400/40 bg-teal-400/10 text-teal-300', node: 'bg-teal-400/15 text-teal-300 ring-teal-400/40' },
   Arreglos: { icon: Wrench, chip: 'border-slate-400/40 bg-slate-400/10 text-slate-300', node: 'bg-slate-400/15 text-slate-300 ring-slate-400/40' },
   Sitio: { icon: Megaphone, chip: 'border-brand/40 bg-brand/10 text-brand', node: 'bg-brand/15 text-brand ring-brand/40' },
+  WoW: { icon: ShieldCheck, chip: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400', node: 'bg-yellow-500/15 text-yellow-400 ring-yellow-500/40' },
 }

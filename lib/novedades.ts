@@ -58,6 +58,7 @@ export type NovedadTag =
   | 'Celular'
   | 'Arreglos'
   | 'Sitio'
+  | 'WoW'
 
 export type NovedadDemo = 'team-generator' | 'apuestas' | 'mvp' | 'cartel' | 'modo-liviano' | 'perfil' | 'xplay' | 'rating-xplay'
 
@@ -80,6 +81,20 @@ export type Novedad = {
 export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
+  {
+    id: '2026-11-16-wow-tiempo-de-juego',
+    date: '2026-11-16',
+    tag: 'WoW',
+    title: 'Tiempo de Juego: cuánto le damos al WoW',
+    summary:
+      'Nueva sección para los que estamos en WoW Forever: cuántas horas juega cada uno por día, semana y mes, quién se pasó del límite y qué nivel tiene. Se entra desde el medallón dorado de abajo a la derecha.',
+    highlights: [
+      { icon: 'shield', text: 'Cada uno con su barra de hoy: verde si va bien, amarilla si le queda poco y roja si ya se pasó.' },
+      { icon: 'chart', text: 'Gráficos de horas por día y de nivel, para ver quién se está escapando.' },
+      { icon: 'list', text: 'Totales de la semana, el mes o los últimos 3 meses, con los días que cada uno se pasó.' },
+    ],
+    cta: { label: 'Ver Tiempo de Juego', href: '/wow' },
+  },
   {
     id: '2026-10-29-generador-rating-xplay',
     date: '2026-10-29',
