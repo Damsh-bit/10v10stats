@@ -209,6 +209,35 @@
     svg.addEventListener("pointermove", mover);
     svg.addEventListener("pointerdown", mover);
     svg.addEventListener("pointerleave", () => { g.style.display = "none"; tip.style.display = "none"; });
+
+    // Las lineas "se dibujan" cuando cambiaste lo que mirabas (no en cada refresco)
+    if (m.animar && !sinMovimiento()) {
+      el.querySelectorAll("path[filter]").forEach((p, k) => {
+        const largo = Math.ceil(p.getTotalLength());
+        p.style.setProperty("--largo", largo);
+        p.style.strokeDasharray = `${largo}`;
+        p.style.animation = `tdj-dibujar 0.9s cubic-bezier(.25,.8,.25,1) ${k * 0.08}s backwards`;
+      });
+    }
+  }
+
+  // Modo liviano de alzstats o "reducir movimiento" del sistema: sin animaciones
+  function sinMovimiento() {
+    return document.documentElement.dataset.motion === "off" ||
+      (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  // Cuenta un numero hacia arriba (solo en la primera carga)
+  function contar(el, hasta, formato) {
+    if (sinMovimiento() || !hasta) { el.textContent = formato(hasta); return; }
+    const t0 = performance.now(), dur = 900;
+    const paso = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = formato(hasta * e);
+      if (k < 1) requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+    setTimeout(() => (el.textContent = formato(hasta)), dur + 150);
   }
 
   /* Mientras alguien juega, el subidor manda una estimacion de hoy (segundos_vivo).
@@ -221,9 +250,13 @@
   }
 
   /* ───────── Panel ───────── */
+  const DIAS_SEMANA = ["L", "M", "X", "J", "V", "S", "D"];
+  const NOMBRE_DIA = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const NIVEL_MAX = 60;
+
   function iniciar(app, opciones = {}) {
-    const st = { filas: normalizar(opciones.datos || []), periodo: PERIODOS[0], metrica: METRICAS[0], vista: "totales",
-      demo: new URLSearchParams(location.search).has("demo") };
+    const st = { filas: normalizar(opciones.datos || []), periodo: PERIODOS[0], metrica: METRICAS[0], vista: "cronica",
+      demo: new URLSearchParams(location.search).has("demo"), primera: true };
     if (st.demo) st.filas = datosEjemplo();
 
     app.innerHTML = `
@@ -232,6 +265,10 @@
         <span class="chip" data-aviso hidden></span>
         <div class="filtros" role="group" aria-label="Período" data-periodos></div>
       </header>
+      <section class="marco carrera" aria-label="La carrera al nivel ${NIVEL_MAX}">
+        <div class="carrera-cab"><h2>La carrera al ${NIVEL_MAX}</h2><span class="sub" data-brecha></span></div>
+        <div class="pista" data-pista></div>
+      </section>
       <section class="tarjetas" data-tarjetas aria-label="Esta semana"></section>
       <div class="cuerpo">
         <section class="marco">
@@ -249,7 +286,7 @@
     // Que el panel ocupe justo lo que queda de pantalla (en alzstats, debajo del menu)
     const ajustarAlto = () => {
       const top = app.getBoundingClientRect().top + window.scrollY;
-      app.style.setProperty("--alto-tdj", `${Math.max(540, window.innerHeight - top)}px`);
+      app.style.setProperty("--alto-tdj", `${Math.max(600, window.innerHeight - top)}px`);
     };
 
     const personas = () => [...new Set(st.filas.map((f) => f.persona))].sort((a, b) => a.localeCompare(b, "es"));
@@ -257,8 +294,8 @@
     const nivelHasta = (p, hasta) => { let nv = 0; for (const f of st.filas) if (f.persona === p && (!hasta || f.dia <= hasta)) nv = Math.max(nv, f.nivel || 0); return nv; };
     const limSem = (p) => { let l = 0; for (const f of st.filas) if (f.persona === p && f.limite_semanal) l = f.limite_semanal; return l || LIMITE_SEMANAL; };
     const enVivo = (p) => st.filas.some((f) => f.persona === p && f.en_vivo && Date.now() - Date.parse(f.en_vivo) < VIVO_MS);
+    const segDe = (p, dia) => { const f = st.filas.find((x) => x.persona === p && x.dia === dia); return f ? f.segundos || 0 : 0; };
     // Ultima vez que se lo vio jugando: el ultimo dato en vivo o el cierre del juego
-    // (para datos viejos, la ultima subida propia).
     const vistoPor = (p) => st.filas.reduce((a, f) => {
       if (f.persona !== p) return a;
       const t = f.visto || f.en_vivo || (f.fuente === "propio" ? f.actualizado : null);
@@ -273,6 +310,13 @@
       const d = new Date(iso);
       if (h < 48) return `ayer ${d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
       return d.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "numeric" });
+    };
+    // Dias seguidos jugando hasta hoy (o hasta ayer, si hoy todavia no jugo)
+    const racha = (p) => {
+      let d = claveDia(), n = 0;
+      if (!segDe(p, d)) d = sumarDias(d, -1);
+      while (segDe(p, d) > 0) { n++; d = sumarDias(d, -1); }
+      return n;
     };
     let colores = {};
     const calcularColores = () => {
@@ -292,59 +336,166 @@
       aviso.textContent = st.demo ? "Datos de ejemplo" : "Todavía nadie subió datos";
       $("periodos").innerHTML = PERIODOS.map((p) => `<button type="button" class="boton" data-p="${p.dias}" aria-pressed="${p === st.periodo}">${p.boton}</button>`).join("");
       $("metricas").innerHTML = METRICAS.map((m) => `<button type="button" role="tab" class="pestana" data-m="${m.id}" aria-selected="${m === st.metrica}">${m.nombre}</button>`).join("");
-      $("vistas").innerHTML = [["totales", "Totales"], ["logros", "Logros"]].map(([id, n]) => `<button type="button" role="tab" class="pestana" data-v="${id}" aria-selected="${st.vista === id}">${n}</button>`).join("");
+      $("vistas").innerHTML = [["cronica", "Crónica"], ["totales", "Totales"], ["logros", "Logros"]].map(([id, n]) => `<button type="button" role="tab" class="pestana" data-v="${id}" aria-selected="${st.vista === id}">${n}</button>`).join("");
+    }
+
+    /* La carrera al 60: cada uno en la pista segun su nivel */
+    function pintarCarrera() {
+      const gente = personas().map((p) => ({ p, nv: nivelHasta(p), vivo: enVivo(p) })).sort((a, b) => b.nv - a.nv);
+      const pista = $("pista");
+      if (!gente.length) { pista.innerHTML = ""; $("brecha").textContent = ""; return; }
+      const pos = (nv) => Math.max(0, Math.min(1, (nv - 1) / (NIVEL_MAX - 1)));
+      // Si dos quedarian encimados (segun el ancho real de la pista), uno va arriba y otro abajo.
+      // En el celular solo se ven los retratos, asi que necesitan menos lugar.
+      const ancho = Math.max(1, pista.clientWidth), chico = window.innerWidth <= 560;
+      const umbral = (chico ? 32 : 104) / ancho;
+      const carriles = [];
+      gente.forEach((g) => {
+        let c = 0;
+        while (carriles[c] && carriles[c].some((x) => Math.abs(pos(x) - pos(g.nv)) < umbral)) c++;
+        (carriles[c] = carriles[c] || []).push(g.nv);
+        g.carril = c % 2 === 0 ? -1 * Math.ceil(c / 2) : Math.ceil(c / 2);
+      });
+      const arriba = Math.max(0, ...gente.map((g) => -g.carril)), abajo = Math.max(0, ...gente.map((g) => g.carril));
+      pista.style.setProperty("--arriba", arriba);
+      pista.style.height = `${58 + Math.max(0, arriba - 1) * 22 + Math.max(0, abajo - 1) * 22}px`;
+      const marcas = [10, 20, 30, 40, 50, 60].map((n) => `<span class="marca-nivel" style="left:${pos(n) * 100}%">${n}</span>`).join("");
+      pista.innerHTML = `<div class="camino"><div class="camino-lleno" style="width:${pos(gente[0].nv) * 100}%"></div>${marcas}</div>` +
+        gente.map((g) => {
+          const c = colores[g.p];
+          return `<div class="corredor${g.vivo ? " vivo" : ""}${pos(g.nv) > 0.8 ? " fin" : ""}" data-x="${pos(g.nv) * 100}" style="--c:${c};--c-claro:${aclarar(c)};--carril:${g.carril}" title="${esc(g.p)}: nivel ${g.nv}">
+            <span class="corredor-retrato">${esc((g.p[0] || "?").toUpperCase())}</span><span class="corredor-nombre">${esc(g.p)} <b>${g.nv}</b></span></div>`;
+        }).join("");
+      const primero = gente[0], ultimo = gente[gente.length - 1], brecha = primero.nv - ultimo.nv;
+      $("brecha").innerHTML = gente.length < 2 ? "" : brecha === 0 ? "Van todos parejos" :
+        `<b style="color:${colores[primero.p]}">${esc(primero.p)}</b> va adelante · ${brecha} ${brecha === 1 ? "nivel" : "niveles"} de diferencia con <b style="color:${colores[ultimo.p]}">${esc(ultimo.p)}</b>`;
+      // Animacion de largada: salen de 0 y corren hasta su nivel (solo la primera vez)
+      const corredores = pista.querySelectorAll(".corredor"), lleno = pista.querySelector(".camino-lleno");
+      corredores.forEach((el, i) => {
+        el.style.left = `${el.dataset.x}%`;
+        if (st.primera) { el.classList.add("largada"); el.style.animationDelay = `${0.15 + i * 0.12}s`; }
+      });
+      if (st.primera) lleno.classList.add("largada");
     }
 
     function pintarTarjetas() {
-      const hoy = claveDia(), semana = semanaDe(hoy);
+      const hoy = claveDia(), semana = semanaDe(hoy), diasSem = [0, 1, 2, 3, 4, 5, 6].map((i) => sumarDias(semana, i));
+      const idxHoy = diasSem.indexOf(hoy);
       $("tarjetas").innerHTML = personas().map((p) => {
         const u = ultima(p), f = st.filas.find((x) => x.persona === p && x.dia === hoy) || {};
-        const lim = limSem(p), sem = st.filas.filter((x) => x.persona === p && semanaDe(x.dia) === semana).reduce((a, x) => a + (x.segundos || 0), 0);
+        const lim = limSem(p), porDia = diasSem.map((d) => segDe(p, d)), sem = porDia.reduce((a, b) => a + b, 0);
         const quedan = lim - sem, pct = Math.min(1, sem / lim), c = colores[p];
         let fondo, estado;
         if (quedan <= 0) { fondo = "linear-gradient(180deg,#e23a2a,#8e0b0b)"; estado = `☠ <b>+${fmtH(-quedan)}</b> pasado`; }
         else if (quedan <= 5 * 3600) { fondo = "linear-gradient(180deg,#f2c94c,#b07a06)"; estado = `⚠ quedan <b>${fmtH(quedan)}</b>`; }
         else { fondo = "linear-gradient(180deg,#3fd23f,#127a12)"; estado = `✔ quedan <b>${fmtH(quedan)}</b>`; }
-        const vivo = enVivo(p), visto = vistoPor(p);
-        const meta = [u.personaje, CLASES[u.clase]].filter(Boolean).map(esc).join(" · ");
-        return `<article class="marco unidad">
-          <div class="retrato${vivo ? " vivo" : ""}" style="--c:${c};--c-claro:${aclarar(c)}">${esc((p[0] || "?").toUpperCase())}<span class="nivel" title="Nivel">${nivelHasta(p)}</span></div>
-          <div class="info">
-            <div class="fila-nombre"><div class="nombre" style="color:${c}">${esc(p)}</div><div class="estado">${estado}</div></div>
-            <div class="meta">${vivo ? `<span class="en-vivo">● jugando ahora</span>` : (visto ? `<span class="visto" title="${esc(new Date(visto).toLocaleString("es-AR"))}">visto ${haceCuanto(visto)}</span>` : "")}${meta || "&nbsp;"}</div>
-            <div class="barra" role="progressbar" aria-label="Tiempo jugado esta semana" aria-valuenow="${Math.round(pct * 100)}" aria-valuemin="0" aria-valuemax="100">
-              <div class="lleno" style="width:${pct * 100}%;background:${fondo}"></div>
-              <div class="texto">Semana ${fmtH(sem)} / ${fmtH(lim)}</div>
-            </div>
-            <div class="barra fina" title="Hoy">
-              <div class="lleno" style="width:${Math.min(1, (f.segundos || 0) / (lim / 7)) * 100}%;background:linear-gradient(180deg,#4f8ff0,#1442a0)"></div>
-              <div class="texto">Hoy ${f.estimado ? "~" : ""}${fmtH(f.segundos)}${f.estimado ? " (en vivo)" : ""}</div>
-            </div>
-            <div class="stats-hoy" title="Hoy: misiones, muertes, enemigos y oro ganado">
-              <span>📜 ${fmtNum(f.misiones)}</span><span>💀 ${fmtNum(f.muertes)}</span><span>⚔️ ${fmtNum(f.kills)}</span><span>🪙 ${fmtOro(f.oro_ganado)}</span>
+        const vivo = enVivo(p), visto = vistoPor(p), rac = racha(p);
+        const diasJugados = idxHoy + 1, prom = sem / diasJugados;
+        // Proyeccion: a este ritmo, ¿cuando llega al limite?
+        let proyeccion = "";
+        if (quedan > 0 && prom > 0) {
+          const faltan = Math.ceil(quedan / prom);
+          proyeccion = idxHoy + faltan <= 6
+            ? `A este ritmo llega al límite el ${NOMBRE_DIA[fecha(sumarDias(hoy, faltan)).getDay()]}`
+            : "A este ritmo no llega al límite";
+        } else if (quedan <= 0) proyeccion = "Ya usó toda la semana";
+        const maxDia = Math.max(...porDia, 3600);
+        const tira = porDia.map((s, i) => `<span class="dia-sem${i === idxHoy ? " hoy" : ""}${i > idxHoy ? " futuro" : ""}" title="${NOMBRE_DIA[fecha(diasSem[i]).getDay()]}: ${fmtH(s)}">
+            <i style="height:${Math.max(s ? 12 : 0, (s / maxDia) * 100)}%"></i><em>${DIAS_SEMANA[i]}</em></span>`).join("");
+        const meta = [u.personaje, CLASES[u.clase]].filter(Boolean).map(esc).join(", ");
+        return `<article class="marco unidad" style="--c:${c};--c-claro:${aclarar(c)}">
+          <div class="unidad-cab">
+            <div class="retrato${vivo ? " vivo" : ""}">${esc((p[0] || "?").toUpperCase())}<span class="nivel" title="Nivel">${nivelHasta(p)}</span></div>
+            <div class="info">
+              <div class="fila-nombre"><div class="nombre">${esc(p)}</div><div class="estado">${estado}</div></div>
+              <div class="meta">${vivo ? `<span class="en-vivo">● jugando ahora</span>` : (visto ? `<span class="visto" title="${esc(new Date(visto).toLocaleString("es-AR"))}">visto ${haceCuanto(visto)}</span>` : "")}${meta || "&nbsp;"}</div>
             </div>
           </div>
+          <div class="barra" role="progressbar" aria-label="Tiempo jugado esta semana" aria-valuenow="${Math.round(pct * 100)}" aria-valuemin="0" aria-valuemax="100">
+            <div class="lleno" data-ancho="${pct * 100}" style="width:${pct * 100}%;background:${fondo}"></div>
+            <div class="texto">Semana <span data-cuenta="${sem}">${fmtH(sem)}</span> / ${fmtH(lim)}</div>
+          </div>
+          <div class="unidad-cuerpo">
+            <div class="tira" aria-label="Horas por día de esta semana">${tira}</div>
+            <dl class="datos">
+              <div><dt>Hoy</dt><dd>${f.estimado ? "~" : ""}${fmtH(f.segundos)}${f.estimado ? `<small> en vivo</small>` : ""}</dd></div>
+              <div><dt>Promedio</dt><dd>${fmtH(prom)}<small>/día</small></dd></div>
+              <div><dt>Racha</dt><dd>${rac} ${rac === 1 ? "día" : "días"}</dd></div>
+            </dl>
+          </div>
+          <div class="proyeccion">${esc(proyeccion)}</div>
+          <div class="stats-hoy" title="Hoy: misiones, muertes, enemigos y oro ganado">
+            <span>📜 ${fmtNum(f.misiones)}</span><span>💀 ${fmtNum(f.muertes)}</span><span>⚔️ ${fmtNum(f.kills)}</span><span>🪙 ${fmtOro(f.oro_ganado)}</span>
+          </div>
         </article>`;
-      }).join("") || `<p class="vacio">Todavía no hay aventureros registrados.</p>`;
+      }).join("") || `<p class="vacio">Todavía no hay aventureros: aparecen cuando alguien con el addon cierra el juego o hace /reload.</p>`;
+
+      // Primera carga: las barras se llenan y las horas cuentan hacia arriba
+      if (st.primera && !sinMovimiento()) {
+        $("tarjetas").querySelectorAll(".lleno[data-ancho]").forEach((el) => el.classList.add("largada"));
+        $("tarjetas").querySelectorAll("[data-cuenta]").forEach((el) => contar(el, +el.dataset.cuenta, fmtH));
+      }
     }
 
-    function pintarGrafico() {
+    function pintarGrafico(animar) {
       const dias = diasHacia(st.periodo.dias), gente = personas(), m = st.metrica;
       const mapa = {}; st.filas.forEach((f) => (mapa[f.persona + "|" + f.dia] = f));
       const series = gente.map((p) => ({ nombre: p, color: colores[p],
         valores: dias.map((d) => (m.acumulado ? nivelHasta(p, d) || null : (mapa[p + "|" + d] ? m.valor(mapa[p + "|" + d]) || 0 : 0))) }));
       const ritmo = gente.length ? Math.round(Math.max(...gente.map(limSem)) / 7) : 0;
-      dibujarGrafico($("grafico"), dias, series, m.id === "horas" ? { ...m, ref: ritmo, refTxt: `Ritmo de ${fmtH(ritmo * 7)} por semana` } : m);
+      const opciones = m.id === "horas" ? { ...m, ref: ritmo, refTxt: `Ritmo de ${fmtH(ritmo * 7)} por semana` } : { ...m };
+      opciones.animar = animar === true;
+      dibujarGrafico($("grafico"), dias, series, opciones);
       $("leyenda").innerHTML = gente.map((p) => `<span style="color:${colores[p]}"><span class="punto" style="background:${colores[p]}"></span>${esc(p)}</span>`).join("");
+    }
+
+    /* Cronica: lo que fue pasando, de lo mas nuevo a lo mas viejo */
+    function cronica() {
+      const gente = personas(), eventos = [];
+      for (const p of gente) {
+        if (enVivo(p)) {
+          const hoy = st.filas.find((f) => f.persona === p && f.dia === claveDia());
+          eventos.push({ cuando: new Date().toISOString(), p, icono: "🟢", texto: `está jugando ahora${hoy ? ` (${fmtH(hoy.segundos)} hoy)` : ""}`, vivo: true });
+        }
+        const mias = st.filas.filter((f) => f.persona === p).sort((a, b) => a.dia.localeCompare(b.dia));
+        let nivelAnt = 0;
+        const semanas = {};
+        for (const f of mias) {
+          if (nivelAnt && f.nivel > nivelAnt) eventos.push({ cuando: f.dia, p, icono: "⭐", texto: f.nivel - nivelAnt > 1 ? `subió ${f.nivel - nivelAnt} niveles y llegó al ${f.nivel}` : `llegó a nivel ${f.nivel}` });
+          if (f.nivel) nivelAnt = Math.max(nivelAnt, f.nivel);
+          if (f.segundos >= 6 * 3600) eventos.push({ cuando: f.dia, p, icono: "⏳", texto: `jugó ${fmtH(f.segundos)} en un día` });
+          if (f.muertes >= 8) eventos.push({ cuando: f.dia, p, icono: "💀", texto: `murió ${f.muertes} veces` });
+          const s = semanaDe(f.dia), antes = semanas[s] || 0, lim = f.limite_semanal || LIMITE_SEMANAL;
+          semanas[s] = antes + (f.segundos || 0);
+          if (antes < lim && semanas[s] >= lim) eventos.push({ cuando: f.dia, p, icono: "☠", texto: `se pasó del límite semanal`, malo: true });
+        }
+      }
+      const logros = calcularLogros(st.filas, gente);
+      for (const l of LOGROS) for (const q of logros[l.id]) eventos.push({ cuando: q.dia, p: q.persona, icono: l.icono, texto: `desbloqueó «${l.nombre}»` });
+      return eventos.sort((a, b) => (b.vivo ? 1 : 0) - (a.vivo ? 1 : 0) || b.cuando.localeCompare(a.cuando)).slice(0, 40);
     }
 
     function pintarLateral() {
       const gente = personas();
+      const lateral = $("lateral");
+      lateral.classList.remove("aparece"); lateral.getBoundingClientRect(); lateral.classList.add("aparece");
+      if (st.vista === "cronica") {
+        const ev = cronica();
+        $("sublateral").textContent = "lo último de la hermandad";
+        let diaAnt = "";
+        lateral.innerHTML = ev.length ? `<ol class="cronica">${ev.map((e) => {
+          const dia = e.vivo ? "Ahora" : (() => { const d = e.cuando.slice(0, 10), h = claveDia(); return d === h ? "Hoy" : d === sumarDias(h, -1) ? "Ayer" : fechaLarga(d); })();
+          const sep = dia !== diaAnt ? `<li class="cronica-dia">${esc(dia)}</li>` : "";
+          diaAnt = dia;
+          return `${sep}<li class="cronica-item${e.malo ? " malo" : ""}${e.vivo ? " ahora" : ""}"><span class="cronica-icono" aria-hidden="true">${e.icono}</span><span><b style="color:${colores[e.p]}">${esc(e.p)}</b> ${esc(e.texto)}</span></li>`;
+        }).join("")}</ol>` : `<p class="vacio">Acá van a aparecer las subidas de nivel, los logros y quién se pasó del límite.</p>`;
+        return;
+      }
       if (st.vista === "logros") {
         const logros = calcularLogros(st.filas, gente);
         const hechos = LOGROS.filter((l) => logros[l.id].length).length;
         $("sublateral").textContent = `${hechos} de ${LOGROS.length} desbloqueados`;
-        $("lateral").innerHTML = `<div class="logros">${LOGROS.map((l) => {
+        lateral.innerHTML = `<div class="logros">${LOGROS.map((l) => {
           const quienes = logros[l.id].sort((a, b) => a.dia.localeCompare(b.dia));
           return `<div class="logro${quienes.length ? "" : " bloqueado"}" title="${esc(l.desc)}">
             <div class="logro-icono" aria-hidden="true">${l.icono}</div>
@@ -362,9 +513,10 @@
         return { p, seg: suma("segundos"), mis: suma("misiones"), mue: suma("muertes"), kil: suma("kills"),
           og: suma("oro_ganado"), os: suma("oro_gastado"), nvFin, sube: nvFin - nvIni };
       }).sort((a, b) => b.seg - a.seg);
+      const maxSeg = Math.max(1, ...filasT.map((t) => t.seg));
       $("sublateral").textContent = `de ${st.periodo.texto}`;
-      $("lateral").innerHTML = `<table class="tabla"><thead><tr><th>Aventurero</th><th class="n">Horas</th><th class="n" title="Misiones">📜</th><th class="n" title="Muertes">💀</th><th class="n" title="Enemigos">⚔️</th><th class="n" title="Oro ganado">🪙 +</th><th class="n" title="Oro gastado">🪙 −</th><th class="n">Nv</th></tr></thead><tbody>${
-        filasT.map((t) => `<tr><td style="color:${colores[t.p]};text-shadow:0 1px 0 #000">${esc(t.p)}</td><td class="n">${fmtH(t.seg)}</td><td class="n">${fmtNum(t.mis)}</td><td class="n">${fmtNum(t.mue)}</td><td class="n">${fmtNum(t.kil)}</td><td class="n">${fmtOro(t.og)}</td><td class="n">${fmtOro(t.os)}</td><td class="n">${t.nvFin}${t.sube > 0 ? ` <span class="sube">+${t.sube}</span>` : ""}</td></tr>`).join("")
+      lateral.innerHTML = `<table class="tabla"><thead><tr><th>Aventurero</th><th class="n">Horas</th><th class="n" title="Misiones">📜</th><th class="n" title="Muertes">💀</th><th class="n" title="Enemigos">⚔️</th><th class="n" title="Oro ganado">🪙 +</th><th class="n" title="Oro gastado">🪙 −</th><th class="n">Nv</th></tr></thead><tbody>${
+        filasT.map((t) => `<tr style="--c:${colores[t.p]};--p:${(t.seg / maxSeg) * 100}%"><td class="quien">${esc(t.p)}</td><td class="n">${fmtH(t.seg)}</td><td class="n">${fmtNum(t.mis)}</td><td class="n">${fmtNum(t.mue)}</td><td class="n">${fmtNum(t.kil)}</td><td class="n">${fmtOro(t.og)}</td><td class="n">${fmtOro(t.os)}</td><td class="n">${t.nvFin}${t.sube > 0 ? ` <span class="sube">+${t.sube}</span>` : ""}</td></tr>`).join("")
       }</tbody></table>${gente.length ? recordsHtml(dias) : ""}`;
     }
 
@@ -373,27 +525,29 @@
       const mejor = (k) => delPeriodo.reduce((a, f) => ((f[k] || 0) > ((a && a[k]) || 0) ? f : a), null);
       const items = [["segundos", "Más horas en un día", fmtH], ["misiones", "Más misiones en un día", fmtNum],
         ["kills", "Más enemigos en un día", fmtNum], ["muertes", "Más muertes en un día", fmtNum], ["oro_ganado", "Más oro en un día", fmtOro]]
-        .map(([k, t, f]) => { const r = mejor(k); return r ? `<li><span>${t}</span><b style="color:${colores[r.persona]}">${esc(r.persona)}</b><em>${f(r[k])} · ${fechaCorta(r.dia)}</em></li>` : ""; }).join("");
+        .map(([k, t, f]) => { const r = mejor(k); return r ? `<li><span>${t}</span><b style="color:${colores[r.persona]}">${esc(r.persona)}</b><em>${f(r[k])}, ${fechaCorta(r.dia)}</em></li>` : ""; }).join("");
       return items ? `<h3 class="sub-titulo">Récords</h3><ul class="records">${items}</ul>` : "";
     }
 
     function pintarPie() {
       const ult = st.filas.reduce((a, f) => [f.actualizado, f.en_vivo].reduce((b, t) => (t && t > b ? t : b), a), "");
-      const jugando = personas().filter(enVivo);
-      $("pie").innerHTML = (jugando.length ? `<span class="en-vivo">● ${jugando.map(esc).join(", ")} ${jugando.length > 1 ? "están" : "está"} jugando ahora</span> · ` : "") +
-        (ult ? `Última actualización: ${new Date(ult).toLocaleString("es-AR")} · ` : "") + "Mientras juegan los datos llegan cada ~2 minutos.";
+      $("pie").textContent = (ult ? `Última actualización: ${new Date(ult).toLocaleString("es-AR")}. ` : "") +
+        "Mientras juegan, el tiempo de hoy se actualiza cada minuto; el dato exacto llega al cerrar el juego.";
     }
 
     function pintarTodo() {
-      calcularColores(); pintarCabecera(); pintarTarjetas(); pintarLateral(); pintarPie();
-      ajustarAlto(); requestAnimationFrame(pintarGrafico);
+      calcularColores(); pintarCabecera(); pintarCarrera(); pintarTarjetas(); pintarLateral(); pintarPie();
+      ajustarAlto();
+      const animar = st.primera;
+      requestAnimationFrame(() => pintarGrafico(animar));
+      st.primera = false;
     }
 
     app.addEventListener("click", (ev) => {
       const b = ev.target.closest("button");
       if (!b) return;
-      if (b.dataset.p) { st.periodo = PERIODOS.find((p) => p.dias === +b.dataset.p); pintarCabecera(); pintarLateral(); pintarGrafico(); }
-      if (b.dataset.m) { st.metrica = METRICAS.find((m) => m.id === b.dataset.m); pintarCabecera(); pintarGrafico(); }
+      if (b.dataset.p) { st.periodo = PERIODOS.find((p) => p.dias === +b.dataset.p); pintarCabecera(); pintarLateral(); pintarGrafico(true); }
+      if (b.dataset.m) { st.metrica = METRICAS.find((m) => m.id === b.dataset.m); pintarCabecera(); pintarGrafico(true); }
       if (b.dataset.v) { st.vista = b.dataset.v; pintarCabecera(); pintarLateral(); }
     });
     let espera;

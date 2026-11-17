@@ -20,7 +20,7 @@
 /* Pantalla completa: todo entra sin scroll */
 .tdj .app {
   height: var(--alto-tdj, 100dvh); max-width: 1500px; margin: 0 auto; padding: 12px 18px 10px;
-  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 12px;
+  display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; gap: 10px;
 }
 .tdj .cuerpo { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 12px; min-height: 0; }
 
@@ -73,7 +73,7 @@
 
 /* Marcos de unidad */
 .tdj .tarjetas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.tdj .unidad { flex-direction: row; gap: 12px; align-items: center; padding: 10px 12px; }
+.tdj .unidad { gap: 6px; padding: 10px 12px; }
 .tdj .retrato {
   position: relative; flex: none; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center;
   font: 900 24px var(--titulo); color: #fff; text-shadow: 0 2px 3px #000; border: 3px solid transparent;
@@ -93,7 +93,7 @@
 }
 .tdj .info { flex: 1; min-width: 0; }
 .tdj .fila-nombre { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.tdj .nombre { font: 700 16px/1.1 var(--titulo); text-shadow: 0 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tdj .nombre { color: var(--c); font: 700 16px/1.1 var(--titulo); text-shadow: 0 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tdj .estado { font-size: 12px; white-space: nowrap; flex: none; }
 .tdj .estado b { color: #fff; font: 700 12.5px var(--num); }
 .tdj .meta { color: var(--pergamino-2); font-size: 12px; margin: 1px 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -164,3 +164,104 @@
 @media (prefers-reduced-motion: reduce) { .tdj .retrato.vivo { animation: none; } }
 .tdj .visto { color: var(--pergamino-2); margin-right: 6px; }
 .tdj .visto::before { content: "○ "; color: var(--apagado); }
+
+/* ───────── v3: carrera, tarjetas con mas datos, cronica y animaciones ───────── */
+
+/* La carrera al 60 */
+.tdj .carrera { padding: 8px 18px 10px; }
+.tdj .carrera-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tdj .carrera-cab h2 { font: 700 14px var(--titulo); color: var(--oro); margin: 0; letter-spacing: .04em; text-shadow: 0 1px 0 #000; }
+.tdj .carrera-cab .sub { padding: 0; }
+.tdj .carrera-cab b { font-weight: normal; text-shadow: 0 1px 0 #000; }
+.tdj .pista { position: relative; height: 58px; margin: 2px 26px 0 22px; }
+.tdj .camino { margin-top: calc(max(0, var(--arriba, 0) - 1) * 22px);
+  position: absolute; left: 0; right: 0; top: 28px; height: 6px; border-radius: 3px;
+  background: linear-gradient(180deg, #0a0806, #1c1610); box-shadow: inset 0 1px 2px #000, 0 0 0 1px #4d3a16;
+}
+.tdj .camino-lleno {
+  position: absolute; inset: 0 auto 0 0; border-radius: 3px;
+  background: linear-gradient(90deg, rgba(200, 162, 74, .15), #c8a24a); box-shadow: 0 0 8px rgba(255, 190, 40, .35);
+
+}
+.tdj .marca-nivel { position: absolute; top: 9px; transform: translateX(-50%); font: 700 10px var(--num); color: var(--apagado); }
+.tdj .marca-nivel::before { content: ""; position: absolute; left: 50%; top: 13px; width: 1px; height: 12px; background: rgba(201, 160, 74, .35); }
+.tdj .corredor {
+  position: absolute; top: calc(31px + max(0, var(--arriba, 0) - 1) * 22px + var(--carril) * 22px); transform: translate(-13px, -50%);
+  display: flex; align-items: center; gap: 5px; z-index: 2;
+
+}
+.tdj .corredor-retrato {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font: 900 13px var(--titulo); color: #fff; text-shadow: 0 1px 2px #000; border: 2px solid transparent;
+  background: radial-gradient(circle at 35% 30%, var(--c-claro), var(--c) 55%, #000 120%) padding-box,
+              linear-gradient(160deg, #ffe58a, #8a5a12 60%, #ffd76a) border-box;
+  box-shadow: 0 0 0 1px #000, 0 2px 6px rgba(0, 0, 0, .8);
+}
+.tdj .corredor.vivo .corredor-retrato { animation: tdj-vivo 2.2s ease-in-out infinite; }
+.tdj .corredor-nombre { font-size: 12px; color: var(--c); text-shadow: 0 1px 0 #000, 0 0 4px #000; white-space: nowrap; }
+.tdj .corredor-nombre b { font: 700 12px var(--num); color: #fff; }
+
+/* Tarjetas */
+.tdj .unidad-cab { display: flex; gap: 12px; align-items: center; }
+.tdj .unidad .retrato { width: 48px; height: 48px; font-size: 21px; }
+.tdj .unidad .meta { margin-bottom: 0; }
+.tdj .unidad-cuerpo { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: end; }
+.tdj .tira { display: flex; gap: 3px; height: 36px; align-items: flex-end; }
+.tdj .dia-sem { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 12px; height: 100%; gap: 2px; }
+.tdj .dia-sem i {
+  display: block; width: 100%; min-height: 2px; border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, var(--c-claro), var(--c)); opacity: .85; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6);
+}
+.tdj .dia-sem em { font: 700 9px var(--num); font-style: normal; color: var(--apagado); }
+.tdj .dia-sem.hoy em { color: var(--oro); }
+.tdj .dia-sem.hoy i { opacity: 1; box-shadow: 0 0 0 1px #000, 0 0 6px var(--c); }
+.tdj .dia-sem.futuro i { background: rgba(255, 255, 255, .06); }
+.tdj .datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 0; text-align: center; }
+.tdj .datos div { min-width: 0; }
+.tdj .datos dt { font-size: 10.5px; color: var(--apagado); }
+.tdj .datos dd { margin: 0; font: 700 13px var(--num); color: #fff; white-space: nowrap; }
+.tdj .datos small { font: 400 10px var(--texto); color: var(--pergamino-2); }
+.tdj .proyeccion { font-size: 12px; color: var(--pergamino-2); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tdj .unidad .stats-hoy { margin-top: 0; padding-top: 5px; border-top: 1px solid rgba(201, 160, 74, .15); }
+
+
+/* Panel lateral: aparece suave al cambiar de pestaña */
+.tdj .contenido-lateral.aparece { animation: tdj-aparece .28s ease-out; }
+@keyframes tdj-aparece { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Cronica */
+.tdj .cronica { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.tdj .cronica-dia { font: 700 11.5px var(--titulo); color: var(--oro); margin: 10px 0 4px; text-transform: capitalize; }
+.tdj .cronica-dia:first-child { margin-top: 2px; }
+.tdj .cronica-item { display: flex; gap: 8px; align-items: baseline; padding: 4px 0 4px 10px; border-left: 2px solid rgba(201, 160, 74, .3); }
+.tdj .cronica-item b { font-weight: normal; text-shadow: 0 1px 0 #000; }
+.tdj .cronica-item.malo { border-left-color: #c4161c; }
+.tdj .cronica-item.ahora { border-left-color: var(--verde); background: linear-gradient(90deg, rgba(51, 224, 74, .08), transparent); }
+.tdj .cronica-icono { flex: none; width: 18px; text-align: center; }
+
+/* Totales: cada fila con una barra de fondo segun las horas */
+.tdj .tabla tbody td.quien { color: var(--c); text-shadow: 0 1px 0 #000; position: relative; }
+.tdj .tabla tbody tr { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 16%, transparent) var(--p), transparent var(--p)); }
+
+/* Sin animaciones: modo liviano de alzstats o "reducir movimiento" */
+html[data-motion="off"] .tdj *, html[data-motion="off"] .tdj *::before, html[data-motion="off"] .tdj *::after { transition: none !important; animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .tdj *, .tdj *::before, .tdj *::after { transition: none !important; animation: none !important; }
+}
+
+@media (max-width: 900px), (max-height: 640px) { .tdj .pista { margin: 2px 18px 0 14px; } }
+
+/* Animaciones de la primera carga: el estado final ya esta puesto, esto solo agrega el recorrido */
+.tdj .corredor.largada { animation: tdj-largada 1.3s cubic-bezier(.2, .8, .2, 1) backwards; }
+.tdj .camino-lleno.largada { animation: tdj-llenar 1.4s cubic-bezier(.2, .8, .2, 1) backwards; }
+.tdj .barra .lleno.largada { animation: tdj-llenar 1.1s cubic-bezier(.2, .8, .2, 1) .1s backwards; }
+@keyframes tdj-largada { from { left: 0%; } }
+@keyframes tdj-llenar { from { width: 0%; } }
+@keyframes tdj-dibujar { from { stroke-dashoffset: var(--largo); } to { stroke-dashoffset: 0; } }
+/* Cerca del 60 el nombre va a la izquierda del retrato, para no salirse del marco */
+.tdj .corredor.fin { flex-direction: row-reverse; transform: translate(calc(-100% + 13px), -50%); }
+/* En el celular la carrera muestra solo los retratos (el nombre queda en el title) */
+@media (max-width: 560px) {
+  .tdj .corredor-nombre { display: none; }
+  .tdj .corredor, .tdj .corredor.fin { transform: translate(-13px, -50%); }
+}
