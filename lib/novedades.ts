@@ -82,6 +82,20 @@ export const NOVEDADES_MAX_AGE_DAYS = 30
 
 export const NOVEDADES: Novedad[] = [
   {
+    id: '2026-11-17-wow-rediseno',
+    date: '2026-11-17',
+    tag: 'WoW',
+    title: 'Tiempo de Juego se renovó: la carrera al 60',
+    summary:
+      'La página de WoW cambió entera: arriba hay una carrera con los cuatro corriendo hacia el nivel 60, así se ve de un vistazo quién se está escapando. Cada uno tiene más datos y hay una crónica con todo lo que va pasando.',
+    highlights: [
+      { icon: 'flame', text: 'La carrera al 60: cada uno en la pista según su nivel, con la diferencia entre el primero y el último.' },
+      { icon: 'chart', text: 'En cada tarjeta, las horas de cada día de la semana, el promedio, la racha y cuándo llega al límite a ese ritmo.' },
+      { icon: 'history', text: 'La crónica: subidas de nivel, logros, quién se pasó del límite y quién está jugando ahora.' },
+    ],
+    cta: { label: 'Ver la carrera', href: '/wow' },
+  },
+  {
     id: '2026-11-16-wow-v2',
     date: '2026-11-16',
     tag: 'WoW',
